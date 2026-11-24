@@ -1,0 +1,117 @@
+name: Design screenshots
+
+# Pictures of every mockup in design/screens, to build and check the UI
+# against. Not a build: nothing here is shipped.
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Also take the app's screenshots (light and dark) and put them next to the mockups"
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - 'design/**'
+      - '.github/workflows/design-shots.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-shots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mockups:
+    # Playwright has no Chromium for ubuntu-latest (26.04) yet
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Cache npm and browsers
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-design-shots-${{ hashFiles('design/tools/package.json') }}
+          restore-keys: ${{ runner.os }}-design-shots-
+      - name: Install Playwright
+        working-directory: design/tools
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Render every screen
+        run: node design/tools/render.mjs design/screens mockups
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mockups
+          path: mockups
+          retention-days: 14
+
+  # The app's screens next to the mockups, light and dark: the comparison
+  # runs here, not on the small server.
+  app:
+    needs: mockups
+    if: github.event_name == 'workflow_dispatch' && inputs.app
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        theme: [light, dark]
+    steps:
+      - name: Install Linux libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libsecret-1-dev clang cmake ninja-build pkg-config
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/shared_workflows/setup_flutter
+      - run: flutter config --no-cli-animations
+      - name: Regenerate translations
+        run: flutter pub get && dart run slang
+      - uses: actions/download-artifact@v4
+        with:
+          name: mockups
+          path: build/design-mockups
+      # PDFium for the PDF check, the version pdfrx's pdfium_dart builds with
+      - name: Cache PDFium
+        id: pdfium
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/pdfium
+          key: ${{ runner.os }}-pdfium-chromium-7811
+      - name: Download PDFium
+        if: steps.pdfium.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/pdfium"
+          curl -sSfL https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7811/pdfium-linux-x64.tgz \
+            | tar -xz -C "$RUNNER_TEMP/pdfium" lib/libpdfium.so
+      - name: Take the app's screenshots
+        continue-on-error: true
+        env:
+          OUT: ${{ github.workspace }}/build/design-out
+          MOCKUPS: ${{ github.workspace }}/build/design-mockups
+          DESIGN_DARK: ${{ matrix.theme == 'dark' }}
+          PDFIUM_PATH: ${{ runner.temp }}/pdfium/lib/libpdfium.so
+        # each file on its own with a time limit per test, so one that hangs
+        # doesn't keep the others' pictures from being uploaded
+        run: |
+          for f in test/ui_gallery_test.dart test/design/*_test.dart; do
+            echo "::group::$f"
+            timeout 900 flutter test --reporter=expanded --timeout 90s "$f" || echo "FAILED $f"
+            echo "::endgroup::"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ matrix.theme }}
+          path: build/design-out
+          retention-days: 30

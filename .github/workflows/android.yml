@@ -1,0 +1,234 @@
+name: Build BadNotes APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build a profile APK (for measuring frame times) instead of a release APK"
+        type: boolean
+        default: false
+      lag:
+        description: "Build BadNotes-lag.apk, which sends frame timings (no note content) to the URL in the LAG_REPORT_URL secret"
+        type: boolean
+        default: false
+      timing:
+        description: "Log every Gradle task with its time, to see what makes the build slow"
+        type: boolean
+        default: false
+  push:
+    branches: ["**"]
+    tags: ["**"]
+    # the design mockups and their screenshot tool don't change the app
+    paths-ignore:
+      - "design/**"
+      - ".github/workflows/design-shots.yml"
+
+# a newer push to the same branch replaces a build that's still running.
+# Every push builds BadNotes-lag.apk (the owner tests only that one); a
+# normal APK is built only by running this by hand with lag off.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ (inputs.lag || github.event_name == 'push') && 'lag' || 'app' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # tests run on the Linux desktop build, whose plugins need these
+      - name: Install Linux libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libsecret-1-dev clang cmake ninja-build pkg-config
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/shared_workflows/setup_flutter
+
+      - run: flutter config --no-cli-animations
+
+      - name: Regenerate translations
+        run: flutter pub get && dart run slang
+
+      # only errors fail the build; the existing infos and warnings don't
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings lib
+
+      - name: Run tests
+        run: flutter test --reporter=compact --exclude-tags="golden||network||scenario||design"
+
+  build-android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 60
+    steps:
+      - name: Free disk space
+        run: |
+          # a cold release build needs more room than deleting only the
+          # biggest folders left (24G ran out), so this frees them all
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
+            /usr/local/lib/node_modules /opt/hostedtoolcache/CodeQL /usr/share/swift \
+            /usr/local/share/powershell /usr/local/share/chromium /opt/microsoft /opt/google
+          # docker images aren't used here; pruning them took 2 minutes, so
+          # it carries on in the background while the build starts
+          (sudo docker image prune -af >/dev/null 2>&1 &)
+          df -h /
+          # extra swap: gradle + AOT compile can run the runner out of memory
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile2 && sudo chmod 600 /swapfile2
+          sudo mkswap /swapfile2 && sudo swapon /swapfile2
+          free -h
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/shared_workflows/setup_flutter
+
+      # Keyed on the dependencies, so a new cache is only saved when they
+      # change instead of after every build. build/ is left out: it was most of
+      # the cache's size and a stale copy saves little.
+      - name: Restore cache
+        id: cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: |
+            .dart_tool/
+            .flutter-plugins-dependencies
+            packages/**/.dart_tool/
+            android/.gradle/
+            android/.kotlin/
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.OS }}-badnotes-${{ hashFiles('pubspec.lock', 'android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.OS }}-badnotes-
+
+      - name: Setup keystore
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        if: ${{ env.SIGNING_KEY != '' }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > android/android.keystore
+          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ALIAS }}" >> android/key.properties
+          echo "storeFile=../android.keystore" >> android/key.properties
+
+      - name: Setup Android build tools
+        run: |
+          ANDROID_NDK=/usr/local/lib/android/sdk/ndk/29.0.14206865
+          echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME_25_X64" >> $GITHUB_ENV
+
+      - run: flutter config --no-cli-animations
+
+      - name: Regenerate translations
+        run: flutter pub get && dart run slang
+
+      # Logs how long each Gradle task took, slowest first, after the build:
+      # the build is quiet for minutes and this shows where they go.
+      - name: Time Gradle tasks
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/task-times.gradle <<'GRADLE'
+          try {
+            def starts = new java.util.concurrent.ConcurrentHashMap()
+            def out = new File(System.getenv('RUNNER_TEMP') ?: '/tmp', 'task-times.txt')
+            gradle.taskGraph.beforeTask { t -> starts[t.path] = System.currentTimeMillis() }
+            gradle.taskGraph.afterTask { t ->
+              def start = starts[t.path]
+              if (start != null) {
+                synchronized (out) {
+                  out << "${System.currentTimeMillis() - start} ${t.path} ${t.state.skipMessage ?: ''}\n"
+                }
+              }
+            }
+          } catch (Throwable e) {
+            println "task times unavailable: $e"
+          }
+          GRADLE
+
+      - name: Build apk
+        env:
+          BUILD_MODE: ${{ inputs.profile && 'profile' || 'release' }}
+          ONEDRIVE_CLIENT_ID: ${{ vars.ONEDRIVE_CLIENT_ID }}
+          # a secret, so it's hidden in the log: as an input it was printed
+          LAG_REPORT_URL: ${{ (inputs.lag || github.event_name == 'push') && secrets.LAG_REPORT_URL || '' }}
+          VERBOSE: ${{ inputs.timing && '--verbose' || '' }}
+          # R8 took 4.5 of the build's 8 minutes. Test builds (lag, profile)
+          # skip it: it only shrinks the Java side, the app itself is Dart.
+          SHRINK: ${{ ((inputs.lag || github.event_name == 'push') || inputs.profile) && '--android-project-arg=shrink=false' || '' }}
+        run: flutter build apk $VERBOSE $SHRINK "--$BUILD_MODE" --target-platform android-arm64 --dart-define=UPDATE_CHECK=false "--dart-define=ONEDRIVE_CLIENT_ID=$ONEDRIVE_CLIENT_ID" "--dart-define=LAG_REPORT_URL=$LAG_REPORT_URL"
+
+      - name: Slowest Gradle tasks
+        if: always()
+        run: |
+          f="$RUNNER_TEMP/task-times.txt"
+          [ -f "$f" ] || { echo "no task times"; exit 0; }
+          {
+            echo "### Slowest Gradle tasks (ms)"
+            echo '```'
+            sort -rn "$f" | head -25
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # Flush Gradle's caches to disk before they get saved
+      - name: Stop Gradle daemon
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pkill -f GradleDaemon || true
+
+      - name: Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6.1.0
+        with:
+          path: |
+            .dart_tool/
+            .flutter-plugins-dependencies
+            packages/**/.dart_tool/
+            android/.gradle/
+            android/.kotlin/
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      # Artifacts hit the private-repo storage quota; a rolling release doesn't.
+      # main publishes to 'latest'; every other branch gets its own
+      # 'build-<branch>' prerelease so testing a branch never replaces the
+      # main build.
+      - name: Publish APK to a rolling release
+        if: github.ref_type == 'branch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_MODE: ${{ inputs.profile && 'profile' || 'release' }}
+        run: |
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+            TAG=latest
+          else
+            TAG="build-$(echo "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9._-' '-' | sed 's/-*$//')"
+          fi
+          APK=BadNotes.apk
+          [ "$BUILD_MODE" = "profile" ] && APK=BadNotes-profile.apk
+          [ "${{ (inputs.lag || github.event_name == 'push') }}" = "true" ] && APK=BadNotes-lag.apk
+          mv "build/app/outputs/flutter-apk/app-$BUILD_MODE.apk" "$APK"
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --prerelease --target "$GITHUB_SHA" \
+              --title "BadNotes build: $GITHUB_REF_NAME" --notes "Built from $GITHUB_REF_NAME"
+          gh release upload "$TAG" "$APK" --clobber
+          # A quicker download too: release downloads are slow on mobile data.
+          # tmpfiles.org keeps it about an hour; it's linked from the notes.
+          QUICK=$(curl -s -m 300 -F "file=@$APK" https://tmpfiles.org/api/v1/upload \
+            | sed -n 's/.*"url":"\([^"]*\)".*/\1/p' || true)
+          NOTES="Built from $GITHUB_REF_NAME at ${GITHUB_SHA::7} (run ${GITHUB_RUN_NUMBER}, $BUILD_MODE)"
+          if [ -n "$QUICK" ]; then
+            NOTES="$NOTES"$'\n\n'"Quick download of $APK (about an hour): $QUICK"
+            echo "Quick download: $QUICK" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          gh release edit "$TAG" --notes "$NOTES"

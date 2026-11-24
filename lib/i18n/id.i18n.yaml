@@ -1,0 +1,391 @@
+common:
+  done: Selesai
+  continueBtn: Lanjutkan
+  cancel: Batal
+home:
+  tabs:
+    home: Beranda
+    browse: Jelajahi
+    whiteboard: Papan tulis
+    settings: Pengaturan
+  titles:
+    home: Catatan terbaru
+    browse: Jelajahi
+    whiteboard: Papan tulis
+    settings: Pengaturan
+  tooltips:
+    newNote: Catatan baru
+    showUpdateDialog: Tampilkan dialog pembaruan
+    exportNote: Ekspor catatan
+  create:
+    newNote: Catatan baru
+    importNote: Impor catatan
+  welcome: Selamat datang di BadNotes
+  invalidFormat: File yang Anda pilih tidak didukung. Pilih file sbn, sbn2, sba, atau pdf.
+  noFiles: Tidak ada file
+  noPreviewAvailable: Pratinjau tidak tersedia
+  createNewNote: Ketuk tombol + untuk membuat catatan baru
+  backFolder: Kembali ke folder sebelumnya
+  newFolder:
+    newFolder: Folder baru
+    folderName: Nama folder
+    create: Buat
+    folderNameEmpty: Nama folder tidak boleh kosong
+    folderNameContainsSlash: Nama folder tidak boleh berisi garis miring
+    folderNameExists: Folder sudah ada
+  renameNote:
+    renameNote: Ganti nama catatan
+    noteName: Nama catatan
+    rename: Ganti nama
+    noteNameEmpty: Nama catatan tidak boleh kosong
+    noteNameExists: Catatan dengan nama ini sudah ada
+    noteNameForbiddenCharacters: Nama catatan berisi karakter yang tidak diizinkan
+    noteNameReserved: Nama catatan sudah dicadangkan
+  moveNote:
+    moveNote: Pindahkan catatan
+    moveNotes: Pindahkan $n catatan
+    moveName: Pindahkan $f
+    move: Pindahkan
+    renamedTo: Catatan akan diganti namanya menjadi $newName
+    multipleRenamedTo: "Catatan berikut akan diganti namanya:"
+    numberRenamedTo: $n catatan akan diganti namanya agar tidak bentrok
+  deleteNote: Hapus catatan
+  deleteNoteDialog:
+    deleteNotes: Hapus $n catatan
+    deleteName: Hapus $f
+    confirmDelete:
+      one: Hapus permanen catatan yang dipilih?
+      other: Hapus permanen catatan-catatan yang dipilih?
+    delete: Hapus
+  renameFolder:
+    renameFolder: Ganti nama folder
+    folderName: Nama folder
+    rename: Ganti nama
+    folderNameEmpty: Nama folder tidak boleh kosong
+    folderNameContainsSlash: Nama folder tidak boleh berisi garis miring
+    folderNameExists: Folder dengan nama ini sudah ada
+  deleteFolder:
+    deleteFolder: Hapus folder
+    deleteName: Hapus $f
+    delete: Hapus
+    alsoDeleteContents: Hapus juga semua catatan di dalam folder ini
+  sort:
+    sortBy: Urutkan menurut
+    nameAToZ: Nama (A-Z)
+    nameZToA: Nama (Z-A)
+    lastModifiedNewToOld: Diedit (Terbaru dulu)
+    lastModifiedOldToNew: Diedit (Terlama dulu)
+  layout:
+    layout: Tata letak
+    masonryGrid: Kisi masonry
+    simpleGrid: Kisi sederhana
+sentry:
+  consent:
+    title: Bantu tingkatkan BadNotes?
+    description:
+      question: Kirim laporan kesalahan tak terduga secara otomatis? Ini membantu saya menemukan dan memperbaiki masalah lebih cepat.
+      scope: Laporan dapat berisi informasi tentang kesalahan dan perangkat Anda. Saya sudah berusaha menyaring data pribadi, tetapi sebagian mungkin masih tersisa.
+      currentlyOff: Jika Anda memberi izin, pelaporan kesalahan akan aktif setelah aplikasi dimulai ulang.
+      currentlyOn: Jika Anda mencabut izin, mulai ulang aplikasi untuk menonaktifkan pelaporan kesalahan.
+      learnMoreInPrivacyPolicy(rich): Pelajari selengkapnya di ${link(kebijakan privasi)}.
+    answers:
+      yes: Ya
+      no: Tidak
+      later: Tanya lagi nanti
+settings:
+  prefCategories:
+    general: Umum
+    writing: Menulis
+    editor: Editor
+    performance: Performa
+    advanced: Lanjutan
+  prefLabels:
+    locale: Bahasa
+    appTheme: Tema aplikasi
+    platform: Jenis tema
+    layoutSize: Jenis tata letak
+    customAccentColor: Warna aksen kustom
+    hyperlegibleFont: Font Atkinson Hyperlegible
+    shouldCheckForUpdates: Periksa pembaruan BadNotes
+    shouldAlwaysAlertForUpdates: Pembaruan lebih cepat
+    allowInsecureConnections: Izinkan koneksi tidak aman
+    syncOnlyOnWifi: Sinkronkan hanya lewat Wi-Fi
+    syncPreviewsOnMobileData: Unggah pratinjau lewat data seluler
+    editorToolbarAlignment: Posisi bilah alat
+    editorToolbarShowInFullscreen: Tampilkan bilah alat dalam mode layar penuh
+    editorAutoInvert: Balik warna catatan dalam mode gelap
+    preferGreyscale: Utamakan warna abu-abu
+    maxImageSize: Ukuran gambar maksimum
+    autoClearWhiteboardOnExit: Bersihkan papan tulis otomatis
+    disableEraserAfterUse: Matikan penghapus otomatis
+    hideFingerDrawingToggle: Sembunyikan tombol menggambar dengan jari
+    autoDisableFingerDrawingWhenStylusDetected: Matikan menggambar dengan jari otomatis
+    editorPromptRename: Minta ganti nama catatan baru
+    recentColorsDontSavePresets: Jangan simpan warna preset di warna terbaru
+    recentColorsLength: Jumlah warna terbaru yang disimpan
+    printPageIndicators: Cetak penanda halaman
+    autosave: Simpan otomatis
+    shapeRecognitionDelay: Jeda pengenalan bentuk
+    autoStraightenLines: Luruskan garis otomatis
+    customDataDir: Folder BadNotes kustom
+    sentry: Pelaporan kesalahan
+  prefDescriptions:
+    syncOnlyOnWifi: "Mati: catatan juga disinkronkan lewat data seluler. Aktif: sinkronisasi menunggu Wi-Fi"
+    syncPreviewsOnMobileData: Gambar mini catatan biasanya menunggu Wi-Fi untuk menghemat data
+    hyperlegibleFont: Meningkatkan keterbacaan bagi pengguna dengan gangguan penglihatan
+    allowInsecureConnections: (Tidak disarankan) Izinkan BadNotes terhubung ke server dengan sertifikat self-signed/tidak tepercaya
+    preferGreyscale: Untuk layar e-ink
+    autoClearWhiteboardOnExit: Membersihkan papan tulis setelah Anda keluar dari aplikasi
+    disableEraserAfterUse: Otomatis kembali ke pena setelah memakai penghapus
+    maxImageSize: Gambar yang lebih besar akan dikompresi
+    hideFingerDrawing:
+      shown: Mencegah tombol tertekan tanpa sengaja
+      fixedOn: Menggambar dengan jari selalu aktif
+      fixedOff: Menggambar dengan jari selalu nonaktif
+    autoDisableFingerDrawingWhenStylusDetected: Matikan menggambar dengan jari saat stylus terdeteksi
+    editorPromptRename: Anda selalu bisa mengganti nama catatan nanti
+    printPageIndicators: Tampilkan penanda halaman saat ekspor
+    autosave: Simpan otomatis setelah jeda singkat, atau tidak pernah
+    shapeRecognitionDelay: Lama pena harus diam sebelum tinta berubah menjadi bentuk
+    autoStraightenLines: Meluruskan garis panjang tanpa perlu memakai pena bentuk
+    shouldAlwaysAlertForUpdates: Beri tahu saya tentang pembaruan segera setelah tersedia
+    sentry:
+      active: Aktif
+      inactive: Nonaktif
+      activeUntilRestart: Aktif hingga aplikasi dimulai ulang
+      inactiveUntilRestart: Nonaktif hingga aplikasi dimulai ulang
+  themeModes:
+    system: Sistem
+    light: Terang
+    dark: Gelap
+  layoutSizes:
+    auto: Otomatis
+    phone: Ponsel
+    tablet: Tablet
+  accentColorPicker:
+    pickAColor: Pilih warna
+  systemLanguage: Otomatis
+  axisDirections:
+  - Atas
+  - Kanan
+  - Bawah
+  - Kiri
+  reset:
+    title: Atur ulang pengaturan ini?
+    button: Atur ulang
+  resyncEverything: Sinkronkan ulang semua
+  openDataDir: Buka folder BadNotes
+  customDataDir:
+    cancel: Batal
+    select: Pilih
+    mustBeEmpty: Folder yang dipilih harus kosong
+    mustBeDoneSyncing: Pastikan sinkronisasi selesai sebelum mengganti folder
+    unsupported: Fitur ini saat ini hanya untuk pengembang. Menggunakannya kemungkinan besar akan menyebabkan data hilang.
+  autosaveDisabled: Tidak pernah
+  shapeRecognitionDisabled: Tidak pernah
+logs:
+  logs: Log
+  viewLogs: Lihat log
+  debuggingInfo: Log berisi informasi yang berguna untuk debugging dan pengembangan
+  noLogs: Belum ada log!
+  useTheApp: Log akan muncul di sini saat Anda menggunakan aplikasi
+login:
+  title: Masuk
+  form:
+    agreeToPrivacyPolicy(rich): Dengan masuk, Anda menyetujui ${linkToPrivacyPolicy(Kebijakan Privasi)}.
+  signup(rich): Belum punya akun? ${linkToSignup(Daftar sekarang)}!
+  notYou(rich): Bukan Anda? ${undoLogin(Pilih akun lain)}.
+  status:
+    loggedOut: Sudah keluar
+    tapToLogin: Ketuk untuk sinkronisasi dengan Google Drive
+    hi: Hai, $u!
+    almostDone: Hampir siap sinkronisasi, ketuk untuk menyelesaikan proses masuk
+    loggedIn: Sinkronisasi aktif
+  ncLoginStep:
+    whereToStoreData: "Pilih tempat menyimpan data Anda:"
+    cloudStorage: Google Drive atau OneDrive
+    loginWithGoogleDrive: Lanjutkan dengan Google Drive
+    loginWithOneDrive: Lanjutkan dengan OneDrive
+    cloudLoginFailed: Gagal masuk
+    comingSoon: Segera hadir
+    badnotesNcServer: Server Nextcloud BadNotes
+    otherNcServer: Server Nextcloud lain
+    serverUrl: URL server
+    loginWithBadNotes: Masuk dengan BadNotes
+    loginWithNextcloud: Masuk dengan Nextcloud
+    loginFlow:
+      pleaseAuthorize: Izinkan BadNotes mengakses akun Nextcloud Anda
+      followPrompts: Ikuti petunjuk di antarmuka Nextcloud
+      browserDidntOpen: Halaman masuk tidak terbuka? Klik di sini
+  encLoginStep:
+    enterEncPassword: "Untuk melindungi data Anda, masukkan kata sandi enkripsi:"
+    newToBadNotes: Baru di BadNotes? Cukup masukkan kata sandi enkripsi baru.
+    encPassword: Kata sandi enkripsi
+    encFaqTitle: Pertanyaan umum
+    wrongEncPassword: Dekripsi gagal dengan kata sandi tersebut. Coba masukkan lagi.
+    connectionFailed: Terjadi kesalahan saat menghubungkan ke server. Coba lagi nanti.
+    encFaq:
+    - q: Apa itu kata sandi enkripsi? Kenapa perlu dua kata sandi?
+      a: |-
+        Akun Google atau Microsoft Anda dipakai untuk mengakses cloud. Kata sandi enkripsi "mengacak" data Anda sebelum sampai ke cloud.
+        Meskipun seseorang berhasil mengakses akun Google atau Microsoft Anda, catatan Anda tetap aman dan terenkripsi dengan kata sandi terpisah. Ini memberi lapisan keamanan kedua untuk melindungi data Anda.
+        Tidak ada yang bisa mengakses catatan Anda di server tanpa kata sandi enkripsi, tetapi ini juga berarti jika Anda lupa kata sandi enkripsi, Anda akan kehilangan akses ke data Anda.
+    - q: Saya belum membuat kata sandi enkripsi. Dari mana saya mendapatkannya?
+      a: |-
+        Buat kata sandi enkripsi baru dan masukkan di atas.
+        BadNotes akan membuat kunci enkripsi Anda dari kata sandi ini secara otomatis.
+    - q: Bolehkah saya memakai kata sandi yang sama dengan akun Google atau Microsoft saya?
+      a: Sebaiknya jangan. Kata sandi enkripsi terpisah menjaga catatan Anda tetap aman meskipun seseorang berhasil masuk ke akun tersebut.
+profile:
+  title: Profil saya
+  logout: Keluar
+  quotaUsage: Anda menggunakan $used dari $total ($percent%)
+  quotaUsageUncapped: Anda menggunakan $used
+  connectedTo: Terhubung ke
+  lastSynced: Terakhir disinkronkan $time
+  notSyncedYet: Belum disinkronkan
+  justNow: baru saja
+  minutesAgo: $n mnt lalu
+  hoursAgo: $n jam lalu
+  filesWaiting: $n file menunggu sinkronisasi
+  signInAgainNeeded: Masuk lagi untuk melanjutkan sinkronisasi
+  signInAgain: Masuk lagi
+  wrongAccount: Pilih $email
+  quickLinks:
+    serverHomepage: Beranda server
+    deleteAccount: Hapus akun
+  faqTitle: Pertanyaan umum
+  faq:
+  - q: Apakah catatan saya akan hilang jika saya keluar?
+    a: Tidak. Catatan Anda tetap ada di perangkat dan di server. Catatan tidak akan disinkronkan dengan server sampai Anda masuk lagi. Pastikan sinkronisasi selesai sebelum keluar agar tidak ada data yang hilang (lihat progres sinkronisasi di layar beranda).
+  - q: Di mana catatan saya disimpan?
+    a: Di folder "BadNotes" di Google Drive Anda, atau "Apps/BadNotes" di OneDrive Anda. File-file tersebut terenkripsi, jadi hanya bisa dibuka di BadNotes.
+  - q: Bagaimana cara mengganti kata sandi enkripsi?
+    a: |-
+      0. Pastikan sinkronisasi selesai (lihat progres sinkronisasi di layar beranda).
+      1. Keluar dari BadNotes.
+      2. Hapus folder 'BadNotes' di Google Drive atau OneDrive Anda. Ini menghapus semua catatan Anda dari cloud, bukan dari perangkat Anda.
+      3. Masuk lagi ke BadNotes. Anda bisa memilih kata sandi enkripsi baru saat masuk.
+      4. Jangan lupa keluar lalu masuk lagi ke BadNotes di perangkat Anda yang lain juga.
+  - q: Bagaimana cara menghapus akun saya?
+    a: |-
+      BadNotes tidak memiliki akun sendiri. Keluar, lalu hapus folder 'BadNotes' di Google Drive atau OneDrive Anda.
+      Untuk mencabut juga akses BadNotes, buka myaccount.google.com/permissions (Google) atau account.live.com/consent/Manage (Microsoft).
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: Pembaruan tersedia
+  updateAvailableDescription: "Versi baru aplikasi telah tersedia:"
+  update: Perbarui
+  downloadNotAvailableYet: Unduhan belum tersedia untuk platform Anda. Silakan periksa lagi sebentar lagi.
+editor:
+  toolbar:
+    toggleColors: Tampilkan/sembunyikan warna (Ctrl C)
+    select: Pilih
+    toggleEraser: Aktifkan/nonaktifkan penghapus (Ctrl E)
+    photo: Gambar
+    text: Teks
+    toggleFingerDrawing: Aktifkan/nonaktifkan menggambar dengan jari (Ctrl F)
+    undo: Urungkan
+    redo: Ulangi
+    export: Ekspor (Ctrl Shift S)
+    exportAs: "Ekspor sebagai:"
+    fullscreen: Layar penuh (F11)
+  pens:
+    fountainPen: Pena tinta
+    ballpointPen: Pulpen
+    highlighter: Stabilo
+    pencil: Pensil
+    shapePen: Pena bentuk
+    laserPointer: Penunjuk laser
+  penOptions:
+    size: Ukuran
+  colors:
+    colorPicker: Pemilih warna
+    customBrightnessHue: $h $b kustom
+    customHue: $h kustom
+    dark: gelap
+    light: terang
+    black: Hitam
+    darkGrey: Abu-abu gelap
+    grey: Abu-abu
+    lightGrey: Abu-abu terang
+    white: Putih
+    red: Merah
+    green: Hijau
+    cyan: Sian
+    blue: Biru
+    yellow: Kuning
+    purple: Ungu
+    pink: Merah muda
+    orange: Oranye
+    pastelRed: Merah pastel
+    pastelOrange: Oranye pastel
+    pastelYellow: Kuning pastel
+    pastelGreen: Hijau pastel
+    pastelCyan: Sian pastel
+    pastelBlue: Biru pastel
+    pastelPurple: Ungu pastel
+    pastelPink: Merah muda pastel
+  imageOptions:
+    title: Opsi gambar
+    invertible: Bisa dibalik warnanya
+    download: Unduh
+    setAsBackground: Jadikan latar belakang
+    removeAsBackground: Hapus dari latar belakang
+    delete: Hapus
+  selectionBar:
+    delete: Hapus
+    duplicate: Duplikat
+  menu:
+    clearPage: Bersihkan halaman $page/$totalPages
+    clearAllPages: Bersihkan semua halaman
+    insertPage: Sisipkan halaman di bawah
+    duplicatePage: Duplikat halaman
+    deletePage: Hapus halaman
+    lineHeight: Tinggi baris
+    lineHeightDescription: Juga mengatur ukuran teks untuk catatan ketikan
+    lineThickness: Ketebalan garis
+    lineThicknessDescription: Ketebalan garis latar belakang
+    backgroundImageFit: Penyesuaian gambar latar
+    backgroundPattern: Pola latar belakang
+    import: Impor
+    watchServer: Pantau pembaruan di server
+    watchServerReadOnly: Pengeditan dinonaktifkan selama memantau server
+    boxFits:
+      fill: Rentangkan
+      cover: Penuhi
+      contain: Muat
+    bgPatterns:
+      none: Kosong
+      college: Bergaris (college)
+      collegeRtl: Bergaris (college, terbalik)
+      lined: Bergaris
+      grid: Kotak-kotak
+      dots: Titik-titik
+      staffs: Paranada
+      tablature: Tablatur
+      cornell: Cornell
+  photoPdfError:
+    title: Kesalahan
+    message: "File PDF tidak bisa ditambahkan sebagai gambar. Gunakan \"@:editor.menu.import > PDF\" untuk itu."
+  readOnlyBanner:
+    title: Mode hanya-baca
+    watchingServer: Anda sedang memantau pembaruan di server. Pengeditan dinonaktifkan dalam mode ini.
+    corrupted: Gagal memuat catatan. Catatan mungkin rusak atau masih diunduh.
+  versionTooNew:
+    title: Catatan ini diedit dengan versi BadNotes yang lebih baru
+    subtitle: Mengedit catatan ini dapat menyebabkan sebagian informasi hilang. Abaikan dan tetap edit?
+    allowEditing: Izinkan pengeditan
+  quill:
+    typeSomething: Ketik sesuatu di sini…
+  hud:
+    unlockZoom: Buka kunci zoom
+    lockZoom: Kunci zoom
+    unlockSingleFingerPan: Aktifkan geser dengan satu jari
+    lockSingleFingerPan: Nonaktifkan geser dengan satu jari
+    unlockAxisAlignedPan: Buka kunci geser horizontal atau vertikal
+    lockAxisAlignedPan: Kunci geser ke horizontal atau vertikal
+  pages: Halaman
+  untitled: Tanpa judul
+  needsToSaveBeforeExiting: Menyimpan perubahan… Anda bisa keluar dari editor dengan aman setelah selesai

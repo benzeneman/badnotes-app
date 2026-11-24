@@ -1,0 +1,391 @@
+common:
+  done: 完了
+  continueBtn: 続ける
+  cancel: キャンセル
+home:
+  tabs:
+    home: ホーム
+    browse: ブラウズ
+    whiteboard: ホワイトボード
+    settings: 設定
+  titles:
+    home: 最近のノート
+    browse: ブラウズ
+    whiteboard: ホワイトボード
+    settings: 設定
+  tooltips:
+    newNote: 新規ノート
+    showUpdateDialog: アップデート情報を表示
+    exportNote: ノートをエクスポート
+  create:
+    newNote: 新規ノート
+    importNote: ノートをインポート
+  welcome: BadNotes へようこそ
+  invalidFormat: 選択したファイルには対応していません。sbn、sbn2、sba、pdf のいずれかのファイルを選択してください。
+  noFiles: ファイルが見つかりません
+  noPreviewAvailable: プレビューはありません
+  createNewNote: + ボタンをタップして新しいノートを作成
+  backFolder: 前のフォルダに戻る
+  newFolder:
+    newFolder: 新規フォルダ
+    folderName: フォルダ名
+    create: 作成
+    folderNameEmpty: フォルダ名を入力してください
+    folderNameContainsSlash: フォルダ名にスラッシュは使用できません
+    folderNameExists: フォルダはすでに存在します
+  renameNote:
+    renameNote: ノート名を変更
+    noteName: ノート名
+    rename: 名前を変更
+    noteNameEmpty: ノート名を入力してください
+    noteNameExists: 同じ名前のノートがすでに存在します
+    noteNameForbiddenCharacters: ノート名に使用できない文字が含まれています
+    noteNameReserved: この名前は予約されています
+  moveNote:
+    moveNote: ノートを移動
+    moveNotes: $n 件のノートを移動
+    moveName: $f を移動
+    move: 移動
+    renamedTo: ノート名は $newName に変更されます
+    multipleRenamedTo: 次のノートの名前が変更されます：
+    numberRenamedTo: 名前の重複を避けるため、$n 件のノートの名前が変更されます
+  deleteNote: ノートを削除
+  deleteNoteDialog:
+    deleteNotes: $n 件のノートを削除
+    deleteName: $f を削除
+    confirmDelete:
+      one: 選択したノートを完全に削除しますか？
+      other: 選択したノートを完全に削除しますか？
+    delete: 削除
+  renameFolder:
+    renameFolder: フォルダ名を変更
+    folderName: フォルダ名
+    rename: 名前を変更
+    folderNameEmpty: フォルダ名を入力してください
+    folderNameContainsSlash: フォルダ名にスラッシュは使用できません
+    folderNameExists: 同じ名前のフォルダがすでに存在します
+  deleteFolder:
+    deleteFolder: フォルダを削除
+    deleteName: $f を削除
+    delete: 削除
+    alsoDeleteContents: フォルダ内のノートもすべて削除する
+  sort:
+    sortBy: 並べ替え
+    nameAToZ: 名前（A→Z）
+    nameZToA: 名前（Z→A）
+    lastModifiedNewToOld: 編集日時（新しい順）
+    lastModifiedOldToNew: 編集日時（古い順）
+  layout:
+    layout: レイアウト
+    masonryGrid: メイソンリーグリッド
+    simpleGrid: シンプルグリッド
+sentry:
+  consent:
+    title: BadNotes の改善に協力しますか？
+    description:
+      question: 予期しないエラーを自動で報告しますか？問題をより早く見つけて修正するのに役立ちます。
+      scope: レポートにはエラーやお使いのデバイスに関する情報が含まれる場合があります。個人情報はできる限り除外していますが、一部が残る可能性があります。
+      currentlyOff: 同意すると、アプリの再起動後にエラー報告が有効になります。
+      currentlyOn: 同意を取り消した場合は、アプリを再起動するとエラー報告が無効になります。
+      learnMoreInPrivacyPolicy(rich): 詳しくは${link(プライバシーポリシー)}をご覧ください。
+    answers:
+      yes: はい
+      no: いいえ
+      later: 後で確認する
+settings:
+  prefCategories:
+    general: 一般
+    writing: 書き込み
+    editor: エディタ
+    performance: パフォーマンス
+    advanced: 詳細設定
+  prefLabels:
+    locale: 言語
+    appTheme: アプリのテーマ
+    platform: テーマの種類
+    layoutSize: レイアウトの種類
+    customAccentColor: カスタムアクセントカラー
+    hyperlegibleFont: Atkinson Hyperlegible フォント
+    shouldCheckForUpdates: BadNotes のアップデートを確認
+    shouldAlwaysAlertForUpdates: アップデートをすぐに受け取る
+    allowInsecureConnections: 安全でない接続を許可
+    syncOnlyOnWifi: Wi-Fi 接続時のみ同期
+    syncPreviewsOnMobileData: モバイルデータでプレビューをアップロード
+    editorToolbarAlignment: ツールバーの位置
+    editorToolbarShowInFullscreen: 全画面表示でツールバーを表示
+    editorAutoInvert: ダークモードでノートを反転
+    preferGreyscale: グレースケールの色を優先
+    maxImageSize: 画像の最大サイズ
+    autoClearWhiteboardOnExit: ホワイトボードを自動でクリア
+    disableEraserAfterUse: 消しゴムを自動で解除
+    hideFingerDrawingToggle: 指描きの切り替えボタンを隠す
+    autoDisableFingerDrawingWhenStylusDetected: 指描きを自動で無効化
+    editorPromptRename: 新規ノートの名前変更を促す
+    recentColorsDontSavePresets: プリセットの色を最近使った色に保存しない
+    recentColorsLength: 最近使った色の保存数
+    printPageIndicators: ページ番号を印刷
+    autosave: 自動保存
+    shapeRecognitionDelay: 図形認識までの時間
+    autoStraightenLines: 線を自動でまっすぐにする
+    customDataDir: BadNotes フォルダの場所
+    sentry: エラー報告
+  prefDescriptions:
+    syncOnlyOnWifi: オフ：モバイルデータでも同期します。オン：Wi-Fi 接続まで同期を待ちます
+    syncPreviewsOnMobileData: 通信量を節約するため、通常ノートのサムネイルは Wi-Fi 接続まで待機します
+    hyperlegibleFont: ロービジョンのユーザー向けに読みやすさを高めます
+    allowInsecureConnections: （非推奨）自己署名または信頼されていない証明書のサーバーへの接続を BadNotes に許可します
+    preferGreyscale: 電子ペーパー向け
+    autoClearWhiteboardOnExit: アプリを終了するとホワイトボードをクリアします
+    disableEraserAfterUse: 消しゴムを使った後、自動でペンに戻ります
+    maxImageSize: これより大きい画像は圧縮されます
+    hideFingerDrawing:
+      shown: 誤って切り替えるのを防ぎます
+      fixedOn: 指描きは常に有効です
+      fixedOff: 指描きは常に無効です
+    autoDisableFingerDrawingWhenStylusDetected: スタイラスを検出したら指描きをオフにします
+    editorPromptRename: ノート名は後からいつでも変更できます
+    printPageIndicators: エクスポート時にページ番号を表示します
+    autosave: 少し時間をおいて自動保存するか、保存しないかを選びます
+    shapeRecognitionDelay: インクが図形に変わるまでペンを止めておく時間
+    autoStraightenLines: 図形ペンを使わなくても長い線をまっすぐにします
+    shouldAlwaysAlertForUpdates: アップデートが公開されたらすぐに通知します
+    sentry:
+      active: 有効
+      inactive: 無効
+      activeUntilRestart: アプリを再起動するまで有効
+      inactiveUntilRestart: アプリを再起動するまで無効
+  themeModes:
+    system: システム
+    light: ライト
+    dark: ダーク
+  layoutSizes:
+    auto: 自動
+    phone: スマートフォン
+    tablet: タブレット
+  accentColorPicker:
+    pickAColor: 色を選択
+  systemLanguage: 自動
+  axisDirections:
+  - 上
+  - 右
+  - 下
+  - 左
+  reset:
+    title: この設定をリセットしますか？
+    button: リセット
+  resyncEverything: すべて再同期
+  openDataDir: BadNotes フォルダを開く
+  customDataDir:
+    cancel: キャンセル
+    select: 選択
+    mustBeEmpty: 空のフォルダを選択してください
+    mustBeDoneSyncing: フォルダを変更する前に同期が完了していることを確認してください
+    unsupported: この機能は現在開発者向けです。使用するとデータが失われる可能性が高いです。
+  autosaveDisabled: しない
+  shapeRecognitionDisabled: しない
+logs:
+  logs: ログ
+  viewLogs: ログを表示
+  debuggingInfo: ログにはデバッグや開発に役立つ情報が含まれています
+  noLogs: ログはありません
+  useTheApp: アプリを使うとここにログが表示されます
+login:
+  title: ログイン
+  form:
+    agreeToPrivacyPolicy(rich): ログインすると、${linkToPrivacyPolicy(プライバシーポリシー)}に同意したものとみなされます。
+  signup(rich): アカウントをお持ちでない場合は、${linkToSignup(今すぐ登録)}してください。
+  notYou(rich): ご本人ではありませんか？${undoLogin(別のアカウントを選択)}してください。
+  status:
+    loggedOut: ログアウト中
+    tapToLogin: タップして Google Drive と同期
+    hi: こんにちは、$u さん
+    almostDone: 同期の準備はほぼ完了です。タップしてログインを完了してください
+    loggedIn: 同期はオンです
+  ncLoginStep:
+    whereToStoreData: データの保存先を選択してください：
+    cloudStorage: Google Drive または OneDrive
+    loginWithGoogleDrive: Google Drive で続ける
+    loginWithOneDrive: OneDrive で続ける
+    cloudLoginFailed: サインインできませんでした
+    comingSoon: 近日公開
+    badnotesNcServer: BadNotes の Nextcloud サーバー
+    otherNcServer: その他の Nextcloud サーバー
+    serverUrl: サーバー URL
+    loginWithBadNotes: BadNotes でログイン
+    loginWithNextcloud: Nextcloud でログイン
+    loginFlow:
+      pleaseAuthorize: BadNotes による Nextcloud アカウントへのアクセスを許可してください
+      followPrompts: Nextcloud の画面の指示に従ってください
+      browserDidntOpen: ログインページが開きませんか？ここをクリック
+  encLoginStep:
+    enterEncPassword: データを保護するため、暗号化パスワードを入力してください：
+    newToBadNotes: BadNotes を初めてお使いの場合は、新しい暗号化パスワードを入力するだけです。
+    encPassword: 暗号化パスワード
+    encFaqTitle: よくある質問
+    wrongEncPassword: 入力したパスワードで復号できませんでした。もう一度入力してください。
+    connectionFailed: サーバーへの接続中に問題が発生しました。しばらくしてからもう一度お試しください。
+    encFaq:
+    - q: 暗号化パスワードとは何ですか？なぜパスワードが 2 つ必要なのですか？
+      a: |-
+        Google または Microsoft アカウントはクラウドへのアクセスに使用されます。暗号化パスワードは、データがクラウドに届く前にデータを「スクランブル」します。
+        誰かがあなたの Google または Microsoft アカウントにアクセスできたとしても、ノートは別のパスワードで暗号化されたまま安全に保たれます。これにより、データを守るための第 2 のセキュリティ層が加わります。
+        暗号化パスワードがなければ、誰もサーバー上のノートにアクセスできません。ただしこれは、暗号化パスワードを忘れるとデータにアクセスできなくなることも意味します。
+    - q: まだ暗号化パスワードを設定していません。どこで入手できますか？
+      a: |-
+        新しい暗号化パスワードを決めて、上に入力してください。
+        BadNotes がこのパスワードから暗号化キーを自動で生成します。
+    - q: Google または Microsoft アカウントと同じパスワードを使えますか？
+      a: おすすめしません。別の暗号化パスワードにしておけば、そのアカウントに誰かが侵入してもノートは安全です。
+profile:
+  title: マイプロフィール
+  logout: ログアウト
+  quotaUsage: $total 中 $used を使用中（$percent%）
+  quotaUsageUncapped: $used を使用中
+  connectedTo: 接続先
+  lastSynced: 最終同期：$time
+  notSyncedYet: まだ同期されていません
+  justNow: たった今
+  minutesAgo: $n 分前
+  hoursAgo: $n 時間前
+  filesWaiting: $n 件のファイルが同期待ちです
+  signInAgainNeeded: 同期を続けるには再度サインインしてください
+  signInAgain: 再度サインイン
+  wrongAccount: $email を選択してください
+  quickLinks:
+    serverHomepage: サーバーのホームページ
+    deleteAccount: アカウントを削除
+  faqTitle: よくある質問
+  faq:
+  - q: ログアウトするとノートは消えますか？
+    a: いいえ。ノートはデバイスとサーバーの両方に残ります。再度ログインするまでサーバーとは同期されません。データを失わないよう、ログアウトする前に同期が完了していることを確認してください（同期の進行状況はホーム画面で確認できます）。
+  - q: ノートはどこに保存されますか？
+    a: Google Drive の「BadNotes」フォルダ、または OneDrive の「Apps/BadNotes」に保存されます。ファイルは暗号化されているため、BadNotes でしか開けません。
+  - q: 暗号化パスワードを変更するにはどうすればよいですか？
+    a: |-
+      0. 同期が完了していることを確認します（同期の進行状況はホーム画面で確認できます）。
+      1. BadNotes からログアウトします。
+      2. Google Drive または OneDrive の「BadNotes」フォルダを削除します。これによりクラウド上のノートはすべて削除されますが、デバイス上のノートは削除されません。
+      3. BadNotes に再度ログインします。ログイン時に新しい暗号化パスワードを設定できます。
+      4. 他のデバイスでも BadNotes からログアウトし、再度ログインするのを忘れないでください。
+  - q: アカウントを削除するにはどうすればよいですか？
+    a: |-
+      BadNotes には独自のアカウントはありません。ログアウトしてから、Google Drive または OneDrive の「BadNotes」フォルダを削除してください。
+      BadNotes のアクセス権も取り消すには、myaccount.google.com/permissions（Google）または account.live.com/consent/Manage（Microsoft）にアクセスしてください。
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: アップデートがあります
+  updateAvailableDescription: アプリの新しいバージョンが利用できます：
+  update: アップデート
+  downloadNotAvailableYet: お使いのプラットフォーム向けのダウンロードはまだ準備中です。しばらくしてからもう一度ご確認ください。
+editor:
+  toolbar:
+    toggleColors: 色の切り替え (Ctrl C)
+    select: 選択
+    toggleEraser: 消しゴムの切り替え (Ctrl E)
+    photo: 画像
+    text: テキスト
+    toggleFingerDrawing: 指描きの切り替え (Ctrl F)
+    undo: 元に戻す
+    redo: やり直す
+    export: エクスポート (Ctrl Shift S)
+    exportAs: エクスポート形式：
+    fullscreen: 全画面表示の切り替え (F11)
+  pens:
+    fountainPen: 万年筆
+    ballpointPen: ボールペン
+    highlighter: 蛍光ペン
+    pencil: 鉛筆
+    shapePen: 図形ペン
+    laserPointer: レーザーポインター
+  penOptions:
+    size: サイズ
+  colors:
+    colorPicker: カラーピッカー
+    customBrightnessHue: カスタム（$b $h）
+    customHue: カスタム（$h）
+    dark: 暗い
+    light: 明るい
+    black: 黒
+    darkGrey: ダークグレー
+    grey: グレー
+    lightGrey: ライトグレー
+    white: 白
+    red: 赤
+    green: 緑
+    cyan: シアン
+    blue: 青
+    yellow: 黄
+    purple: 紫
+    pink: ピンク
+    orange: オレンジ
+    pastelRed: パステルレッド
+    pastelOrange: パステルオレンジ
+    pastelYellow: パステルイエロー
+    pastelGreen: パステルグリーン
+    pastelCyan: パステルシアン
+    pastelBlue: パステルブルー
+    pastelPurple: パステルパープル
+    pastelPink: パステルピンク
+  imageOptions:
+    title: 画像のオプション
+    invertible: 反転可能
+    download: ダウンロード
+    setAsBackground: 背景に設定
+    removeAsBackground: 背景から削除
+    delete: 削除
+  selectionBar:
+    delete: 削除
+    duplicate: 複製
+  menu:
+    clearPage: ページ $page/$totalPages をクリア
+    clearAllPages: すべてのページをクリア
+    insertPage: 下にページを挿入
+    duplicatePage: ページを複製
+    deletePage: ページを削除
+    lineHeight: 行の高さ
+    lineHeightDescription: 入力したノートの文字サイズも変わります
+    lineThickness: 線の太さ
+    lineThicknessDescription: 背景の線の太さ
+    backgroundImageFit: 背景画像の配置
+    backgroundPattern: 背景の模様
+    import: インポート
+    watchServer: サーバーの更新を監視
+    watchServerReadOnly: サーバーの監視中は編集できません
+    boxFits:
+      fill: 引き伸ばす
+      cover: 全体を覆う
+      contain: 全体を表示
+    bgPatterns:
+      none: 無地
+      college: 罫線（大学ノート）
+      collegeRtl: 罫線（大学ノート・左右反転）
+      lined: 罫線
+      grid: 方眼
+      dots: ドット
+      staffs: 五線譜
+      tablature: タブ譜
+      cornell: コーネル式
+  photoPdfError:
+    title: エラー
+    message: "PDF ファイルは画像として追加できません。「@:editor.menu.import > PDF」を使用してください。"
+  readOnlyBanner:
+    title: 読み取り専用モード
+    watchingServer: 現在サーバーの更新を監視しています。このモードでは編集できません。
+    corrupted: ノートを読み込めませんでした。破損しているか、まだダウンロード中の可能性があります。
+  versionTooNew:
+    title: このノートは新しいバージョンの BadNotes で編集されています
+    subtitle: このノートを編集すると、一部の情報が失われる可能性があります。それでも編集しますか？
+    allowEditing: 編集を許可
+  quill:
+    typeSomething: ここに入力…
+  hud:
+    unlockZoom: ズームのロックを解除
+    lockZoom: ズームをロック
+    unlockSingleFingerPan: 1 本指でのパンを有効化
+    lockSingleFingerPan: 1 本指でのパンを無効化
+    unlockAxisAlignedPan: 水平・垂直方向へのパン固定を解除
+    lockAxisAlignedPan: パンを水平・垂直方向に固定
+  pages: ページ
+  untitled: 無題
+  needsToSaveBeforeExiting: 変更を保存しています… 完了したらエディタを安全に終了できます

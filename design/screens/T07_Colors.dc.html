@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color palette</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Lora:wght@500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Nunito:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E56CF;text-decoration:none}a:hover{color:#5A43B8}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.pop{position:absolute;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:18px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(0,0,0,.12);padding:16px;box-sizing:border-box;font-family:Inter,system-ui,sans-serif;color:#1C1C1E}
+.pt{font-family:Inter,sans-serif;font-weight:600;font-size:15px;margin:0;letter-spacing:-.1px}
+.ps{font-size:12px;color:#6B6B70;margin-top:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:14px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.tg{width:40px;height:24px;border-radius:99px;background:#E2E1DC;position:relative;display:inline-block;flex:none}
+.tg i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tg.on{background:#6E56CF}
+.tg.on i{left:18px}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;font-size:13px;font-weight:500}
+.ds{font-size:12px;color:#6B6B70;line-height:1.45;margin:-4px 0 6px}
+.sep{height:1px;background:#EFEEEA;margin:10px 0}
+.sg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:#EDEDEA;border-radius:10px}
+.sg .rb{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#55555A}
+.sg .rb.on{background:#FFFFFF;color:#1C1C1E;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.pv{height:80px;border-radius:12px;background:#F6F6F4;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;height:40px;border-radius:10px;padding:0 10px;font-size:13px;font-weight:500;color:#1C1C1E}
+.mi:hover{background:#F4F4F1}
+.sub{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);font-family:Inter,sans-serif;color:#1C1C1E}
+.sb{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.sb.on{background:#F2F2EF}
+.pill{height:32px;padding:0 10px;border-radius:9px;background:#F0EDFC;color:#5A43B8;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.vs{width:1px;height:18px;background:#E7E6E1;margin:0 6px}
+.sw{width:22px;height:22px;margin:0 4px;border-radius:50%}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+.note{position:absolute;font-family:Inter,sans-serif;font-weight:400;font-size:13px;line-height:1.45;color:#3A3A3F;background:#FFFFFF;padding:12px 14px;border:1px solid #E7E6E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dim{position:absolute;inset:0;background:rgba(20,20,22,.28);backdrop-filter:blur(4px)}
+.chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid #E7E6E1;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;background:#FFFFFF;color:#3A3A3F}
+.chip.on{background:#F0EDFC;color:#5A43B8;border-color:#E0D9FA;font-weight:600}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:1px solid #E7E6E1;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;color:#1C1C1E}
+.btn.go{background:#6E56CF;border-color:#6E56CF;color:#FFFFFF;font-weight:600}
+.red{color:#D93A2B}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+<div style="position: absolute; inset: 0"><dc-import name="M_Editor" tool="pen" show-sub="true" show-pop="false" hint-size="1280px,800px"></dc-import></div>
+<div class="pop" style="left: 560px; bottom: 166px; width: 420px">
+  <div class="hd"><h2 class="pt">Color</h2>
+    <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700"><span style="width: 26px; height: 26px; border-radius: 50%; border: 1px solid #E7E6E1; background: {{hex}}"></span>{{hex}}</span></div>
+  <div class="sg" style="margin-top: 12px">
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3"><button class="rb" onClick="{{t.pick}}" style="background: {{t.bg}}; color: {{t.fg}}">{{t.name}}</button></sc-for>
+  </div>
+
+  <sc-if value="{{isPresets}}" hint-placeholder-val="{{ true }}">
+    <div style="display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 10px; margin-top: 16px">
+      <sc-for list="{{presets}}" as="p" hint-placeholder-count="15"><button class="rb" aria-label="{{p.hex}}" onClick="{{p.pick}}" style="height: 36px; border-radius: 50%; background: {{p.hex}}; box-shadow: {{p.ring}}"></button></sc-for>
+      <button class="rb" aria-label="Add color" style="height: 36px; border-radius: 50%; border: 1.5px dashed #CFCEC8; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    <div class="ds" style="margin-top: 14px">Long-press a preset to edit or remove it.</div>
+  </sc-if>
+
+  <sc-if value="{{isCustom}}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{isGrid}}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top: 14px; border-radius: 14px; overflow: hidden; border: 1px solid #E7E6E1">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+          <div style="display: grid; grid-template-columns: repeat(13, minmax(0,1fr))">
+            <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="13"><button class="rb" aria-label="{{c.hex}}" onClick="{{c.pick}}" style="height: 24px; background: {{c.hex}}"></button></sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{isWheel}}" hint-placeholder-val="{{ false }}">
+      <div style="margin: 14px auto 0; width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); display: flex; align-items: center; justify-content: center; position: relative">
+        <div style="width: 160px; height: 160px; border-radius: 50%; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+          <div style="width: 100px; height: 100px; border-radius: 8px; background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, {{hex}}); border: 1px solid #E7E6E1"></div>
+        </div>
+        <span style="position: absolute; right: 4px; top: 92px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #FFFFFF; box-shadow: 0 0 0 1.5px #1C1C1E"></span>
+      </div>
+    </sc-if>
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 14px">
+      <button class="rb chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add to presets</button>
+      <span style="flex: 1; height: 36px; border-radius: 12px; background: #F2F2EF; display: flex; align-items: center; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px">HEX {{hexPlain}}</span>
+      <button class="rb" aria-label="Switch grid or wheel" onClick="{{toggleView}}" style="width: 36px; height: 36px; border-radius: 50%; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); border: 1px solid #E7E6E1"></button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isHistory}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 12px">
+      <sc-for list="{{history}}" as="h" hint-placeholder-count="5">
+        <button class="rb mi" onClick="{{h.pick}}"><span style="width: 28px; height: 28px; border-radius: 50%; background: {{h.hex}}; border: 1px solid #E7E6E1"></span><span style="flex: 1">{{h.hex}}</span><span style="font-size: 11px; color: #6B6B70; font-weight: 500">{{h.when}}</span></button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 0, view: 0, hex: '#FFB74D' }; }
+  renderVals() {
+    const s = this.state;
+    const hsl = (h, sat, l) => { l /= 100; const a = sat * Math.min(l, 1 - l) / 100; const f = n => { const k = (n + h / 30) % 12; const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2, '0'); }; return ('#' + f(0) + f(8) + f(4)).toUpperCase(); };
+    const P = ['#FFB74D','#FF8A65','#F4511E','#EC407A','#AB47BC','#7E57C2','#5C6BC0','#29B6F6','#26C6DA','#26A69A','#43A047','#C0CA33','#8D6E63','#455A64','#1C1C1E'];
+    const pick = (h) => () => this.setState({ hex: h });
+    const rows = [];
+    for (let r = 0; r < 8; r++) {
+      const L = 18 + r * 10;
+      const cells = [{ hex: hsl(0, 0, 8 + r * 12), pick: pick(hsl(0, 0, 8 + r * 12)) }];
+      for (let c = 0; c < 12; c++) { const h = hsl(c * 30, 85, L); cells.push({ hex: h, pick: pick(h) }); }
+      rows.push({ cells });
+    }
+    const H = [['#1C1C1E','just now'],['#2A4BD0','2 min ago'],['#D7372A','10 min ago'],['#FFB74D','today'],['#1F8A70','yesterday']];
+    const names = ['Presets','Custom','History'];
+    return {
+      hex: s.hex, hexPlain: s.hex.replace('#',''),
+      tabs: names.map((n, i) => ({ name: n, bg: i === s.tab ? '#FFFFFF' : 'transparent', fg: i === s.tab ? '#5A43B8' : '#3A3A3F', pick: () => this.setState({ tab: i }) })),
+      isPresets: s.tab === 0, isCustom: s.tab === 1, isHistory: s.tab === 2,
+      isGrid: s.view === 0, isWheel: s.view === 1,
+      toggleView: () => this.setState({ view: s.view ? 0 : 1 }),
+      presets: P.map(h => ({ hex: h, ring: h === s.hex ? '0 0 0 2px #FFFFFF, 0 0 0 3.5px #6E56CF' : 'none', pick: pick(h) })),
+      rows,
+      history: H.map(h => ({ hex: h[0], when: h[1], pick: pick(h[0]) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+common:
+  done: Fertig
+  continueBtn: Weiter
+  cancel: Abbrechen
+home:
+  tabs:
+    home: Start
+    browse: Durchsuchen
+    whiteboard: Whiteboard
+    settings: Einstellungen
+  titles:
+    home: Zuletzt verwendet
+    browse: Durchsuchen
+    whiteboard: Whiteboard
+    settings: Einstellungen
+  tooltips:
+    newNote: Neue Notiz
+    showUpdateDialog: Update-Dialog anzeigen
+    exportNote: Notiz exportieren
+  create:
+    newNote: Neue Notiz
+    importNote: Notiz importieren
+  welcome: Willkommen bei BadNotes
+  invalidFormat: Die ausgewählte Datei wird nicht unterstützt. Bitte wähle eine sbn-, sbn2-, sba- oder PDF-Datei aus.
+  noFiles: Keine Dateien gefunden
+  noPreviewAvailable: Keine Vorschau verfügbar
+  createNewNote: Tippe auf +, um eine neue Notiz zu erstellen
+  backFolder: Zurück zum vorherigen Ordner
+  newFolder:
+    newFolder: Neuer Ordner
+    folderName: Ordnername
+    create: Erstellen
+    folderNameEmpty: Der Ordnername darf nicht leer sein
+    folderNameContainsSlash: Der Ordnername darf keinen Schrägstrich enthalten
+    folderNameExists: Ordner existiert bereits
+  renameNote:
+    renameNote: Notiz umbenennen
+    noteName: Notizname
+    rename: Umbenennen
+    noteNameEmpty: Der Notizname darf nicht leer sein
+    noteNameExists: Eine Notiz mit diesem Namen existiert bereits
+    noteNameForbiddenCharacters: Der Notizname enthält unzulässige Zeichen
+    noteNameReserved: Dieser Notizname ist reserviert
+  moveNote:
+    moveNote: Notiz verschieben
+    moveNotes: $n Notizen verschieben
+    moveName: $f verschieben
+    move: Verschieben
+    renamedTo: Die Notiz wird in $newName umbenannt
+    multipleRenamedTo: "Folgende Notizen werden umbenannt:"
+    numberRenamedTo: $n Notizen werden umbenannt, um Konflikte zu vermeiden
+  deleteNote: Notiz löschen
+  deleteNoteDialog:
+    deleteNotes: $n Notizen löschen
+    deleteName: $f löschen
+    confirmDelete:
+      one: Ausgewählte Notiz endgültig löschen?
+      other: Ausgewählte Notizen endgültig löschen?
+    delete: Löschen
+  renameFolder:
+    renameFolder: Ordner umbenennen
+    folderName: Ordnername
+    rename: Umbenennen
+    folderNameEmpty: Der Ordnername darf nicht leer sein
+    folderNameContainsSlash: Der Ordnername darf keinen Schrägstrich enthalten
+    folderNameExists: Ein Ordner mit diesem Namen existiert bereits
+  deleteFolder:
+    deleteFolder: Ordner löschen
+    deleteName: $f löschen
+    delete: Löschen
+    alsoDeleteContents: Auch alle Notizen in diesem Ordner löschen
+  sort:
+    sortBy: Sortieren nach
+    nameAToZ: Name (A–Z)
+    nameZToA: Name (Z–A)
+    lastModifiedNewToOld: Bearbeitet (neueste zuerst)
+    lastModifiedOldToNew: Bearbeitet (älteste zuerst)
+  layout:
+    layout: Layout
+    masonryGrid: Mauerwerk-Raster
+    simpleGrid: Einfaches Raster
+sentry:
+  consent:
+    title: BadNotes verbessern?
+    description:
+      question: Möchtest du unerwartete Fehler automatisch melden? So kann ich Probleme schneller finden und beheben.
+      scope: Die Berichte können Informationen über den Fehler und dein Gerät enthalten. Ich habe mich bemüht, persönliche Daten herauszufiltern, aber einige könnten trotzdem enthalten sein.
+      currentlyOff: Wenn du zustimmst, wird die Fehlerberichterstattung nach einem Neustart der App aktiviert.
+      currentlyOn: Wenn du deine Zustimmung widerrufst, starte die App bitte neu, um die Fehlerberichterstattung zu deaktivieren.
+      learnMoreInPrivacyPolicy(rich): Mehr dazu in der ${link(Datenschutzerklärung)}.
+    answers:
+      yes: Ja
+      no: Nein
+      later: Später fragen
+settings:
+  prefCategories:
+    general: Allgemein
+    writing: Schreiben
+    editor: Editor
+    performance: Leistung
+    advanced: Erweitert
+  prefLabels:
+    locale: Sprache
+    appTheme: App-Design
+    platform: Designstil
+    layoutSize: Layouttyp
+    customAccentColor: Eigene Akzentfarbe
+    hyperlegibleFont: Schriftart Atkinson Hyperlegible
+    shouldCheckForUpdates: Nach BadNotes-Updates suchen
+    shouldAlwaysAlertForUpdates: Schnellere Updates
+    allowInsecureConnections: Unsichere Verbindungen zulassen
+    syncOnlyOnWifi: Nur über WLAN synchronisieren
+    syncPreviewsOnMobileData: Vorschaubilder über mobile Daten hochladen
+    editorToolbarAlignment: Position der Werkzeugleiste
+    editorToolbarShowInFullscreen: Werkzeugleiste im Vollbildmodus anzeigen
+    editorAutoInvert: Notizen im dunklen Modus invertieren
+    preferGreyscale: Graustufen bevorzugen
+    maxImageSize: Maximale Bildgröße
+    autoClearWhiteboardOnExit: Whiteboard automatisch leeren
+    disableEraserAfterUse: Radierer automatisch deaktivieren
+    hideFingerDrawingToggle: Schalter für Fingerzeichnen ausblenden
+    autoDisableFingerDrawingWhenStylusDetected: Fingerzeichnen automatisch deaktivieren
+    editorPromptRename: Neue Notizen umbenennen lassen
+    recentColorsDontSavePresets: Vordefinierte Farben nicht in den letzten Farben speichern
+    recentColorsLength: Anzahl der gespeicherten letzten Farben
+    printPageIndicators: Seitenzahlen drucken
+    autosave: Automatisch speichern
+    shapeRecognitionDelay: Verzögerung der Formerkennung
+    autoStraightenLines: Linien automatisch begradigen
+    customDataDir: Eigener BadNotes-Ordner
+    sentry: Fehlerberichte
+  prefDescriptions:
+    syncOnlyOnWifi: "Aus: Notizen werden auch über mobile Daten synchronisiert. An: Die Synchronisierung wartet auf WLAN"
+    syncPreviewsOnMobileData: Vorschaubilder warten normalerweise auf WLAN, um Daten zu sparen
+    hyperlegibleFont: Verbessert die Lesbarkeit bei eingeschränktem Sehvermögen
+    allowInsecureConnections: (Nicht empfohlen) BadNotes erlauben, sich mit Servern mit selbstsignierten/nicht vertrauenswürdigen Zertifikaten zu verbinden
+    preferGreyscale: Für E-Ink-Displays
+    autoClearWhiteboardOnExit: Leert das Whiteboard, wenn du die App verlässt
+    disableEraserAfterUse: Wechselt nach dem Radieren automatisch zurück zum Stift
+    maxImageSize: Größere Bilder werden komprimiert
+    hideFingerDrawing:
+      shown: Verhindert versehentliches Umschalten
+      fixedOn: Fingerzeichnen ist dauerhaft aktiviert
+      fixedOff: Fingerzeichnen ist dauerhaft deaktiviert
+    autoDisableFingerDrawingWhenStylusDetected: Fingerzeichnen ausschalten, wenn ein Stift erkannt wird
+    editorPromptRename: Du kannst Notizen jederzeit später umbenennen
+    printPageIndicators: Seitenzahlen in Exporten anzeigen
+    autosave: Nach kurzer Verzögerung automatisch speichern oder nie
+    shapeRecognitionDelay: Wie lange der Stift still gehalten werden muss, bis die Tinte zu einer Form wird
+    autoStraightenLines: Begradigt lange Linien, ohne den Formenstift zu verwenden
+    shouldAlwaysAlertForUpdates: Über Updates informieren, sobald sie verfügbar sind
+    sentry:
+      active: Aktiv
+      inactive: Inaktiv
+      activeUntilRestart: Aktiv bis zum Neustart der App
+      inactiveUntilRestart: Inaktiv bis zum Neustart der App
+  themeModes:
+    system: System
+    light: Hell
+    dark: Dunkel
+  layoutSizes:
+    auto: Automatisch
+    phone: Smartphone
+    tablet: Tablet
+  accentColorPicker:
+    pickAColor: Farbe auswählen
+  systemLanguage: Automatisch
+  axisDirections:
+  - Oben
+  - Rechts
+  - Unten
+  - Links
+  reset:
+    title: Diese Einstellung zurücksetzen?
+    button: Zurücksetzen
+  resyncEverything: Alles neu synchronisieren
+  openDataDir: BadNotes-Ordner öffnen
+  customDataDir:
+    cancel: Abbrechen
+    select: Auswählen
+    mustBeEmpty: Der ausgewählte Ordner muss leer sein
+    mustBeDoneSyncing: Stelle sicher, dass die Synchronisierung abgeschlossen ist, bevor du den Ordner änderst
+    unsupported: Diese Funktion ist derzeit nur für Entwickler gedacht. Ihre Verwendung führt wahrscheinlich zu Datenverlust.
+  autosaveDisabled: Nie
+  shapeRecognitionDisabled: Nie
+logs:
+  logs: Protokolle
+  viewLogs: Protokolle anzeigen
+  debuggingInfo: Protokolle enthalten nützliche Informationen für Fehlersuche und Entwicklung
+  noLogs: Keine Protokolle vorhanden!
+  useTheApp: Protokolle erscheinen hier, während du die App verwendest
+login:
+  title: Anmelden
+  form:
+    agreeToPrivacyPolicy(rich): Mit der Anmeldung stimmst du der ${linkToPrivacyPolicy(Datenschutzerklärung)} zu.
+  signup(rich): Noch kein Konto? ${linkToSignup(Jetzt registrieren)}!
+  notYou(rich): Nicht du? ${undoLogin(Anderes Konto wählen)}.
+  status:
+    loggedOut: Abgemeldet
+    tapToLogin: Tippen, um mit Google Drive zu synchronisieren
+    hi: Hallo, $u!
+    almostDone: Fast bereit zum Synchronisieren – tippe, um die Anmeldung abzuschließen
+    loggedIn: Synchronisierung ist aktiv
+  ncLoginStep:
+    whereToStoreData: "Wähle, wo deine Daten gespeichert werden sollen:"
+    cloudStorage: Google Drive oder OneDrive
+    loginWithGoogleDrive: Weiter mit Google Drive
+    loginWithOneDrive: Weiter mit OneDrive
+    cloudLoginFailed: Anmeldung fehlgeschlagen
+    comingSoon: Demnächst verfügbar
+    badnotesNcServer: Nextcloud-Server von BadNotes
+    otherNcServer: Anderer Nextcloud-Server
+    serverUrl: Server-URL
+    loginWithBadNotes: Mit BadNotes anmelden
+    loginWithNextcloud: Mit Nextcloud anmelden
+    loginFlow:
+      pleaseAuthorize: Bitte erlaube BadNotes den Zugriff auf dein Nextcloud-Konto
+      followPrompts: Bitte folge den Anweisungen in der Nextcloud-Oberfläche
+      browserDidntOpen: Anmeldeseite nicht geöffnet? Hier klicken
+  encLoginStep:
+    enterEncPassword: "Gib zum Schutz deiner Daten bitte dein Verschlüsselungspasswort ein:"
+    newToBadNotes: Neu bei BadNotes? Gib einfach ein neues Verschlüsselungspasswort ein.
+    encPassword: Verschlüsselungspasswort
+    encFaqTitle: Häufig gestellte Fragen
+    wrongEncPassword: Entschlüsselung mit diesem Passwort fehlgeschlagen. Bitte versuche es erneut.
+    connectionFailed: Bei der Verbindung zum Server ist ein Fehler aufgetreten. Bitte versuche es später erneut.
+    encFaq:
+    - q: Was ist ein Verschlüsselungspasswort? Warum zwei Passwörter?
+      a: |-
+        Dein Google- oder Microsoft-Konto dient dem Zugriff auf die Cloud. Das Verschlüsselungspasswort „verschlüsselt“ deine Daten, bevor sie überhaupt in die Cloud gelangen.
+        Selbst wenn jemand Zugriff auf dein Google- oder Microsoft-Konto erhält, bleiben deine Notizen sicher und mit einem separaten Passwort verschlüsselt. So hast du eine zweite Sicherheitsebene für deine Daten.
+        Ohne dein Verschlüsselungspasswort kann niemand auf deine Notizen auf dem Server zugreifen. Das bedeutet aber auch: Wenn du dein Verschlüsselungspasswort vergisst, verlierst du den Zugriff auf deine Daten.
+    - q: Ich habe noch kein Verschlüsselungspasswort festgelegt. Woher bekomme ich es?
+      a: |-
+        Wähle ein neues Verschlüsselungspasswort und gib es oben ein.
+        BadNotes erzeugt deine Verschlüsselungsschlüssel automatisch aus diesem Passwort.
+    - q: Kann ich dasselbe Passwort wie für mein Google- oder Microsoft-Konto verwenden?
+      a: Bitte nicht. Ein separates Verschlüsselungspasswort schützt deine Notizen auch dann, wenn jemand in dieses Konto eindringt.
+profile:
+  title: Mein Profil
+  logout: Abmelden
+  quotaUsage: Du nutzt $used von $total ($percent %)
+  quotaUsageUncapped: Du nutzt $used
+  connectedTo: Verbunden mit
+  lastSynced: Zuletzt synchronisiert $time
+  notSyncedYet: Noch nicht synchronisiert
+  justNow: gerade eben
+  minutesAgo: vor $n Min.
+  hoursAgo: vor $n Std.
+  filesWaiting: $n Dateien warten auf Synchronisierung
+  signInAgainNeeded: Melde dich erneut an, um weiter zu synchronisieren
+  signInAgain: Erneut anmelden
+  wrongAccount: Bitte wähle $email
+  quickLinks:
+    serverHomepage: Server-Startseite
+    deleteAccount: Konto löschen
+  faqTitle: Häufig gestellte Fragen
+  faq:
+  - q: Verliere ich meine Notizen, wenn ich mich abmelde?
+    a: Nein. Deine Notizen bleiben sowohl auf deinem Gerät als auch auf dem Server. Sie werden erst wieder mit dem Server synchronisiert, wenn du dich erneut anmeldest. Stelle vor dem Abmelden sicher, dass die Synchronisierung abgeschlossen ist, damit keine Daten verloren gehen (siehe Synchronisierungsfortschritt auf dem Startbildschirm).
+  - q: Wo werden meine Notizen gespeichert?
+    a: In einem Ordner „BadNotes“ in deinem Google Drive oder „Apps/BadNotes“ in deinem OneDrive. Die Dateien sind verschlüsselt und lassen sich nur in BadNotes öffnen.
+  - q: Wie ändere ich mein Verschlüsselungspasswort?
+    a: |-
+      0. Stelle sicher, dass die Synchronisierung abgeschlossen ist (siehe Synchronisierungsfortschritt auf dem Startbildschirm).
+      1. Melde dich von BadNotes ab.
+      2. Lösche den Ordner „BadNotes“ in deinem Google Drive oder OneDrive. Dadurch werden alle deine Notizen aus der Cloud gelöscht, nicht von deinem Gerät.
+      3. Melde dich wieder bei BadNotes an. Bei der Anmeldung kannst du ein neues Verschlüsselungspasswort wählen.
+      4. Vergiss nicht, dich auch auf deinen anderen Geräten bei BadNotes ab- und wieder anzumelden.
+  - q: Wie kann ich mein Konto löschen?
+    a: |-
+      BadNotes hat kein eigenes Konto. Melde dich ab und lösche dann den Ordner „BadNotes“ in deinem Google Drive oder OneDrive.
+      Um BadNotes auch den Zugriff zu entziehen, besuche myaccount.google.com/permissions (Google) oder account.live.com/consent/Manage (Microsoft).
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: Update verfügbar
+  updateAvailableDescription: "Eine neue Version der App ist verfügbar:"
+  update: Aktualisieren
+  downloadNotAvailableYet: Der Download ist für deine Plattform noch nicht verfügbar. Bitte schau in Kürze wieder vorbei.
+editor:
+  toolbar:
+    toggleColors: Farben ein/aus (Ctrl C)
+    select: Auswählen
+    toggleEraser: Radierer ein/aus (Ctrl E)
+    photo: Bilder
+    text: Text
+    toggleFingerDrawing: Fingerzeichnen ein/aus (Ctrl F)
+    undo: Rückgängig
+    redo: Wiederholen
+    export: Exportieren (Ctrl Shift S)
+    exportAs: "Exportieren als:"
+    fullscreen: Vollbild ein/aus (F11)
+  pens:
+    fountainPen: Füller
+    ballpointPen: Kugelschreiber
+    highlighter: Textmarker
+    pencil: Bleistift
+    shapePen: Formenstift
+    laserPointer: Laserpointer
+  penOptions:
+    size: Größe
+  colors:
+    colorPicker: Farbauswahl
+    customBrightnessHue: Eigenes $b $h
+    customHue: Eigenes $h
+    dark: dunkel
+    light: hell
+    black: Schwarz
+    darkGrey: Dunkelgrau
+    grey: Grau
+    lightGrey: Hellgrau
+    white: Weiß
+    red: Rot
+    green: Grün
+    cyan: Cyan
+    blue: Blau
+    yellow: Gelb
+    purple: Lila
+    pink: Pink
+    orange: Orange
+    pastelRed: Pastellrot
+    pastelOrange: Pastellorange
+    pastelYellow: Pastellgelb
+    pastelGreen: Pastellgrün
+    pastelCyan: Pastellcyan
+    pastelBlue: Pastellblau
+    pastelPurple: Pastelllila
+    pastelPink: Pastellpink
+  imageOptions:
+    title: Bildoptionen
+    invertible: Invertierbar
+    download: Herunterladen
+    setAsBackground: Als Hintergrund festlegen
+    removeAsBackground: Als Hintergrund entfernen
+    delete: Löschen
+  selectionBar:
+    delete: Löschen
+    duplicate: Duplizieren
+  menu:
+    clearPage: Seite $page/$totalPages leeren
+    clearAllPages: Alle Seiten leeren
+    insertPage: Seite darunter einfügen
+    duplicatePage: Seite duplizieren
+    deletePage: Seite löschen
+    lineHeight: Zeilenhöhe
+    lineHeightDescription: Steuert auch die Textgröße bei getippten Notizen
+    lineThickness: Linienstärke
+    lineThicknessDescription: Stärke der Hintergrundlinien
+    backgroundImageFit: Hintergrundbild anpassen
+    backgroundPattern: Hintergrundmuster
+    import: Importieren
+    watchServer: Auf Updates vom Server achten
+    watchServerReadOnly: Bearbeiten ist deaktiviert, während der Server beobachtet wird
+    boxFits:
+      fill: Strecken
+      cover: Füllen
+      contain: Einpassen
+    bgPatterns:
+      none: Leer
+      college: Liniert (College)
+      collegeRtl: Liniert (College, umgekehrt)
+      lined: Liniert
+      grid: Kariert
+      dots: Gepunktet
+      staffs: Notenlinien
+      tablature: Tabulatur
+      cornell: Cornell
+  photoPdfError:
+    title: Fehler
+    message: "PDF-Dateien können nicht als Bild hinzugefügt werden. Verwende dafür \"@:editor.menu.import > PDF\"."
+  readOnlyBanner:
+    title: Schreibgeschützter Modus
+    watchingServer: Du beobachtest gerade Updates vom Server. In diesem Modus ist Bearbeiten deaktiviert.
+    corrupted: Notiz konnte nicht geladen werden. Sie ist möglicherweise beschädigt oder wird noch heruntergeladen.
+  versionTooNew:
+    title: Diese Notiz wurde mit einer neueren Version von BadNotes bearbeitet
+    subtitle: Beim Bearbeiten dieser Notiz können Informationen verloren gehen. Möchtest du das ignorieren und sie trotzdem bearbeiten?
+    allowEditing: Bearbeiten erlauben
+  quill:
+    typeSomething: Hier etwas eingeben…
+  hud:
+    unlockZoom: Zoom entsperren
+    lockZoom: Zoom sperren
+    unlockSingleFingerPan: Verschieben mit einem Finger aktivieren
+    lockSingleFingerPan: Verschieben mit einem Finger deaktivieren
+    unlockAxisAlignedPan: Verschieben nur horizontal oder vertikal aufheben
+    lockAxisAlignedPan: Verschieben nur horizontal oder vertikal
+  pages: Seiten
+  untitled: Unbenannt
+  needsToSaveBeforeExiting: Änderungen werden gespeichert… Du kannst den Editor verlassen, sobald der Vorgang abgeschlossen ist

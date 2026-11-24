@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BadNotes Editor — Minimal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.gi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.gi:hover{background:#EDEDEA}
+.tl{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.tl.on{background:#F0EDFC;color:#6E56CF}
+.hw{font-family:Caveat,cursive;font-weight:700;color:#2B4ACB;position:absolute;white-space:nowrap}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:16px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.sw{width:22px;height:22px;border-radius:50%;margin:0 4px}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #F6F6F4; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+
+  <header style="position: absolute; left: 16px; right: 16px; top: 12px; height: 40px; display: flex; align-items: center; gap: 6px">
+    <button class="rb gi" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button class="rb gi" aria-label="Pages"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="16" rx="1.5"/><rect x="13" y="4" width="7" height="16" rx="1.5"/></svg></button>
+    <div style="display: flex; gap: 2px; margin-left: 8px">
+      <span style="height: 32px; padding: 0 12px; border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,.08); font-size: 13px; font-weight: 600; display: flex; align-items: center">Physics — Class 12</span>
+      <span style="height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; color: #6B6B70; display: flex; align-items: center">Maths Formula</span>
+    </div>
+    <span style="flex: 1"></span>
+    <span style="height: 30px; padding: 0 10px; border-radius: 8px; background: #F0EDFC; color: #5A43B8; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-right: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/></svg>18:42</span>
+    <button class="rb gi" aria-label="Draw with finger (off)" title="Draw with finger"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V5a1.5 1.5 0 0 1 3 0v6M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V5.5a1.5 1.5 0 0 1 3 0V14c0 4-3 7-7 7-3 0-5-2-6-4l-2-4a1.5 1.5 0 0 1 2.5-1.5L8 13"/></svg></button>
+    <button class="rb gi" aria-label="Undo"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button class="rb gi" aria-label="Redo" style="color: #B4B4B8"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+    <span style="width: 1px; height: 20px; background: #E2E1DC; margin: 0 4px"></span>
+    <button class="rb gi" aria-label="Add page"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M12 10v6M9 13h6"/></svg></button>
+    <button class="rb gi" aria-label="Share"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/></svg></button>
+    <button class="rb gi" aria-label="More"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  </header>
+
+  <div style="position: absolute; left: 340px; top: {{pageTop}}; width: 600px; height: 800px; background-color: #FFFFFF; background-image: linear-gradient(#E3E8F3 1px, transparent 1px); background-size: 100% 32px; background-position: 0 86px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 12px 40px rgba(0,0,0,.07)">
+    <div class="hw" style="left: 60px; top: 36px; font-size: 38px; color: #1C1C1E">Ch 5 — Laws of Motion</div>
+    <div class="hw" style="left: 60px; top: 120px; font-size: 26px">1st law → inertia: stays at rest or in motion</div>
+    <div style="position: absolute; left: 56px; top: 166px; width: 232px; height: 22px; background: rgba(255,214,60,.45); border-radius: 10px"></div>
+    <div class="hw" style="left: 60px; top: 152px; font-size: 26px">2nd law: F = m · a</div>
+    <svg width="420" height="150" viewBox="0 0 420 150" fill="none" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 70px; top: 206px" aria-hidden="true">
+      <path d="M20 120h360" stroke="#1C1C1E" stroke-width="2.2"/>
+      <rect x="150" y="62" width="90" height="58" rx="6" stroke="#2B4ACB" stroke-width="2.4"/>
+      <path d="M240 91h110M336 81l14 10-14 10" stroke="#E03131" stroke-width="2.4"/>
+      <path d="M150 91H70M84 81l-14 10 14 10" stroke="#2B4ACB" stroke-width="2.4"/>
+    </svg>
+    <div class="hw" style="left: 60px; top: 376px; font-size: 26px; color: #E03131">3rd law: action = − reaction</div>
+  </div>
+
+  <sc-if value="{{isTop}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 50%; top: 722px; transform: translateX(-50%); height: 36px; padding: 0 14px; border-radius: 10px; border: 1.5px dashed #CFCEC8; color: #8A8A90; font-size: 12px; display: flex; align-items: center">Drop here to dock at the bottom</div></sc-if>
+  <span style="position: absolute; right: 20px; bottom: 30px; font-size: 12px; color: #6B6B70; font-weight: 500">12 of 24 · 100%</span>
+
+  <sc-if value="{{showPop}}" hint-placeholder-val="{{ true }}">
+  <!-- Pen popup -->
+  <div role="dialog" aria-label="Pen" style="position: absolute; left: 402px; top: {{popTop}}; bottom: {{popBottom}}; width: 320px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 18px; box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 18px 48px rgba(0,0,0,.12); padding: 16px; box-sizing: border-box">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 15px; font-weight: 600">Pen</span>
+      <span style="font-size: 12px; color: #6B6B70">Fountain</span>
+    </div>
+    <div style="height: 76px; margin-top: 12px; border-radius: 12px; background: #F6F6F4; display: flex; align-items: center; justify-content: center">
+      <svg width="250" height="46" viewBox="0 0 300 60" aria-hidden="true"><path d="M10 40 C 60 0, 100 0, 150 30 S 240 60, 290 20 L 290 25 C 240 64, 200 40, 150 37 S 60 10, 10 45 Z" fill="#1C1C1E"/></svg>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 10px">
+      <button class="rb ty on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l5 8-5 7-5-7zM12 11v3M8 21h8"/></svg>Fountain</button>
+      <button class="rb ty"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l4 4L8 20l-5 1 1-5zM14 6l4 4"/></svg>Ball</button>
+      <button class="rb ty"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M20 3c-4 3-8 7-10 10l2 2c3-2 7-6 10-10zM9 14c-3 0-5 2-5 6 3 0 6-2 6-5"/></svg>Brush</button>
+      <button class="rb ty"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M5 19l4-12h6l4 12zM9 7l3-4 3 4M12 11v4"/></svg>Calligraphy</button>
+    </div>
+    <div class="lab"><span>Tip sharpness</span><span>42%</span></div>
+    <div class="sl"><div class="tr"></div><div class="fi" style="width: 42%"></div><div class="kn" style="left: 42%"></div></div>
+    <div class="lab"><span>Pressure sensitivity</span><span>60%</span></div>
+    <div class="sl"><div class="tr"></div><div class="fi" style="width: 60%"></div><div class="kn" style="left: 60%"></div></div>
+    <div class="lab"><span>Stabilization</span><span>20%</span></div>
+    <div class="sl"><div class="tr"></div><div class="fi" style="width: 20%"></div><div class="kn" style="left: 20%"></div></div>
+    <div style="height: 1px; background: #EFEEEA; margin: 14px 0 4px"></div>
+    <button class="rb" style="width: 100%; height: 40px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500">Pen settings<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8A90" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+
+  </sc-if>
+  <sc-if value="{{showSub}}" hint-placeholder-val="{{ true }}">
+  <!-- Sub bar -->
+  <div role="toolbar" aria-label="Pen options" style="position: absolute; left: 50%; top: {{subTop}}; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 5px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.06)">
+    <button class="rb" style="height: 32px; padding: 0 10px; border-radius: 9px; background: #F0EDFC; color: #5A43B8; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px">Fountain<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+    <span style="width: 1px; height: 18px; background: #E7E6E1; margin: 0 6px"></span>
+    <button class="rb" aria-label="Thin" style="width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center"><span style="width: 14px; height: 2px; border-radius: 2px; background: #1C1C1E"></span></button>
+    <button class="rb" aria-label="Medium" style="width: 30px; height: 30px; border-radius: 8px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><span style="width: 14px; height: 3.5px; border-radius: 2px; background: #1C1C1E"></span></button>
+    <button class="rb" aria-label="Thick" style="width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center"><span style="width: 14px; height: 6px; border-radius: 3px; background: #1C1C1E"></span></button>
+    <span style="width: 1px; height: 18px; background: #E7E6E1; margin: 0 6px"></span>
+    <button class="rb sw on" aria-label="Black" style="background: #1C1C1E"></button>
+    <button class="rb sw" aria-label="Blue" style="background: #2B4ACB"></button>
+    <button class="rb sw" aria-label="Red" style="background: #E03131"></button>
+    <button class="rb sw" aria-label="Green" style="background: #2F9E77"></button>
+    <button class="rb sw" aria-label="More colors" style="background: conic-gradient(#E03131, #F2C94C, #2F9E77, #2B4ACB, #6E56CF, #E03131)"></button>
+  </div>
+
+  </sc-if>
+  <!-- Tool dock -->
+  <nav aria-label="Tools" style="position: absolute; left: 50%; top: {{dockTop}}; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 5px; background: rgba(255,255,255,.94); border: 1px solid #E7E6E1; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.08)">
+    <button class="rb" aria-label="Move toolbar to top or bottom" onClick="{{flip}}" style="width: 22px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #A4A4AA; cursor: grab"><svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.6"/><circle cx="10" cy="4" r="1.6"/><circle cx="4" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="4" cy="16" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button>
+    <sc-for list="{{tools}}" as="t" hint-placeholder-count="9">
+      <button class="rb tl" aria-label="{{t.label}}" style="background: {{t.bg}}; color: {{t.fg}}"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="{{t.dash}}" aria-hidden="true"><path d="{{t.d}}"/></svg></button>
+    </sc-for>
+    <span style="width: 1px; height: 22px; background: #E7E6E1; margin: 0 6px"></span>
+    <button class="rb tl" aria-label="Insert" style="background: {{insBg}}; color: #FFFFFF"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"position":{"editor":"enum","options":["bottom","top"],"default":"bottom"},"tool":{"editor":"enum","options":["lasso","pen","highlighter","pencil","smart","tape","shapes","eraser","laser","insert","none"],"default":"pen"},"showSub":{"editor":"boolean","default":true},"showPop":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { pos: null }; }
+  renderVals() {
+    const pos = this.state.pos || this.props.position || 'bottom';
+    const top = pos === 'top';
+    const off = v => v === false || v === 'false';
+    const tool = this.props.tool ?? 'pen';
+    const T = [
+      ['lasso', 'Lasso', 'M12 4a8 7 0 1 1-7 10M5 20l0-6 6 1', '2.5 2.5'],
+      ['pen', 'Pen', 'M12 3l5 8-5 7-5-7zM12 11v3M8 21h8', ''],
+      ['highlighter', 'Highlighter', 'M15 4l5 5-9 9H7v-4zM4 21h8', ''],
+      ['pencil', 'Pencil', 'M4 20l1-5L16 4l4 4L9 19zM14 6l4 4', ''],
+      ['smart', 'Draw shapes', 'M3 15c2-5 4 5 6 0M13 8h7v7h-7z', ''],
+      ['tape', 'Tape', 'M3 8h18v8H3zM8 8l-3 8M13 8l-3 8M18 8l-3 8', ''],
+      ['shapes', 'Shapes', 'M4 9a5 5 0 1 0 10 0a5 5 0 1 0-10 0M12 13h8v8h-8z', ''],
+      ['eraser', 'Eraser', 'M9 20l-5-5L15 4l5 5L9 20zM4 20h16M9 10l5 5', ''],
+      ['laser', 'Laser', 'M13 3l-6 10h5l-1 8 6-11h-5z', '']
+    ];
+    return {
+      showSub: !off(this.props.showSub), showPop: !off(this.props.showPop),
+      insBg: tool === 'insert' ? '#4B3A9E' : '#6E56CF',
+      tools: T.map(t => ({ label: t[1], d: t[2], dash: t[3] || 'none', bg: t[0] === tool ? '#F0EDFC' : 'transparent', fg: t[0] === tool ? '#6E56CF' : '#3A3A3F' })),
+      isTop: top,
+      flip: () => this.setState({ pos: top ? 'bottom' : 'top' }),
+      dockTop: top ? '60px' : '724px',
+      subTop: top ? '120px' : '664px',
+      popTop: top ? '172px' : 'auto',
+      popBottom: top ? 'auto' : '150px',
+      pageTop: top ? '130px' : '66px'
+    };
+  }
+}
+</script>
+</body>
+</html>

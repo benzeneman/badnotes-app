@@ -1,0 +1,11 @@
+tags:
+  # Pictures of the old look, made on another machine with other fonts.
+  golden:
+  # Talk to a real server or the upstream project's releases.
+  network:
+  # The editor used as a hand would, with pictures of each step. Slow:
+  # run by the scenarios workflow.
+  scenario:
+  # The app's screens next to the design mockups. Slow: run by the
+  # design-shots workflow.
+  design:

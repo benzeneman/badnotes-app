@@ -1,0 +1,391 @@
+common:
+  done: Готово
+  continueBtn: Продолжить
+  cancel: Отмена
+home:
+  tabs:
+    home: Главная
+    browse: Обзор
+    whiteboard: Доска
+    settings: Настройки
+  titles:
+    home: Недавние заметки
+    browse: Обзор
+    whiteboard: Доска
+    settings: Настройки
+  tooltips:
+    newNote: Новая заметка
+    showUpdateDialog: Показать окно обновления
+    exportNote: Экспортировать заметку
+  create:
+    newNote: Новая заметка
+    importNote: Импортировать заметку
+  welcome: Добро пожаловать в BadNotes
+  invalidFormat: Выбранный файл не поддерживается. Выберите файл sbn, sbn2, sba или pdf.
+  noFiles: Файлы не найдены
+  noPreviewAvailable: Предпросмотр недоступен
+  createNewNote: Нажмите +, чтобы создать заметку
+  backFolder: Вернуться в предыдущую папку
+  newFolder:
+    newFolder: Новая папка
+    folderName: Имя папки
+    create: Создать
+    folderNameEmpty: Имя папки не может быть пустым
+    folderNameContainsSlash: Имя папки не может содержать косую черту
+    folderNameExists: Папка уже существует
+  renameNote:
+    renameNote: Переименовать заметку
+    noteName: Имя заметки
+    rename: Переименовать
+    noteNameEmpty: Имя заметки не может быть пустым
+    noteNameExists: Заметка с таким именем уже существует
+    noteNameForbiddenCharacters: Имя заметки содержит недопустимые символы
+    noteNameReserved: Это имя зарезервировано
+  moveNote:
+    moveNote: Переместить заметку
+    moveNotes: "Переместить заметки: $n"
+    moveName: Переместить $f
+    move: Переместить
+    renamedTo: Заметка будет переименована в $newName
+    multipleRenamedTo: "Следующие заметки будут переименованы:"
+    numberRenamedTo: "Заметок будет переименовано во избежание конфликтов: $n"
+  deleteNote: Удалить заметку
+  deleteNoteDialog:
+    deleteNotes: "Удалить заметки: $n"
+    deleteName: Удалить $f
+    confirmDelete:
+      one: Удалить выбранную заметку без возможности восстановления?
+      other: Удалить выбранные заметки без возможности восстановления?
+    delete: Удалить
+  renameFolder:
+    renameFolder: Переименовать папку
+    folderName: Имя папки
+    rename: Переименовать
+    folderNameEmpty: Имя папки не может быть пустым
+    folderNameContainsSlash: Имя папки не может содержать косую черту
+    folderNameExists: Папка с таким именем уже существует
+  deleteFolder:
+    deleteFolder: Удалить папку
+    deleteName: Удалить $f
+    delete: Удалить
+    alsoDeleteContents: Также удалить все заметки в этой папке
+  sort:
+    sortBy: Сортировка
+    nameAToZ: Имя (А–Я)
+    nameZToA: Имя (Я–А)
+    lastModifiedNewToOld: Изменено (сначала новые)
+    lastModifiedOldToNew: Изменено (сначала старые)
+  layout:
+    layout: Вид
+    masonryGrid: Плиточная сетка
+    simpleGrid: Простая сетка
+sentry:
+  consent:
+    title: Помочь улучшить BadNotes?
+    description:
+      question: Автоматически отправлять отчёты о непредвиденных ошибках? Это поможет мне быстрее находить и исправлять проблемы.
+      scope: Отчёты могут содержать сведения об ошибке и вашем устройстве. Я сделал всё возможное, чтобы отфильтровать личные данные, но часть из них может остаться.
+      currentlyOff: Если вы дадите согласие, отправка отчётов об ошибках включится после перезапуска приложения.
+      currentlyOn: Если вы отзовёте согласие, перезапустите приложение, чтобы отключить отправку отчётов об ошибках.
+      learnMoreInPrivacyPolicy(rich): Подробнее в ${link(политике конфиденциальности)}.
+    answers:
+      yes: Да
+      no: Нет
+      later: Спросить позже
+settings:
+  prefCategories:
+    general: Общие
+    writing: Письмо
+    editor: Редактор
+    performance: Производительность
+    advanced: Дополнительно
+  prefLabels:
+    locale: Язык
+    appTheme: Тема приложения
+    platform: Стиль оформления
+    layoutSize: Тип макета
+    customAccentColor: Свой акцентный цвет
+    hyperlegibleFont: Шрифт Atkinson Hyperlegible
+    shouldCheckForUpdates: Проверять обновления BadNotes
+    shouldAlwaysAlertForUpdates: Быстрые обновления
+    allowInsecureConnections: Разрешить небезопасные подключения
+    syncOnlyOnWifi: Синхронизация только по Wi-Fi
+    syncPreviewsOnMobileData: Загружать превью через мобильную сеть
+    editorToolbarAlignment: Положение панели инструментов
+    editorToolbarShowInFullscreen: Показывать панель инструментов в полноэкранном режиме
+    editorAutoInvert: Инвертировать заметки в тёмной теме
+    preferGreyscale: Предпочитать оттенки серого
+    maxImageSize: Максимальный размер изображения
+    autoClearWhiteboardOnExit: Автоочистка доски
+    disableEraserAfterUse: Автоотключение ластика
+    hideFingerDrawingToggle: Скрыть переключатель рисования пальцем
+    autoDisableFingerDrawingWhenStylusDetected: Автоотключение рисования пальцем
+    editorPromptRename: Предлагать переименовать новые заметки
+    recentColorsDontSavePresets: Не сохранять стандартные цвета в недавних
+    recentColorsLength: Сколько недавних цветов хранить
+    printPageIndicators: Печатать номера страниц
+    autosave: Автосохранение
+    shapeRecognitionDelay: Задержка распознавания фигур
+    autoStraightenLines: Автовыпрямление линий
+    customDataDir: Своя папка BadNotes
+    sentry: Отчёты об ошибках
+  prefDescriptions:
+    syncOnlyOnWifi: "Выкл.: заметки синхронизируются и через мобильную сеть. Вкл.: синхронизация ждёт Wi-Fi"
+    syncPreviewsOnMobileData: Обычно миниатюры заметок ждут Wi-Fi, чтобы экономить трафик
+    hyperlegibleFont: Улучшает читаемость для слабовидящих
+    allowInsecureConnections: (Не рекомендуется) Разрешить BadNotes подключаться к серверам с самоподписанными или ненадёжными сертификатами
+    preferGreyscale: Для экранов на электронных чернилах
+    autoClearWhiteboardOnExit: Очищает доску после выхода из приложения
+    disableEraserAfterUse: Автоматически возвращает перо после использования ластика
+    maxImageSize: Более крупные изображения будут сжаты
+    hideFingerDrawing:
+      shown: Защищает от случайного переключения
+      fixedOn: Рисование пальцем всегда включено
+      fixedOff: Рисование пальцем всегда выключено
+    autoDisableFingerDrawingWhenStylusDetected: Отключать рисование пальцем при обнаружении стилуса
+    editorPromptRename: Переименовать заметку можно и позже
+    printPageIndicators: Показывать номера страниц при экспорте
+    autosave: Автосохранение после короткой паузы или никогда
+    shapeRecognitionDelay: Сколько держать перо неподвижно, прежде чем линия превратится в фигуру
+    autoStraightenLines: Выпрямляет длинные линии без пера для фигур
+    shouldAlwaysAlertForUpdates: Сообщать об обновлениях сразу после их выхода
+    sentry:
+      active: Включено
+      inactive: Выключено
+      activeUntilRestart: Включено до перезапуска приложения
+      inactiveUntilRestart: Выключено до перезапуска приложения
+  themeModes:
+    system: Системная
+    light: Светлая
+    dark: Тёмная
+  layoutSizes:
+    auto: Авто
+    phone: Телефон
+    tablet: Планшет
+  accentColorPicker:
+    pickAColor: Выберите цвет
+  systemLanguage: Авто
+  axisDirections:
+  - Сверху
+  - Справа
+  - Снизу
+  - Слева
+  reset:
+    title: Сбросить эту настройку?
+    button: Сбросить
+  resyncEverything: Синхронизировать всё заново
+  openDataDir: Открыть папку BadNotes
+  customDataDir:
+    cancel: Отмена
+    select: Выбрать
+    mustBeEmpty: Выбранная папка должна быть пустой
+    mustBeDoneSyncing: Перед сменой папки дождитесь окончания синхронизации
+    unsupported: Эта функция пока только для разработчиков. Её использование, скорее всего, приведёт к потере данных.
+  autosaveDisabled: Никогда
+  shapeRecognitionDisabled: Никогда
+logs:
+  logs: Журнал
+  viewLogs: Открыть журнал
+  debuggingInfo: Журнал содержит сведения, полезные для отладки и разработки
+  noLogs: Записей нет!
+  useTheApp: Записи появятся здесь по мере использования приложения
+login:
+  title: Вход
+  form:
+    agreeToPrivacyPolicy(rich): Входя в аккаунт, вы соглашаетесь с ${linkToPrivacyPolicy(политикой конфиденциальности)}.
+  signup(rich): Ещё нет аккаунта? ${linkToSignup(Зарегистрируйтесь)}!
+  notYou(rich): Это не вы? ${undoLogin(Выберите другой аккаунт)}.
+  status:
+    loggedOut: Вход не выполнен
+    tapToLogin: Нажмите, чтобы синхронизировать с Google Drive
+    hi: Привет, $u!
+    almostDone: Синхронизация почти готова, нажмите, чтобы завершить вход
+    loggedIn: Синхронизация включена
+  ncLoginStep:
+    whereToStoreData: "Выберите, где хранить данные:"
+    cloudStorage: Google Drive или OneDrive
+    loginWithGoogleDrive: Продолжить с Google Drive
+    loginWithOneDrive: Продолжить с OneDrive
+    cloudLoginFailed: Не удалось войти
+    comingSoon: Скоро
+    badnotesNcServer: Сервер Nextcloud от BadNotes
+    otherNcServer: Другой сервер Nextcloud
+    serverUrl: Адрес сервера
+    loginWithBadNotes: Войти через BadNotes
+    loginWithNextcloud: Войти через Nextcloud
+    loginFlow:
+      pleaseAuthorize: Разрешите BadNotes доступ к вашему аккаунту Nextcloud
+      followPrompts: Следуйте подсказкам в интерфейсе Nextcloud
+      browserDidntOpen: Страница входа не открылась? Нажмите здесь
+  encLoginStep:
+    enterEncPassword: "Для защиты данных введите пароль шифрования:"
+    newToBadNotes: Впервые в BadNotes? Просто придумайте новый пароль шифрования.
+    encPassword: Пароль шифрования
+    encFaqTitle: Частые вопросы
+    wrongEncPassword: Не удалось расшифровать данные с этим паролем. Попробуйте ввести его ещё раз.
+    connectionFailed: Не удалось подключиться к серверу. Попробуйте позже.
+    encFaq:
+    - q: Что такое пароль шифрования? Зачем два пароля?
+      a: |-
+        Аккаунт Google или Microsoft нужен для доступа к облаку. Пароль шифрования «перемешивает» ваши данные ещё до того, как они попадут в облако.
+        Даже если кто-то получит доступ к вашему аккаунту Google или Microsoft, заметки останутся в безопасности, ведь они зашифрованы отдельным паролем. Это второй уровень защиты ваших данных.
+        Без пароля шифрования никто не сможет открыть ваши заметки на сервере, но это значит и то, что, забыв пароль шифрования, вы потеряете доступ к своим данным.
+    - q: Я ещё не задавал пароль шифрования. Где его взять?
+      a: |-
+        Придумайте новый пароль шифрования и введите его выше.
+        BadNotes автоматически создаст из него ключи шифрования.
+    - q: Можно ли использовать тот же пароль, что и для аккаунта Google или Microsoft?
+      a: Лучше не надо. Отдельный пароль шифрования защитит заметки, даже если кто-то войдёт в этот аккаунт.
+profile:
+  title: Мой профиль
+  logout: Выйти
+  quotaUsage: Использовано $used из $total ($percent%)
+  quotaUsageUncapped: Использовано $used
+  connectedTo: Подключено к
+  lastSynced: Синхронизировано $time
+  notSyncedYet: Ещё не синхронизировано
+  justNow: только что
+  minutesAgo: $n мин назад
+  hoursAgo: $n ч назад
+  filesWaiting: "Файлов ожидает синхронизации: $n"
+  signInAgainNeeded: Войдите снова, чтобы продолжить синхронизацию
+  signInAgain: Войти снова
+  wrongAccount: Выберите $email
+  quickLinks:
+    serverHomepage: Сайт сервера
+    deleteAccount: Удалить аккаунт
+  faqTitle: Частые вопросы
+  faq:
+  - q: Потеряю ли я заметки, если выйду из аккаунта?
+    a: Нет. Заметки останутся и на устройстве, и на сервере, но не будут синхронизироваться, пока вы не войдёте снова. Перед выходом дождитесь окончания синхронизации, чтобы не потерять данные (ход синхронизации виден на главном экране).
+  - q: Где хранятся мои заметки?
+    a: В папке «BadNotes» на Google Drive или «Apps/BadNotes» в OneDrive. Файлы зашифрованы, поэтому открыть их можно только в BadNotes.
+  - q: Как сменить пароль шифрования?
+    a: |-
+      0. Дождитесь окончания синхронизации (ход синхронизации виден на главном экране).
+      1. Выйдите из BadNotes.
+      2. Удалите папку «BadNotes» на Google Drive или в OneDrive. Это удалит все заметки из облака, но не с устройства.
+      3. Снова войдите в BadNotes. При входе можно задать новый пароль шифрования.
+      4. Не забудьте выйти и снова войти в BadNotes и на других устройствах.
+  - q: Как удалить аккаунт?
+    a: |-
+      У BadNotes нет собственного аккаунта. Выйдите, затем удалите папку «BadNotes» на Google Drive или в OneDrive.
+      Чтобы также отозвать доступ BadNotes, откройте myaccount.google.com/permissions (Google) или account.live.com/consent/Manage (Microsoft).
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: Доступно обновление
+  updateAvailableDescription: "Доступна новая версия приложения:"
+  update: Обновить
+  downloadNotAvailableYet: Загрузка для вашей платформы пока недоступна. Загляните чуть позже.
+editor:
+  toolbar:
+    toggleColors: Цвета (Ctrl C)
+    select: Выделение
+    toggleEraser: Ластик (Ctrl E)
+    photo: Изображения
+    text: Текст
+    toggleFingerDrawing: Рисование пальцем (Ctrl F)
+    undo: Отменить
+    redo: Повторить
+    export: Экспорт (Ctrl Shift S)
+    exportAs: "Экспортировать как:"
+    fullscreen: Полноэкранный режим (F11)
+  pens:
+    fountainPen: Перьевая ручка
+    ballpointPen: Шариковая ручка
+    highlighter: Маркер
+    pencil: Карандаш
+    shapePen: Перо для фигур
+    laserPointer: Лазерная указка
+  penOptions:
+    size: Размер
+  colors:
+    colorPicker: Выбор цвета
+    customBrightnessHue: Свой $b $h
+    customHue: Свой $h
+    dark: тёмный
+    light: светлый
+    black: Чёрный
+    darkGrey: Тёмно-серый
+    grey: Серый
+    lightGrey: Светло-серый
+    white: Белый
+    red: Красный
+    green: Зелёный
+    cyan: Голубой
+    blue: Синий
+    yellow: Жёлтый
+    purple: Фиолетовый
+    pink: Розовый
+    orange: Оранжевый
+    pastelRed: Пастельный красный
+    pastelOrange: Пастельный оранжевый
+    pastelYellow: Пастельный жёлтый
+    pastelGreen: Пастельный зелёный
+    pastelCyan: Пастельный голубой
+    pastelBlue: Пастельный синий
+    pastelPurple: Пастельный фиолетовый
+    pastelPink: Пастельный розовый
+  imageOptions:
+    title: Параметры изображения
+    invertible: Инвертируемое
+    download: Скачать
+    setAsBackground: Сделать фоном
+    removeAsBackground: Убрать из фона
+    delete: Удалить
+  selectionBar:
+    delete: Удалить
+    duplicate: Дублировать
+  menu:
+    clearPage: Очистить страницу $page/$totalPages
+    clearAllPages: Очистить все страницы
+    insertPage: Вставить страницу ниже
+    duplicatePage: Дублировать страницу
+    deletePage: Удалить страницу
+    lineHeight: Межстрочный интервал
+    lineHeightDescription: Также задаёт размер текста в печатных заметках
+    lineThickness: Толщина линий
+    lineThicknessDescription: Толщина линий фона
+    backgroundImageFit: Размещение фонового изображения
+    backgroundPattern: Узор фона
+    import: Импорт
+    watchServer: Следить за обновлениями на сервере
+    watchServerReadOnly: Редактирование отключено во время слежения за сервером
+    boxFits:
+      fill: Растянуть
+      cover: Заполнить
+      contain: Вписать
+    bgPatterns:
+      none: Пустой
+      college: Узкая линейка
+      collegeRtl: Узкая линейка (справа налево)
+      lined: В линейку
+      grid: В клетку
+      dots: В точку
+      staffs: Нотный стан
+      tablature: Табулатура
+      cornell: Корнелл
+  photoPdfError:
+    title: Ошибка
+    message: "PDF-файлы нельзя добавить как изображение. Для этого используйте «@:editor.menu.import > PDF»."
+  readOnlyBanner:
+    title: Только чтение
+    watchingServer: Вы следите за обновлениями на сервере. В этом режиме редактирование отключено.
+    corrupted: Не удалось загрузить заметку. Возможно, она повреждена или ещё загружается.
+  versionTooNew:
+    title: Эта заметка изменена в более новой версии BadNotes
+    subtitle: При редактировании часть данных может быть потеряна. Всё равно редактировать?
+    allowEditing: Разрешить редактирование
+  quill:
+    typeSomething: Введите текст…
+  hud:
+    unlockZoom: Разблокировать масштаб
+    lockZoom: Заблокировать масштаб
+    unlockSingleFingerPan: Включить прокрутку одним пальцем
+    lockSingleFingerPan: Отключить прокрутку одним пальцем
+    unlockAxisAlignedPan: Разрешить прокрутку в любом направлении
+    lockAxisAlignedPan: Прокрутка только по горизонтали или вертикали
+  pages: Страницы
+  untitled: Без названия
+  needsToSaveBeforeExiting: Сохранение изменений… Когда оно завершится, можно выйти из редактора

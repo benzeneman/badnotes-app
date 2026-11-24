@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Move to folder</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #1C1C1E;outline-offset:3px}
+.mi:hover{background:#F2F2EF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+  <div style="position: absolute; inset: 0"><dc-import name="M_Home" hint-size="1280px,800px"></dc-import></div>
+  <div style="position: absolute; inset: 0; background: rgba(22,22,26,.5); backdrop-filter: blur(5px)"></div>
+
+  <div role="dialog" aria-label="Move to folder" style="position: absolute; left: 410px; top: 110px; width: 460px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,.08); padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 14px">
+      <div style="width: 44px; height: 60px; border: 1px solid #E7E6E1; border-radius: 3px 8px 8px 3px; background: #E8E1FB; transform: rotate(-6deg)"></div>
+      <div>
+        <h2 style="margin: 0; font-family: Inter, sans-serif; font-weight: 600; font-size: 22px">Move to…</h2>
+        <div style="font-size: 13px; color: #6B6B70; margin-top: 2px">Physics — Class 12</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{folders}}" as="f" hint-placeholder-count="5">
+        <button class="rb mi" onClick="{{f.pick}}" style="height: 56px; border-radius: 14px; padding: 0 12px; display: flex; align-items: center; gap: 14px; border: 1.5px solid {{f.border}}">
+          <span style="display: flex; flex-direction: column; width: 34px">
+            <span style="width: 14px; height: 5px; background: {{f.hex}}; border: 1px solid #E7E6E1; border-bottom: none; border-radius: 3px 3px 0 0; margin-bottom: -1px"></span>
+            <span style="height: 22px; background: {{f.hex}}; border: 1px solid #E7E6E1; border-radius: 0 6px 6px 6px"></span>
+          </span>
+          <span style="flex: 1"><span style="display: block; font-size: 14px; font-weight: 600">{{f.name}}</span><span style="display: block; font-size: 11px; color: #6B6B70">{{f.meta}}</span></span>
+          <sc-if value="{{f.on}}" hint-placeholder-val="{{ false }}">
+            <span style="width: 24px; height: 24px; border-radius: 50%; background: #F0EDFC; border: 1px solid #E7E6E1; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+          </sc-if>
+        </button>
+      </sc-for>
+      <button class="rb mi" style="height: 52px; border-radius: 14px; padding: 0 12px; display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 600; color: #3F3F39">
+        <span style="width: 34px; height: 28px; border: 1.5px dashed #CFCEC8; border-radius: 6px; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>New folder</button>
+    </div>
+
+    <div style="display: flex; gap: 10px; justify-content: flex-end">
+      <button class="rb" style="height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid #E7E6E1; font-size: 15px; font-weight: 600; display: flex; align-items: center">Cancel</button>
+      <button class="rb" style="height: 48px; padding: 0 24px; border-radius: 999px; background: #F0EDFC; border: 1px solid #E7E6E1; box-shadow: 0 10px 30px rgba(0,0,0,.08); font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; display: flex; align-items: center">{{cta}}</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 1 };
+  }
+  renderVals() {
+    const F = [
+      ['Desk (no folder)', 'Currently here', '#FFFFFF'],
+      ['College', '12 items', '#CFC2F5'],
+      ['Personal', '7 items', '#F2C2B1'],
+      ['Work', '9 items', '#B5DDD0'],
+      ['test', '2 items', '#EBD69F']
+    ];
+    const s = this.state.sel;
+    return {
+      cta: s === 0 ? 'Keep on Desk' : 'Move to ' + F[s][0],
+      folders: F.map((f, i) => ({ name: f[0], meta: f[1], hex: f[2], on: i === s, border: i === s ? '#FFFFFF' : 'transparent', pick: () => this.setState({ sel: i }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

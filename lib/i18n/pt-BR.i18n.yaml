@@ -1,0 +1,391 @@
+common:
+  done: Concluído
+  continueBtn: Continuar
+  cancel: Cancelar
+home:
+  tabs:
+    home: Início
+    browse: Explorar
+    whiteboard: Quadro branco
+    settings: Configurações
+  titles:
+    home: Notas recentes
+    browse: Explorar
+    whiteboard: Quadro branco
+    settings: Configurações
+  tooltips:
+    newNote: Nova nota
+    showUpdateDialog: Mostrar aviso de atualização
+    exportNote: Exportar nota
+  create:
+    newNote: Nova nota
+    importNote: Importar nota
+  welcome: Boas-vindas ao BadNotes
+  invalidFormat: O arquivo selecionado não é compatível. Selecione um arquivo sbn, sbn2, sba ou pdf.
+  noFiles: Nenhum arquivo encontrado
+  noPreviewAvailable: Prévia indisponível
+  createNewNote: Toque no botão + para criar uma nova nota
+  backFolder: Voltar para a pasta anterior
+  newFolder:
+    newFolder: Nova pasta
+    folderName: Nome da pasta
+    create: Criar
+    folderNameEmpty: O nome da pasta não pode ficar vazio
+    folderNameContainsSlash: O nome da pasta não pode conter barra
+    folderNameExists: A pasta já existe
+  renameNote:
+    renameNote: Renomear nota
+    noteName: Nome da nota
+    rename: Renomear
+    noteNameEmpty: O nome da nota não pode ficar vazio
+    noteNameExists: Já existe uma nota com esse nome
+    noteNameForbiddenCharacters: O nome da nota contém caracteres não permitidos
+    noteNameReserved: Nome de nota reservado
+  moveNote:
+    moveNote: Mover nota
+    moveNotes: Mover $n notas
+    moveName: Mover $f
+    move: Mover
+    renamedTo: A nota será renomeada para $newName
+    multipleRenamedTo: "As seguintes notas serão renomeadas:"
+    numberRenamedTo: $n notas serão renomeadas para evitar conflitos
+  deleteNote: Excluir nota
+  deleteNoteDialog:
+    deleteNotes: Excluir $n notas
+    deleteName: Excluir $f
+    confirmDelete:
+      one: Excluir permanentemente a nota selecionada?
+      other: Excluir permanentemente as notas selecionadas?
+    delete: Excluir
+  renameFolder:
+    renameFolder: Renomear pasta
+    folderName: Nome da pasta
+    rename: Renomear
+    folderNameEmpty: O nome da pasta não pode ficar vazio
+    folderNameContainsSlash: O nome da pasta não pode conter barra
+    folderNameExists: Já existe uma pasta com esse nome
+  deleteFolder:
+    deleteFolder: Excluir pasta
+    deleteName: Excluir $f
+    delete: Excluir
+    alsoDeleteContents: Excluir também todas as notas desta pasta
+  sort:
+    sortBy: Ordenar por
+    nameAToZ: Nome (A-Z)
+    nameZToA: Nome (Z-A)
+    lastModifiedNewToOld: Edição (mais recentes primeiro)
+    lastModifiedOldToNew: Edição (mais antigas primeiro)
+  layout:
+    layout: Layout
+    masonryGrid: Grade em mosaico
+    simpleGrid: Grade simples
+sentry:
+  consent:
+    title: Quer ajudar a melhorar o BadNotes?
+    description:
+      question: Quer enviar automaticamente relatórios de erros inesperados? Isso me ajuda a encontrar e corrigir problemas mais rápido.
+      scope: Os relatórios podem conter informações sobre o erro e o seu dispositivo. Fiz o possível para filtrar dados pessoais, mas alguns podem permanecer.
+      currentlyOff: Se você der o consentimento, o envio de erros será ativado depois que você reiniciar o app.
+      currentlyOn: Se você retirar o consentimento, reinicie o app para desativar o envio de erros.
+      learnMoreInPrivacyPolicy(rich): Saiba mais na ${link(política de privacidade)}.
+    answers:
+      yes: Sim
+      no: Não
+      later: Perguntar depois
+settings:
+  prefCategories:
+    general: Geral
+    writing: Escrita
+    editor: Editor
+    performance: Desempenho
+    advanced: Avançado
+  prefLabels:
+    locale: Idioma
+    appTheme: Tema do app
+    platform: Tipo de tema
+    layoutSize: Tipo de layout
+    customAccentColor: Cor de destaque personalizada
+    hyperlegibleFont: Fonte Atkinson Hyperlegible
+    shouldCheckForUpdates: Verificar atualizações do BadNotes
+    shouldAlwaysAlertForUpdates: Atualizações mais rápidas
+    allowInsecureConnections: Permitir conexões inseguras
+    syncOnlyOnWifi: Sincronizar só no Wi-Fi
+    syncPreviewsOnMobileData: Enviar prévias usando dados móveis
+    editorToolbarAlignment: Posição da barra de ferramentas
+    editorToolbarShowInFullscreen: Mostrar a barra de ferramentas em tela cheia
+    editorAutoInvert: Inverter notas no modo escuro
+    preferGreyscale: Preferir cores em tons de cinza
+    maxImageSize: Tamanho máximo da imagem
+    autoClearWhiteboardOnExit: Limpar o quadro branco automaticamente
+    disableEraserAfterUse: Desativar a borracha automaticamente
+    hideFingerDrawingToggle: Ocultar o botão de desenho com o dedo
+    autoDisableFingerDrawingWhenStylusDetected: Desativar o desenho com o dedo automaticamente
+    editorPromptRename: Pedir para renomear novas notas
+    recentColorsDontSavePresets: Não salvar cores predefinidas nas cores recentes
+    recentColorsLength: Quantas cores recentes guardar
+    printPageIndicators: Imprimir indicadores de página
+    autosave: Salvamento automático
+    shapeRecognitionDelay: Atraso no reconhecimento de formas
+    autoStraightenLines: Endireitar linhas automaticamente
+    customDataDir: Pasta personalizada do BadNotes
+    sentry: Relatórios de erros
+  prefDescriptions:
+    syncOnlyOnWifi: "Desativado: as notas também sincronizam com dados móveis. Ativado: a sincronização espera o Wi-Fi"
+    syncPreviewsOnMobileData: As miniaturas das notas normalmente esperam o Wi-Fi para economizar dados
+    hyperlegibleFont: Melhora a legibilidade para pessoas com baixa visão
+    allowInsecureConnections: (Não recomendado) Permite que o BadNotes se conecte a servidores com certificados autoassinados/não confiáveis
+    preferGreyscale: Para telas de tinta eletrônica (e-ink)
+    autoClearWhiteboardOnExit: Limpa o quadro branco quando você sai do app
+    disableEraserAfterUse: Volta automaticamente para a caneta depois de usar a borracha
+    maxImageSize: Imagens maiores serão comprimidas
+    hideFingerDrawing:
+      shown: Evita ativar ou desativar sem querer
+      fixedOn: O desenho com o dedo fica sempre ativado
+      fixedOff: O desenho com o dedo fica sempre desativado
+    autoDisableFingerDrawingWhenStylusDetected: Desativa o desenho com o dedo quando uma caneta stylus é detectada
+    editorPromptRename: Você pode renomear as notas depois a qualquer momento
+    printPageIndicators: Mostra indicadores de página nas exportações
+    autosave: Salva automaticamente após um breve intervalo, ou nunca
+    shapeRecognitionDelay: Quanto tempo segurar a caneta parada até o traço virar uma forma
+    autoStraightenLines: Endireita linhas longas sem precisar usar a caneta de formas
+    shouldAlwaysAlertForUpdates: Avisar sobre atualizações assim que estiverem disponíveis
+    sentry:
+      active: Ativo
+      inactive: Inativo
+      activeUntilRestart: Ativo até você reiniciar o app
+      inactiveUntilRestart: Inativo até você reiniciar o app
+  themeModes:
+    system: Sistema
+    light: Claro
+    dark: Escuro
+  layoutSizes:
+    auto: Automático
+    phone: Celular
+    tablet: Tablet
+  accentColorPicker:
+    pickAColor: Escolha uma cor
+  systemLanguage: Automático
+  axisDirections:
+  - Topo
+  - Direita
+  - Base
+  - Esquerda
+  reset:
+    title: Redefinir esta configuração?
+    button: Redefinir
+  resyncEverything: Sincronizar tudo de novo
+  openDataDir: Abrir pasta do BadNotes
+  customDataDir:
+    cancel: Cancelar
+    select: Selecionar
+    mustBeEmpty: A pasta selecionada precisa estar vazia
+    mustBeDoneSyncing: Aguarde a sincronização terminar antes de trocar a pasta
+    unsupported: No momento, este recurso é só para desenvolvedores. Usá-lo provavelmente causará perda de dados.
+  autosaveDisabled: Nunca
+  shapeRecognitionDisabled: Nunca
+logs:
+  logs: Registros
+  viewLogs: Ver registros
+  debuggingInfo: Os registros contêm informações úteis para depuração e desenvolvimento
+  noLogs: Nenhum registro aqui!
+  useTheApp: Os registros aparecerão aqui conforme você usar o app
+login:
+  title: Entrar
+  form:
+    agreeToPrivacyPolicy(rich): Ao entrar, você concorda com a ${linkToPrivacyPolicy(Política de Privacidade)}.
+  signup(rich): Ainda não tem uma conta? ${linkToSignup(Cadastre-se agora)}!
+  notYou(rich): Não é você? ${undoLogin(Escolha outra conta)}.
+  status:
+    loggedOut: Desconectado
+    tapToLogin: Toque para sincronizar com o Google Drive
+    hi: Olá, $u!
+    almostDone: Quase pronto para sincronizar, toque para concluir o login
+    loggedIn: Sincronização ativada
+  ncLoginStep:
+    whereToStoreData: "Escolha onde guardar seus dados:"
+    cloudStorage: Google Drive ou OneDrive
+    loginWithGoogleDrive: Continuar com o Google Drive
+    loginWithOneDrive: Continuar com o OneDrive
+    cloudLoginFailed: Não foi possível entrar
+    comingSoon: Em breve
+    badnotesNcServer: Servidor Nextcloud do BadNotes
+    otherNcServer: Outro servidor Nextcloud
+    serverUrl: URL do servidor
+    loginWithBadNotes: Entrar com o BadNotes
+    loginWithNextcloud: Entrar com o Nextcloud
+    loginFlow:
+      pleaseAuthorize: Autorize o BadNotes a acessar sua conta do Nextcloud
+      followPrompts: Siga as instruções na interface do Nextcloud
+      browserDidntOpen: A página de login não abriu? Clique aqui
+  encLoginStep:
+    enterEncPassword: "Para proteger seus dados, digite sua senha de criptografia:"
+    newToBadNotes: Novo no BadNotes? É só digitar uma nova senha de criptografia.
+    encPassword: Senha de criptografia
+    encFaqTitle: Perguntas frequentes
+    wrongEncPassword: Não foi possível descriptografar com a senha informada. Tente digitá-la novamente.
+    connectionFailed: Algo deu errado ao conectar ao servidor. Tente novamente mais tarde.
+    encFaq:
+    - q: O que é uma senha de criptografia? Por que usar duas senhas?
+      a: |-
+        Sua conta do Google ou da Microsoft é usada para acessar a nuvem. A senha de criptografia "embaralha" seus dados antes mesmo de eles chegarem à nuvem.
+        Mesmo que alguém consiga acessar sua conta do Google ou da Microsoft, suas notas continuarão seguras e criptografadas com uma senha separada. Isso oferece uma segunda camada de segurança para proteger seus dados.
+        Ninguém consegue acessar suas notas no servidor sem a sua senha de criptografia, mas isso também significa que, se você esquecer essa senha, perderá o acesso aos seus dados.
+    - q: Ainda não defini uma senha de criptografia. Onde consigo uma?
+      a: |-
+        Escolha uma nova senha de criptografia e digite-a acima.
+        O BadNotes vai gerar suas chaves de criptografia a partir dessa senha automaticamente.
+    - q: Posso usar a mesma senha da minha conta do Google ou da Microsoft?
+      a: Melhor não. Uma senha de criptografia separada mantém suas notas seguras mesmo que alguém invada essa conta.
+profile:
+  title: Meu perfil
+  logout: Sair
+  quotaUsage: Você está usando $used de $total ($percent%)
+  quotaUsageUncapped: Você está usando $used
+  connectedTo: Conectado a
+  lastSynced: Última sincronização $time
+  notSyncedYet: Ainda não sincronizado
+  justNow: agora mesmo
+  minutesAgo: há $n min
+  hoursAgo: há $n h
+  filesWaiting: $n arquivos aguardando sincronização
+  signInAgainNeeded: Entre novamente para continuar sincronizando
+  signInAgain: Entrar novamente
+  wrongAccount: Escolha $email
+  quickLinks:
+    serverHomepage: Página inicial do servidor
+    deleteAccount: Excluir conta
+  faqTitle: Perguntas frequentes
+  faq:
+  - q: Vou perder minhas notas se eu sair?
+    a: Não. Suas notas continuarão no seu dispositivo e no servidor. Elas não serão sincronizadas com o servidor até você entrar novamente. Aguarde a sincronização terminar antes de sair para não perder dados (veja o progresso da sincronização na tela inicial).
+  - q: Onde minhas notas ficam guardadas?
+    a: Em uma pasta "BadNotes" no seu Google Drive, ou em "Apps/BadNotes" no seu OneDrive. Os arquivos são criptografados, então só podem ser abertos no BadNotes.
+  - q: Como altero minha senha de criptografia?
+    a: |-
+      0. Aguarde a sincronização terminar (veja o progresso da sincronização na tela inicial).
+      1. Saia do BadNotes.
+      2. Exclua a pasta 'BadNotes' do seu Google Drive ou OneDrive. Isso exclui todas as suas notas da nuvem, não do seu dispositivo.
+      3. Entre novamente no BadNotes. Você poderá escolher uma nova senha de criptografia ao entrar.
+      4. Não se esqueça de sair e entrar novamente no BadNotes nos seus outros dispositivos também.
+  - q: Como posso excluir minha conta?
+    a: |-
+      O BadNotes não tem conta própria. Saia e depois exclua a pasta 'BadNotes' do seu Google Drive ou OneDrive.
+      Para também remover o acesso do BadNotes, acesse myaccount.google.com/permissions (Google) ou account.live.com/consent/Manage (Microsoft).
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: Atualização disponível
+  updateAvailableDescription: "Uma nova versão do app está disponível:"
+  update: Atualizar
+  downloadNotAvailableYet: O download ainda não está disponível para a sua plataforma. Volte a verificar em breve.
+editor:
+  toolbar:
+    toggleColors: Alternar cores (Ctrl C)
+    select: Selecionar
+    toggleEraser: Alternar borracha (Ctrl E)
+    photo: Imagens
+    text: Texto
+    toggleFingerDrawing: Alternar desenho com o dedo (Ctrl F)
+    undo: Desfazer
+    redo: Refazer
+    export: Exportar (Ctrl Shift S)
+    exportAs: "Exportar como:"
+    fullscreen: Alternar tela cheia (F11)
+  pens:
+    fountainPen: Caneta-tinteiro
+    ballpointPen: Caneta esferográfica
+    highlighter: Marca-texto
+    pencil: Lápis
+    shapePen: Caneta de formas
+    laserPointer: Apontador laser
+  penOptions:
+    size: Tamanho
+  colors:
+    colorPicker: Seletor de cores
+    customBrightnessHue: $h $b personalizado
+    customHue: $h personalizado
+    dark: escuro
+    light: claro
+    black: Preto
+    darkGrey: Cinza-escuro
+    grey: Cinza
+    lightGrey: Cinza-claro
+    white: Branco
+    red: Vermelho
+    green: Verde
+    cyan: Ciano
+    blue: Azul
+    yellow: Amarelo
+    purple: Roxo
+    pink: Rosa
+    orange: Laranja
+    pastelRed: Vermelho pastel
+    pastelOrange: Laranja pastel
+    pastelYellow: Amarelo pastel
+    pastelGreen: Verde pastel
+    pastelCyan: Ciano pastel
+    pastelBlue: Azul pastel
+    pastelPurple: Roxo pastel
+    pastelPink: Rosa pastel
+  imageOptions:
+    title: Opções da imagem
+    invertible: Invertível
+    download: Baixar
+    setAsBackground: Definir como fundo
+    removeAsBackground: Remover do fundo
+    delete: Excluir
+  selectionBar:
+    delete: Excluir
+    duplicate: Duplicar
+  menu:
+    clearPage: Limpar página $page/$totalPages
+    clearAllPages: Limpar todas as páginas
+    insertPage: Inserir página abaixo
+    duplicatePage: Duplicar página
+    deletePage: Excluir página
+    lineHeight: Altura da linha
+    lineHeightDescription: Também controla o tamanho do texto nas notas digitadas
+    lineThickness: Espessura da linha
+    lineThicknessDescription: Espessura das linhas do fundo
+    backgroundImageFit: Ajuste da imagem de fundo
+    backgroundPattern: Padrão de fundo
+    import: Importar
+    watchServer: Acompanhar atualizações no servidor
+    watchServerReadOnly: A edição fica desativada enquanto você acompanha o servidor
+    boxFits:
+      fill: Esticar
+      cover: Cobrir
+      contain: Conter
+    bgPatterns:
+      none: Em branco
+      college: Pautado universitário
+      collegeRtl: Pautado universitário (invertido)
+      lined: Pautado
+      grid: Quadriculado
+      dots: Pontilhado
+      staffs: Pautas musicais
+      tablature: Tablatura
+      cornell: Cornell
+  photoPdfError:
+    title: Erro
+    message: "Arquivos PDF não podem ser adicionados como imagem. Use \"@:editor.menu.import > PDF\" para isso."
+  readOnlyBanner:
+    title: Modo somente leitura
+    watchingServer: Você está acompanhando atualizações no servidor. A edição fica desativada neste modo.
+    corrupted: Não foi possível carregar a nota. Ela pode estar corrompida ou ainda sendo baixada.
+  versionTooNew:
+    title: Esta nota foi editada em uma versão mais recente do BadNotes
+    subtitle: Editar esta nota pode causar a perda de algumas informações. Quer ignorar isso e editar mesmo assim?
+    allowEditing: Permitir edição
+  quill:
+    typeSomething: Digite algo aqui…
+  hud:
+    unlockZoom: Desbloquear zoom
+    lockZoom: Bloquear zoom
+    unlockSingleFingerPan: Ativar movimento com um dedo
+    lockSingleFingerPan: Desativar movimento com um dedo
+    unlockAxisAlignedPan: Liberar movimento fora da horizontal ou vertical
+    lockAxisAlignedPan: Travar movimento na horizontal ou vertical
+  pages: Páginas
+  untitled: Sem título
+  needsToSaveBeforeExiting: Salvando suas alterações… Você pode sair do editor com segurança quando terminar

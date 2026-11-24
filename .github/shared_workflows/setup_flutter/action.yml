@@ -1,0 +1,60 @@
+name: "Set up Flutter"
+description: "Puts the Flutter SDK pinned by the submodules/flutter submodule on PATH, cached by its commit"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Find the pinned Flutter commit
+      id: sdk
+      shell: bash
+      run: echo "sha=$(git ls-tree HEAD submodules/flutter | awk '{print $3}')" >> "$GITHUB_OUTPUT"
+
+    # the SDK with its downloaded Dart SDK and engine artifacts (bin/cache)
+    - name: Restore the Flutter SDK
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: submodules/flutter
+        key: flutter-sdk-${{ runner.os }}-${{ steps.sdk.outputs.sha }}
+
+    - name: Fetch the Flutter SDK
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        SHA: ${{ steps.sdk.outputs.sha }}
+      run: |
+        git submodule update --init --depth 1 submodules/flutter
+        # move its git folder inside it, so the cache holds a working repo
+        # (flutter runs git in it) and not a link into this checkout's .git
+        rm submodules/flutter/.git
+        mv .git/modules/submodules/flutter submodules/flutter/.git
+        git config --file submodules/flutter/.git/config --unset core.worktree
+        # flutter reads its version from a tag on its commit; a shallow
+        # clone has none, so add the release tag that points at it
+        # (read in full first: awk stopping early broke the pipe under pipefail)
+        remote_tags=$(git -C submodules/flutter ls-remote --tags origin)
+        tag=$(awk -v s="$SHA" '$1==s && !t {t=$2; sub("refs/tags/","",t); sub(/\^\{\}$/,"",t)} END {print t}' <<< "$remote_tags")
+        if [ -n "$tag" ]; then
+          git -C submodules/flutter tag -f "$tag" "$SHA"
+        else
+          git -C submodules/flutter fetch --quiet --tags --depth 1 origin
+        fi
+        rm -f submodules/flutter/bin/cache/flutter.version.json
+
+    - name: Put Flutter on PATH
+      shell: bash
+      run: |
+        echo "$GITHUB_WORKSPACE/submodules/flutter/bin" >> "$GITHUB_PATH"
+        echo "$GITHUB_WORKSPACE/submodules/flutter/bin/cache/dart-sdk/bin" >> "$GITHUB_PATH"
+        echo "PUB_CACHE=$HOME/.pub-cache" >> "$GITHUB_ENV"
+
+    - name: Restore the pub cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.pub-cache
+        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: pub-${{ runner.os }}-
+
+    - name: Flutter version
+      shell: bash
+      run: flutter --version

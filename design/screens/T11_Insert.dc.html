@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Insert menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Lora:wght@500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Nunito:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E56CF;text-decoration:none}a:hover{color:#5A43B8}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.pop{position:absolute;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:18px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(0,0,0,.12);padding:16px;box-sizing:border-box;font-family:Inter,system-ui,sans-serif;color:#1C1C1E}
+.pt{font-family:Inter,sans-serif;font-weight:600;font-size:15px;margin:0;letter-spacing:-.1px}
+.ps{font-size:12px;color:#6B6B70;margin-top:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:14px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.tg{width:40px;height:24px;border-radius:99px;background:#E2E1DC;position:relative;display:inline-block;flex:none}
+.tg i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tg.on{background:#6E56CF}
+.tg.on i{left:18px}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;font-size:13px;font-weight:500}
+.ds{font-size:12px;color:#6B6B70;line-height:1.45;margin:-4px 0 6px}
+.sep{height:1px;background:#EFEEEA;margin:10px 0}
+.sg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:#EDEDEA;border-radius:10px}
+.sg .rb{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#55555A}
+.sg .rb.on{background:#FFFFFF;color:#1C1C1E;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.pv{height:80px;border-radius:12px;background:#F6F6F4;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;height:40px;border-radius:10px;padding:0 10px;font-size:13px;font-weight:500;color:#1C1C1E}
+.mi:hover{background:#F4F4F1}
+.sub{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);font-family:Inter,sans-serif;color:#1C1C1E}
+.sb{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.sb.on{background:#F2F2EF}
+.pill{height:32px;padding:0 10px;border-radius:9px;background:#F0EDFC;color:#5A43B8;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.vs{width:1px;height:18px;background:#E7E6E1;margin:0 6px}
+.sw{width:22px;height:22px;margin:0 4px;border-radius:50%}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+.note{position:absolute;font-family:Inter,sans-serif;font-weight:400;font-size:13px;line-height:1.45;color:#3A3A3F;background:#FFFFFF;padding:12px 14px;border:1px solid #E7E6E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dim{position:absolute;inset:0;background:rgba(20,20,22,.28);backdrop-filter:blur(4px)}
+.chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid #E7E6E1;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;background:#FFFFFF;color:#3A3A3F}
+.chip.on{background:#F0EDFC;color:#5A43B8;border-color:#E0D9FA;font-weight:600}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:1px solid #E7E6E1;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;color:#1C1C1E}
+.btn.go{background:#6E56CF;border-color:#6E56CF;color:#FFFFFF;font-weight:600}
+.red{color:#D93A2B}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+<div style="position: absolute; inset: 0"><dc-import name="M_Editor" tool="insert" show-sub="false" show-pop="false" hint-size="1280px,800px"></dc-import></div>
+<div class="pop" role="menu" aria-label="Insert" style="left: 600px; bottom: 96px; width: 410px">
+  <h2 class="pt">Insert</h2>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 12px">
+    <button class="rb" style="height: 84px; border-radius: 18px; background: #E3EDFB; border: 1px solid #E7E6E1; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; font-size: 14px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v14H3zM8 10a1.5 1.5 0 1 0 0-.1M21 16l-5-5-9 8"/></svg>Photo</button><button class="rb" style="height: 84px; border-radius: 18px; background: #ECE7FB; border: 1px solid #E7E6E1; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; font-size: 14px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4zM8.5 13a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0"/></svg>Camera</button><button class="rb" style="height: 84px; border-radius: 18px; background: #FBE6DE; border: 1px solid #E7E6E1; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; font-size: 14px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v10l-6 6H4zM14 20v-6h6M9 10h.01M15 10h.01M9 14c1.5 1 3.5 1 5 0"/></svg>Sticker</button>
+    <button class="rb" style="height: 84px; border-radius: 18px; background: #FFF4CC; border: 1px solid #E7E6E1; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; font-size: 14px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v11l-5 5H4zM15 20v-5h5"/></svg>Sticky note</button><button class="rb" style="height: 84px; border-radius: 18px; background: #EEF6E0; border: 1px solid #E7E6E1; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; font-size: 14px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>Text box</button><button class="rb" style="height: 84px; border-radius: 18px; background: #DCEFE9; border: 1px solid #E7E6E1; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 12px; font-size: 14px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Voice note</button>
+  </div>
+  <div class="sep"></div>
+  <button class="rb mi"><span style="width: 34px; height: 34px; border-radius: 10px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 13h6M9 17h4"/></svg></span><span style="flex: 1"><span style="display: block">Import PDF pages</span><span style="display: block; font-size: 11px; color: #6B6B70; font-weight: 500">Add slides or a book into this notebook</span></span></button>
+  <button class="rb mi"><span style="width: 34px; height: 34px; border-radius: 10px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0"/></svg></span><span style="flex: 1"><span style="display: block">Scan a document</span><span style="display: block; font-size: 11px; color: #6B6B70; font-weight: 500">Auto-crop with your camera</span></span></button>
+  <button class="rb mi"><span style="width: 34px; height: 34px; border-radius: 10px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.6 0l3-3a4 4 0 0 0-5.6-5.6l-1 1M14 10a4 4 0 0 0-5.6 0l-3 3a4 4 0 0 0 5.6 5.6l1-1"/></svg></span><span style="flex: 1"><span style="display: block">Web link</span><span style="display: block; font-size: 11px; color: #6B6B70; font-weight: 500">Shows as a tappable card</span></span></button>
+  <div style="position: absolute; left: 240px; bottom: -11px; width: 18px; height: 18px; background: #FFFFFF; border-right: 1px solid #E7E6E1; border-bottom: 1px solid #E7E6E1; transform: rotate(45deg)"></div>
+</div>
+<div class="note" style="left: 1040px; top: 300px; width: 200px">all "add" things live under + so the toolbar stays short</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

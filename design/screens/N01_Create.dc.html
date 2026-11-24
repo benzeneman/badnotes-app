@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Create menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1C1C1E}a:hover{color:#000}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #1C1C1E;outline-offset:3px}
+.mi:hover{background:#F2F2EF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+  <div style="position: absolute; inset: 0"><dc-import name="M_Home" hint-size="1280px,800px"></dc-import></div>
+  <div style="position: absolute; inset: 0; background: rgba(22,22,26,.42); backdrop-filter: blur(3px)"></div>
+
+  <!-- Popover -->
+  <div role="menu" aria-label="Create" style="position: absolute; left: 560px; bottom: 86px; width: 380px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); padding: 16px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px">
+      <div style="font-family: Inter, sans-serif; font-weight: 600; font-size: 20px">Create something</div>
+      
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <button class="rb" style="height: 92px; border-radius: 18px; background: #F0EDFC; border: 1px solid #E7E6E1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3v18M10 8h5"/></svg>
+        <span><span style="display: block; font-weight: 700; font-size: 15px">Notebook</span><span style="display: block; font-size: 11px; color: #3F3F39">Pick a cover &amp; paper</span></span>
+      </button>
+      <button class="rb" style="height: 92px; border-radius: 18px; background: #FFF4CC; border: 1px solid #E7E6E1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v11l-5 5H4z"/><path d="M15 20v-5h5"/></svg>
+        <span><span style="display: block; font-weight: 700; font-size: 15px">Quick note</span><span style="display: block; font-size: 11px; color: #3F3F39">Pins to your board</span></span>
+      </button>
+      <button class="rb" style="height: 92px; border-radius: 18px; background: #ECE7FB; border: 1px solid #E7E6E1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>
+        <span><span style="display: block; font-weight: 700; font-size: 15px">Folder</span><span style="display: block; font-size: 11px; color: #3F3F39">Group your notebooks</span></span>
+      </button>
+      <button class="rb" style="height: 92px; border-radius: 18px; background: #E3EDFB; border: 1px solid #E7E6E1; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg>
+        <span><span style="display: block; font-weight: 700; font-size: 15px">Whiteboard</span><span style="display: block; font-size: 11px; color: #3F3F39">Endless canvas</span></span>
+      </button>
+    </div>
+    <div style="height: 1.5px; background: #EFEEEA; margin: 12px 0 6px"></div>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 52px; border-radius: 12px; padding: 0 10px; display: flex; align-items: center; gap: 12px">
+      <span style="width: 34px; height: 34px; border-radius: 10px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14l3 3 3-3"/></svg></span>
+      <span style="flex: 1"><span style="display: block; font-weight: 600; font-size: 14px">Import PDF</span><span style="display: block; font-size: 11px; color: #6B6B70">Annotate slides, books, papers</span></span>
+    </button>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 52px; border-radius: 12px; padding: 0 10px; display: flex; align-items: center; gap: 12px">
+      <span style="width: 34px; height: 34px; border-radius: 10px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 8"/></svg></span>
+      <span style="flex: 1"><span style="display: block; font-weight: 600; font-size: 14px">Import image</span><span style="display: block; font-size: 11px; color: #6B6B70">From gallery or Files</span></span>
+    </button>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 52px; border-radius: 12px; padding: 0 10px; display: flex; align-items: center; gap: 12px">
+      <span style="width: 34px; height: 34px; border-radius: 10px; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+      <span style="flex: 1"><span style="display: block; font-weight: 600; font-size: 14px">Scan with camera</span><span style="display: block; font-size: 11px; color: #6B6B70">Board, notes, documents</span></span>
+    </button>
+    <div style="position: absolute; right: 100px; bottom: -11px; width: 18px; height: 18px; background: #FFFFFF; border-right: 1px solid #E7E6E1; border-bottom: 1px solid #E7E6E1; transform: rotate(45deg)"></div>
+  </div>
+
+  <!-- Active create button (close) -->
+  <button class="rb" style="position: absolute; left: 822px; top: 727px; height: 44px; padding: 0 22px; border-radius: 999px; background: #F0EDFC; color: #5A43B8; display: flex; align-items: center; gap: 8px; font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; box-shadow: 0 0 0 6px rgba(255,255,255,.9)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Close</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

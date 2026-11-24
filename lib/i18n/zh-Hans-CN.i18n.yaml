@@ -1,0 +1,391 @@
+common:
+  done: 完成
+  continueBtn: 继续
+  cancel: 取消
+home:
+  tabs:
+    home: 首页
+    browse: 浏览
+    whiteboard: 白板
+    settings: 设置
+  titles:
+    home: 最近笔记
+    browse: 浏览
+    whiteboard: 白板
+    settings: 设置
+  tooltips:
+    newNote: 新建笔记
+    showUpdateDialog: 显示更新对话框
+    exportNote: 导出笔记
+  create:
+    newNote: 新建笔记
+    importNote: 导入笔记
+  welcome: 欢迎使用 BadNotes
+  invalidFormat: 不支持所选文件。请选择 sbn、sbn2、sba 或 pdf 文件。
+  noFiles: 未找到文件
+  noPreviewAvailable: 暂无预览
+  createNewNote: 点按 + 按钮新建笔记
+  backFolder: 返回上一个文件夹
+  newFolder:
+    newFolder: 新建文件夹
+    folderName: 文件夹名称
+    create: 创建
+    folderNameEmpty: 文件夹名称不能为空
+    folderNameContainsSlash: 文件夹名称不能包含斜杠
+    folderNameExists: 文件夹已存在
+  renameNote:
+    renameNote: 重命名笔记
+    noteName: 笔记名称
+    rename: 重命名
+    noteNameEmpty: 笔记名称不能为空
+    noteNameExists: 已存在同名笔记
+    noteNameForbiddenCharacters: 笔记名称包含不允许的字符
+    noteNameReserved: 该笔记名称为保留名称
+  moveNote:
+    moveNote: 移动笔记
+    moveNotes: 移动 $n 条笔记
+    moveName: 移动 $f
+    move: 移动
+    renamedTo: 笔记将重命名为 $newName
+    multipleRenamedTo: 以下笔记将被重命名：
+    numberRenamedTo: 为避免冲突，$n 条笔记将被重命名
+  deleteNote: 删除笔记
+  deleteNoteDialog:
+    deleteNotes: 删除 $n 条笔记
+    deleteName: 删除 $f
+    confirmDelete:
+      one: 要永久删除所选笔记吗？
+      other: 要永久删除所选笔记吗？
+    delete: 删除
+  renameFolder:
+    renameFolder: 重命名文件夹
+    folderName: 文件夹名称
+    rename: 重命名
+    folderNameEmpty: 文件夹名称不能为空
+    folderNameContainsSlash: 文件夹名称不能包含斜杠
+    folderNameExists: 已存在同名文件夹
+  deleteFolder:
+    deleteFolder: 删除文件夹
+    deleteName: 删除 $f
+    delete: 删除
+    alsoDeleteContents: 同时删除此文件夹中的所有笔记
+  sort:
+    sortBy: 排序方式
+    nameAToZ: 名称（A-Z）
+    nameZToA: 名称（Z-A）
+    lastModifiedNewToOld: 编辑时间（从新到旧）
+    lastModifiedOldToNew: 编辑时间（从旧到新）
+  layout:
+    layout: 布局
+    masonryGrid: 瀑布流
+    simpleGrid: 简单网格
+sentry:
+  consent:
+    title: 帮助改进 BadNotes？
+    description:
+      question: 是否自动报告意外错误？这有助于我更快地发现并修复问题。
+      scope: 报告可能包含错误信息和设备信息。我已尽力过滤个人数据，但仍可能有少量残留。
+      currentlyOff: 如果你同意，错误报告将在重启应用后启用。
+      currentlyOn: 如果你撤回同意，请重启应用以停用错误报告。
+      learnMoreInPrivacyPolicy(rich): 详情请参阅${link(隐私政策)}。
+    answers:
+      yes: 是
+      no: 否
+      later: 以后再问
+settings:
+  prefCategories:
+    general: 常规
+    writing: 书写
+    editor: 编辑器
+    performance: 性能
+    advanced: 高级
+  prefLabels:
+    locale: 语言
+    appTheme: 应用主题
+    platform: 主题类型
+    layoutSize: 布局类型
+    customAccentColor: 自定义强调色
+    hyperlegibleFont: Atkinson Hyperlegible 字体
+    shouldCheckForUpdates: 检查 BadNotes 更新
+    shouldAlwaysAlertForUpdates: 更快获取更新
+    allowInsecureConnections: 允许不安全的连接
+    syncOnlyOnWifi: 仅在 Wi-Fi 下同步
+    syncPreviewsOnMobileData: 使用移动数据上传预览图
+    editorToolbarAlignment: 工具栏位置
+    editorToolbarShowInFullscreen: 全屏模式下显示工具栏
+    editorAutoInvert: 深色模式下反色显示笔记
+    preferGreyscale: 优先使用灰度颜色
+    maxImageSize: 最大图片尺寸
+    autoClearWhiteboardOnExit: 自动清空白板
+    disableEraserAfterUse: 自动关闭橡皮擦
+    hideFingerDrawingToggle: 隐藏手指绘图开关
+    autoDisableFingerDrawingWhenStylusDetected: 自动关闭手指绘图
+    editorPromptRename: 提示重命名新笔记
+    recentColorsDontSavePresets: 最近使用的颜色中不保存预设颜色
+    recentColorsLength: 保存的最近颜色数量
+    printPageIndicators: 打印页码
+    autosave: 自动保存
+    shapeRecognitionDelay: 形状识别延迟
+    autoStraightenLines: 自动拉直线条
+    customDataDir: 自定义 BadNotes 文件夹
+    sentry: 错误报告
+  prefDescriptions:
+    syncOnlyOnWifi: 关闭：使用移动数据时也会同步笔记。开启：等到连接 Wi-Fi 时再同步
+    syncPreviewsOnMobileData: 笔记缩略图默认等到连接 Wi-Fi 时再上传，以节省流量
+    hyperlegibleFont: 为视力不佳的用户提升文字辨识度
+    allowInsecureConnections: （不推荐）允许 BadNotes 连接使用自签名或不受信任证书的服务器
+    preferGreyscale: 适用于墨水屏
+    autoClearWhiteboardOnExit: 退出应用后清空白板
+    disableEraserAfterUse: 使用橡皮擦后自动切换回笔
+    maxImageSize: 超过此尺寸的图片将被压缩
+    hideFingerDrawing:
+      shown: 防止误触切换
+      fixedOn: 手指绘图已固定为开启
+      fixedOff: 手指绘图已固定为关闭
+    autoDisableFingerDrawingWhenStylusDetected: 检测到手写笔时关闭手指绘图
+    editorPromptRename: 你随时可以稍后重命名笔记
+    printPageIndicators: 在导出文件中显示页码
+    autosave: 短暂延迟后自动保存，或从不保存
+    shapeRecognitionDelay: 笔停住多久后，笔迹会自动吸附为形状
+    autoStraightenLines: 无需使用形状笔即可拉直长线条
+    shouldAlwaysAlertForUpdates: 有更新时第一时间通知我
+    sentry:
+      active: 已启用
+      inactive: 未启用
+      activeUntilRestart: 重启应用前保持启用
+      inactiveUntilRestart: 重启应用前保持停用
+  themeModes:
+    system: 跟随系统
+    light: 浅色
+    dark: 深色
+  layoutSizes:
+    auto: 自动
+    phone: 手机
+    tablet: 平板
+  accentColorPicker:
+    pickAColor: 选择颜色
+  systemLanguage: 自动
+  axisDirections:
+  - 顶部
+  - 右侧
+  - 底部
+  - 左侧
+  reset:
+    title: 重置此设置？
+    button: 重置
+  resyncEverything: 全部重新同步
+  openDataDir: 打开 BadNotes 文件夹
+  customDataDir:
+    cancel: 取消
+    select: 选择
+    mustBeEmpty: 所选文件夹必须为空
+    mustBeDoneSyncing: 更改文件夹前，请确保同步已完成
+    unsupported: 此功能目前仅供开发者使用，使用它很可能导致数据丢失。
+  autosaveDisabled: 从不
+  shapeRecognitionDisabled: 从不
+logs:
+  logs: 日志
+  viewLogs: 查看日志
+  debuggingInfo: 日志包含有助于调试和开发的信息
+  noLogs: 暂无日志！
+  useTheApp: 使用应用时，日志会显示在这里
+login:
+  title: 登录
+  form:
+    agreeToPrivacyPolicy(rich): 登录即表示你同意${linkToPrivacyPolicy(隐私政策)}。
+  signup(rich): 还没有账号？${linkToSignup(立即注册)}！
+  notYou(rich): 不是你？${undoLogin(选择其他账号)}。
+  status:
+    loggedOut: 已退出登录
+    tapToLogin: 点按以与 Google Drive 同步
+    hi: 你好，$u！
+    almostDone: 即将可以同步，点按以完成登录
+    loggedIn: 同步已开启
+  ncLoginStep:
+    whereToStoreData: 选择数据的存储位置：
+    cloudStorage: Google Drive 或 OneDrive
+    loginWithGoogleDrive: 通过 Google Drive 继续
+    loginWithOneDrive: 通过 OneDrive 继续
+    cloudLoginFailed: 无法登录
+    comingSoon: 即将推出
+    badnotesNcServer: BadNotes 的 Nextcloud 服务器
+    otherNcServer: 其他 Nextcloud 服务器
+    serverUrl: 服务器地址
+    loginWithBadNotes: 使用 BadNotes 登录
+    loginWithNextcloud: 使用 Nextcloud 登录
+    loginFlow:
+      pleaseAuthorize: 请授权 BadNotes 访问你的 Nextcloud 账号
+      followPrompts: 请按照 Nextcloud 界面中的提示操作
+      browserDidntOpen: 登录页面没有打开？点击这里
+  encLoginStep:
+    enterEncPassword: 为保护你的数据，请输入加密密码：
+    newToBadNotes: 首次使用 BadNotes？直接输入一个新的加密密码即可。
+    encPassword: 加密密码
+    encFaqTitle: 常见问题
+    wrongEncPassword: 使用该密码解密失败，请重新输入。
+    connectionFailed: 连接服务器时出错，请稍后重试。
+    encFaq:
+    - q: 什么是加密密码？为什么要用两个密码？
+      a: |-
+        你的 Google 或 Microsoft 账号用于访问云端。加密密码会在数据上传到云端之前将其"打乱"。
+        即使有人获取了你的 Google 或 Microsoft 账号，你的笔记仍会通过单独的密码加密，保持安全。这为你的数据提供了第二层保护。
+        没有你的加密密码，任何人都无法访问服务器上的笔记；但这也意味着，如果你忘记了加密密码，将无法再访问你的数据。
+    - q: 我还没有设置加密密码，去哪里获取？
+      a: |-
+        选择一个新的加密密码并在上方输入即可。
+        BadNotes 会根据此密码自动生成你的加密密钥。
+    - q: 我可以使用与 Google 或 Microsoft 账号相同的密码吗？
+      a: 请不要这样做。单独的加密密码可以在该账号被他人登录时仍保护你的笔记安全。
+profile:
+  title: 我的资料
+  logout: 退出登录
+  quotaUsage: 已使用 $used / $total（$percent%）
+  quotaUsageUncapped: 已使用 $used
+  connectedTo: 已连接到
+  lastSynced: 上次同步：$time
+  notSyncedYet: 尚未同步
+  justNow: 刚刚
+  minutesAgo: $n 分钟前
+  hoursAgo: $n 小时前
+  filesWaiting: $n 个文件等待同步
+  signInAgainNeeded: 请重新登录以继续同步
+  signInAgain: 重新登录
+  wrongAccount: 请选择 $email
+  quickLinks:
+    serverHomepage: 服务器主页
+    deleteAccount: 删除账号
+  faqTitle: 常见问题
+  faq:
+  - q: 退出登录会丢失笔记吗？
+    a: 不会。你的笔记会同时保留在设备和服务器上，但在你重新登录之前不会与服务器同步。退出登录前请确保同步已完成，以免丢失数据（可在首页查看同步进度）。
+  - q: 我的笔记存储在哪里？
+    a: 存储在 Google Drive 的"BadNotes"文件夹中，或 OneDrive 的"Apps/BadNotes"中。这些文件已加密，因此只能在 BadNotes 中打开。
+  - q: 如何更改加密密码？
+    a: |-
+      0. 确保同步已完成（可在首页查看同步进度）。
+      1. 退出 BadNotes 登录。
+      2. 删除 Google Drive 或 OneDrive 中的"BadNotes"文件夹。这会删除云端的所有笔记，但不会删除设备上的笔记。
+      3. 重新登录 BadNotes。登录时可以设置新的加密密码。
+      4. 别忘了在其他设备上也退出并重新登录 BadNotes。
+  - q: 如何删除我的账号？
+    a: |-
+      BadNotes 没有自己的账号体系。退出登录，然后删除 Google Drive 或 OneDrive 中的"BadNotes"文件夹即可。
+      如需同时撤销 BadNotes 的访问权限，请前往 myaccount.google.com/permissions（Google）或 account.live.com/consent/Manage（Microsoft）。
+appInfo:
+  debug: 调试
+update:
+  updateAvailable: 有可用更新
+  updateAvailableDescription: 应用有新版本可用：
+  update: 更新
+  downloadNotAvailableYet: 你的平台暂时无法下载，请稍后再试。
+editor:
+  toolbar:
+    toggleColors: 切换颜色 (Ctrl C)
+    select: 选择
+    toggleEraser: 切换橡皮擦 (Ctrl E)
+    photo: 图片
+    text: 文本
+    toggleFingerDrawing: 切换手指绘图 (Ctrl F)
+    undo: 撤销
+    redo: 重做
+    export: 导出 (Ctrl Shift S)
+    exportAs: 导出为：
+    fullscreen: 切换全屏 (F11)
+  pens:
+    fountainPen: 钢笔
+    ballpointPen: 圆珠笔
+    highlighter: 荧光笔
+    pencil: 铅笔
+    shapePen: 形状笔
+    laserPointer: 激光笔
+  penOptions:
+    size: 粗细
+  colors:
+    colorPicker: 取色器
+    customBrightnessHue: 自定义$b$h
+    customHue: 自定义$h
+    dark: 深
+    light: 浅
+    black: 黑色
+    darkGrey: 深灰色
+    grey: 灰色
+    lightGrey: 浅灰色
+    white: 白色
+    red: 红色
+    green: 绿色
+    cyan: 青色
+    blue: 蓝色
+    yellow: 黄色
+    purple: 紫色
+    pink: 粉色
+    orange: 橙色
+    pastelRed: 浅红色
+    pastelOrange: 浅橙色
+    pastelYellow: 浅黄色
+    pastelGreen: 浅绿色
+    pastelCyan: 浅青色
+    pastelBlue: 浅蓝色
+    pastelPurple: 浅紫色
+    pastelPink: 浅粉色
+  imageOptions:
+    title: 图片选项
+    invertible: 可反色
+    download: 下载
+    setAsBackground: 设为背景
+    removeAsBackground: 取消背景
+    delete: 删除
+  selectionBar:
+    delete: 删除
+    duplicate: 复制
+  menu:
+    clearPage: 清空第 $page/$totalPages 页
+    clearAllPages: 清空所有页面
+    insertPage: 在下方插入页面
+    duplicatePage: 复制页面
+    deletePage: 删除页面
+    lineHeight: 行高
+    lineHeightDescription: 同时控制键入笔记的文字大小
+    lineThickness: 线条粗细
+    lineThicknessDescription: 背景线条的粗细
+    backgroundImageFit: 背景图片适应方式
+    backgroundPattern: 背景样式
+    import: 导入
+    watchServer: 监听服务器更新
+    watchServerReadOnly: 监听服务器时无法编辑
+    boxFits:
+      fill: 拉伸
+      cover: 覆盖
+      contain: 适应
+    bgPatterns:
+      none: 空白
+      college: 窄横线
+      collegeRtl: 窄横线（反向）
+      lined: 横线
+      grid: 方格
+      dots: 点阵
+      staffs: 五线谱
+      tablature: 六线谱
+      cornell: 康奈尔笔记
+  photoPdfError:
+    title: 错误
+    message: "PDF 文件不能作为图片添加。请使用“@:editor.menu.import > PDF”。"
+  readOnlyBanner:
+    title: 只读模式
+    watchingServer: 你正在监听服务器上的更新，此模式下无法编辑。
+    corrupted: 无法加载笔记。笔记可能已损坏或仍在下载中。
+  versionTooNew:
+    title: 此笔记是用更新版本的 BadNotes 编辑的
+    subtitle: 编辑此笔记可能导致部分信息丢失。仍要忽略并继续编辑吗？
+    allowEditing: 允许编辑
+  quill:
+    typeSomething: 在此输入内容…
+  hud:
+    unlockZoom: 解锁缩放
+    lockZoom: 锁定缩放
+    unlockSingleFingerPan: 启用单指平移
+    lockSingleFingerPan: 停用单指平移
+    unlockAxisAlignedPan: 解除水平或垂直平移锁定
+    lockAxisAlignedPan: 锁定为水平或垂直平移
+  pages: 页面
+  untitled: 未命名
+  needsToSaveBeforeExiting: 正在保存更改… 完成后即可安全退出编辑器

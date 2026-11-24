@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>All pages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Lora:wght@500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Nunito:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E56CF;text-decoration:none}a:hover{color:#5A43B8}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.pop{position:absolute;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:18px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(0,0,0,.12);padding:16px;box-sizing:border-box;font-family:Inter,system-ui,sans-serif;color:#1C1C1E}
+.pt{font-family:Inter,sans-serif;font-weight:600;font-size:15px;margin:0;letter-spacing:-.1px}
+.ps{font-size:12px;color:#6B6B70;margin-top:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:14px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.tg{width:40px;height:24px;border-radius:99px;background:#E2E1DC;position:relative;display:inline-block;flex:none}
+.tg i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tg.on{background:#6E56CF}
+.tg.on i{left:18px}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;font-size:13px;font-weight:500}
+.ds{font-size:12px;color:#6B6B70;line-height:1.45;margin:-4px 0 6px}
+.sep{height:1px;background:#EFEEEA;margin:10px 0}
+.sg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:#EDEDEA;border-radius:10px}
+.sg .rb{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#55555A}
+.sg .rb.on{background:#FFFFFF;color:#1C1C1E;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.pv{height:80px;border-radius:12px;background:#F6F6F4;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;height:40px;border-radius:10px;padding:0 10px;font-size:13px;font-weight:500;color:#1C1C1E}
+.mi:hover{background:#F4F4F1}
+.sub{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);font-family:Inter,sans-serif;color:#1C1C1E}
+.sb{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.sb.on{background:#F2F2EF}
+.pill{height:32px;padding:0 10px;border-radius:9px;background:#F0EDFC;color:#5A43B8;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.vs{width:1px;height:18px;background:#E7E6E1;margin:0 6px}
+.sw{width:22px;height:22px;margin:0 4px;border-radius:50%}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+.note{position:absolute;font-family:Inter,sans-serif;font-weight:400;font-size:13px;line-height:1.45;color:#3A3A3F;background:#FFFFFF;padding:12px 14px;border:1px solid #E7E6E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dim{position:absolute;inset:0;background:rgba(20,20,22,.28);backdrop-filter:blur(4px)}
+.chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid #E7E6E1;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;background:#FFFFFF;color:#3A3A3F}
+.chip.on{background:#F0EDFC;color:#5A43B8;border-color:#E0D9FA;font-weight:600}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:1px solid #E7E6E1;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;color:#1C1C1E}
+.btn.go{background:#6E56CF;border-color:#6E56CF;color:#FFFFFF;font-weight:600}
+.red{color:#D93A2B}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+<div style="position: absolute; inset: 0"><dc-import name="M_Editor" tool="pen" show-sub="false" show-pop="false" hint-size="1280px,800px"></dc-import></div>
+<div class="dim"></div>
+<div class="pop" role="dialog" aria-label="All pages" style="left: 50px; top: 50px; right: 50px; bottom: 30px; padding: 24px 28px">
+  <div class="hd"><div style="display: flex; align-items: baseline; gap: 10px"><h2 class="pt" style="font-size: 26px">All pages</h2><span class="ps">24 pages</span></div>
+    <div style="display: flex; gap: 8px; align-items: center">
+      <div class="sg" style="width: 420px"><button class="rb on">All</button><button class="rb">Bookmarked · 3</button><button class="rb">With audio · 2</button></div>
+      <button class="rb btn">Select</button><button class="rb sb" aria-label="Close" style="border: 1px solid #E7E6E1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+  <div style="display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 18px 14px; margin-top: 22px"><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>1</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>2</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: radial-gradient(#C9C9C0 1px, transparent 1.3px) 0 0 / 10px 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    <span style="position: absolute; right: 8px; top: -2px; width: 14px; height: 22px; background: #FF5A36; clip-path: polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)"></span>
+    
+  </span>3</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>4</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>5</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: radial-gradient(#C9C9C0 1px, transparent 1.3px) 0 0 / 10px 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>6</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    <span style="position: absolute; left: 6px; bottom: 6px; width: 22px; height: 22px; border-radius: 50%; background: #8B7CFF; display: flex; align-items: center; justify-content: center; color: #FFFFFF"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+  </span>7</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>8</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: radial-gradient(#C9C9C0 1px, transparent 1.3px) 0 0 / 10px 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>9</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>10</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>11</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: radial-gradient(#C9C9C0 1px, transparent 1.3px) 0 0 / 10px 10px, #FFFFFF; box-shadow: 0 0 0 4px #6E56CF;"><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    <span style="position: absolute; right: 8px; top: -2px; width: 14px; height: 22px; background: #FF5A36; clip-path: polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)"></span>
+    <span style="position: absolute; left: 6px; bottom: 6px; width: 22px; height: 22px; border-radius: 50%; background: #8B7CFF; display: flex; align-items: center; justify-content: center; color: #FFFFFF"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0zM5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+  </span>12 · current</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>13</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#DCE3F2 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF; "><svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#2A4BD0" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 14px; top: 18px" aria-hidden="true"><path d="M2 6c8-4 14 4 22 0s14 4 24 0M2 18c10-3 20 3 34 0M2 30c6-3 18 3 30 0s14 3 20 0"/></svg>
+    
+    
+  </span>14</button><button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600">
+  <span style="position: relative; display: block; width: 104px; height: 136px; border-radius: 6px; border: 1px solid #E7E6E1; background: radial-gradient(#C9C9C0 1px, transparent 1.3px) 0 0 / 10px 10px, #FFFFFF; ">
+    
+    
+  </span>15</button>
+    <button class="rb" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 600"><span style="display: flex; width: 104px; height: 136px; border-radius: 6px; border: 1.5px dashed #CFCEC8; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Add page</button>
+  </div>
+  <div class="note" style="right: 30px; bottom: 26px; width: 300px">drag to reorder · long-press a page to copy, move, export or delete</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

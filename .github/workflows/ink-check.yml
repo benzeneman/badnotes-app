@@ -1,0 +1,50 @@
+name: Ink check
+
+# Draws a pen line both ways (the outline and the triangles) and keeps the
+# pictures, to look at before an APK is built. Run by hand.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Install Linux libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libsecret-1-dev clang cmake ninja-build pkg-config
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/shared_workflows/setup_flutter
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - run: flutter config --no-cli-animations
+
+      - name: Regenerate translations
+        run: flutter pub get && dart run slang
+
+      - name: Ink tests, with pictures
+        env:
+          INK_PNG: ${{ runner.temp }}/ink
+        run: flutter test --reporter=expanded test/ink_vertices_test.dart test/pen_settings_look_test.dart
+
+      - name: Keep the pictures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ink-pictures
+          path: ${{ runner.temp }}/ink
+          retention-days: 3

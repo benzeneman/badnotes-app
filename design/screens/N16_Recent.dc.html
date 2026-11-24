@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Lora:wght@500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Nunito:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E56CF;text-decoration:none}a:hover{color:#5A43B8}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.pop{position:absolute;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:18px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(0,0,0,.12);padding:16px;box-sizing:border-box;font-family:Inter,system-ui,sans-serif;color:#1C1C1E}
+.pt{font-family:Inter,sans-serif;font-weight:600;font-size:15px;margin:0;letter-spacing:-.1px}
+.ps{font-size:12px;color:#6B6B70;margin-top:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:14px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.tg{width:40px;height:24px;border-radius:99px;background:#E2E1DC;position:relative;display:inline-block;flex:none}
+.tg i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tg.on{background:#6E56CF}
+.tg.on i{left:18px}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;font-size:13px;font-weight:500}
+.ds{font-size:12px;color:#6B6B70;line-height:1.45;margin:-4px 0 6px}
+.sep{height:1px;background:#EFEEEA;margin:10px 0}
+.sg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:#EDEDEA;border-radius:10px}
+.sg .rb{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#55555A}
+.sg .rb.on{background:#FFFFFF;color:#1C1C1E;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.pv{height:80px;border-radius:12px;background:#F6F6F4;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;height:40px;border-radius:10px;padding:0 10px;font-size:13px;font-weight:500;color:#1C1C1E}
+.mi:hover{background:#F4F4F1}
+.sub{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);font-family:Inter,sans-serif;color:#1C1C1E}
+.sb{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.sb.on{background:#F2F2EF}
+.pill{height:32px;padding:0 10px;border-radius:9px;background:#F0EDFC;color:#5A43B8;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.vs{width:1px;height:18px;background:#E7E6E1;margin:0 6px}
+.sw{width:22px;height:22px;margin:0 4px;border-radius:50%}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+.note{position:absolute;font-family:Inter,sans-serif;font-weight:400;font-size:13px;line-height:1.45;color:#3A3A3F;background:#FFFFFF;padding:12px 14px;border:1px solid #E7E6E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dim{position:absolute;inset:0;background:rgba(20,20,22,.28);backdrop-filter:blur(4px)}
+.chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid #E7E6E1;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;background:#FFFFFF;color:#3A3A3F}
+.chip.on{background:#F0EDFC;color:#5A43B8;border-color:#E0D9FA;font-weight:600}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:1px solid #E7E6E1;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;color:#1C1C1E}
+.btn.go{background:#6E56CF;border-color:#6E56CF;color:#FFFFFF;font-weight:600}
+.red{color:#D93A2B}
+
+.card{background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.h1{margin:0;font-size:28px;font-weight:600;letter-spacing:-.8px}
+.h2{margin:0;font-size:15px;font-weight:600}
+.mut{font-size:12px;color:#6B6B70}
+.t{font-size:13px;font-weight:600}
+.cv{position:relative;display:block;border-radius:4px 12px 12px 4px;box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 24px rgba(0,0,0,.08);overflow:hidden}
+.cv::before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:rgba(0,0,0,.08)}
+.cl{position:absolute;left:18px;bottom:12px;font-size:12px;font-weight:600;color:rgba(28,28,30,.75)}
+.fd{position:relative;display:block;height:104px}
+.ftab{position:absolute;left:0;top:0;width:64px;height:20px;border-radius:10px 10px 0 0}
+.fback{position:absolute;left:0;right:0;top:12px;bottom:0;border-radius:0 12px 12px 12px}
+.pk{position:absolute;top:18px;width:36px;height:48px;border-radius:2px 5px 5px 2px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ffront{position:absolute;left:0;right:0;bottom:0;height:56px;border-radius:12px;padding:0 14px 10px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 -1px 0 rgba(255,255,255,.7) inset,0 -4px 10px rgba(0,0,0,.05)}
+.dk{height:44px;padding:0 16px;border-radius:999px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#3A3A3F}
+.lr{display:flex;align-items:center;gap:14px;height:64px;padding:0 16px;border-bottom:1px solid #F0EFEB}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #F6F6F4; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+<div style="position: absolute; inset: 0"><dc-import name="M_Shell" active="recent" hint-size="1280px,800px"></dc-import></div>
+<div style="position: absolute; left: 40px; right: 40px; top: 96px; display: flex; align-items: flex-end; justify-content: space-between"><div><h1 class="h1">Recent</h1><p class="mut" style="margin: 6px 0 0; font-size: 13px">Everything you opened or edited lately</p></div><div class="sg"><button class="rb" style="padding: 0 14px">Today</button><button class="rb on" style="padding: 0 14px">This week</button><button class="rb" style="padding: 0 14px">This month</button></div></div><div style="position: absolute; left: 40px; right: 40px; top: 160px; display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 32px">
+<div><div class="card" style="display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: #F0EDFC; border-color: #E0D9FA"><span style="width: 36px; height: 36px; border-radius: 10px; background: #FFFFFF; color: #6E56CF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h18v8H3zM8 8l-3 8M13 8l-3 8M18 8l-3 8"/></svg></span><span style="flex: 1"><span style="display: block; font-size: 14px; font-weight: 600">2 notes are due for revision</span><span style="font-size: 12px; color: #5A43B8">Physics — Class 12 · Hindi Vyakaran — tape quiz</span></span><button class="rb btn go" style="height: 34px">Start quiz</button></div><div class="mut" style="font-weight: 600; margin: 18px 0 6px 4px">Today</div><div class="card" style="overflow: hidden"><div class="lr"><span class="cv" style="width: 34px; height: 44px; background: #FFFFFF; border-radius: 2px 6px 6px 2px; flex: none"></span><span style="flex: 1"><span class="t" style="display: block">26-11-21 Untitled</span><span class="mut">Created 1:51 PM · 1 page</span></span><span class="chip" style="height: 26px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #CFCEC8"></span>Desk</span><button class="rb btn" style="height: 32px; padding: 0 12px; font-size: 12px">Open</button></div><div class="lr"><span class="cv" style="width: 34px; height: 44px; background: #E8E1FB; border-radius: 2px 6px 6px 2px; flex: none"></span><span style="flex: 1"><span class="t" style="display: block">Physics — Class 12</span><span class="mut">Edited 1:40 PM · page 12</span></span><span class="chip" style="height: 26px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #CFC2F5"></span>College</span><button class="rb btn" style="height: 32px; padding: 0 12px; font-size: 12px">Open</button></div><div class="lr"><span class="cv" style="width: 34px; height: 44px; background: #2B2B30; border-radius: 2px 6px 6px 2px; flex: none"></span><span style="flex: 1"><span class="t" style="display: block">Maths Formula Book</span><span class="mut">Edited 11:20 AM · page 30</span></span><span class="chip" style="height: 26px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #CFC2F5"></span>College</span><button class="rb btn" style="height: 32px; padding: 0 12px; font-size: 12px">Open</button></div></div>
+<div class="mut" style="font-weight: 600; margin: 18px 0 6px 4px">Yesterday</div><div class="card" style="overflow: hidden"><div class="lr"><span class="cv" style="width: 34px; height: 44px; background: #FBE3DA; border-radius: 2px 6px 6px 2px; flex: none"></span><span style="flex: 1"><span class="t" style="display: block">Daily Journal</span><span class="mut">Edited 9:05 PM · page 88</span></span><span class="chip" style="height: 26px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #F2C2B1"></span>Personal</span><button class="rb btn" style="height: 32px; padding: 0 12px; font-size: 12px">Open</button></div></div>
+<div class="mut" style="font-weight: 600; margin: 18px 0 6px 4px">Earlier this week</div><div class="card" style="overflow: hidden"><div class="lr"><span class="cv" style="width: 34px; height: 44px; background: #DCEFE9; border-radius: 2px 6px 6px 2px; flex: none"></span><span style="flex: 1"><span class="t" style="display: block">Hindi Vyakaran</span><span class="mut">Edited Wed · page 16</span></span><span class="chip" style="height: 26px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #CFC2F5"></span>College</span><button class="rb btn" style="height: 32px; padding: 0 12px; font-size: 12px">Open</button></div></div></div>
+<aside class="card" style="padding: 16px; height: 420px; box-sizing: border-box"><h2 class="h2">Pages you were on</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-top: 14px">
+<button class="rb" style="display: flex; flex-direction: column; gap: 6px; text-align: left"><span style="display: block; height: 130px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#E3E8F3 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF"></span><span class="mut">Physics · p.12</span></button><button class="rb" style="display: flex; flex-direction: column; gap: 6px; text-align: left"><span style="display: block; height: 130px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#E3E8F3 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF"></span><span class="mut">Maths · p.30</span></button><button class="rb" style="display: flex; flex-direction: column; gap: 6px; text-align: left"><span style="display: block; height: 130px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#E3E8F3 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF"></span><span class="mut">Journal · p.88</span></button><button class="rb" style="display: flex; flex-direction: column; gap: 6px; text-align: left"><span style="display: block; height: 130px; border-radius: 6px; border: 1px solid #E7E6E1; background: linear-gradient(#E3E8F3 1px, transparent 1px) 0 0 / 100% 10px, #FFFFFF"></span><span class="mut">Hindi · p.16</span></button>
+</div></aside></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

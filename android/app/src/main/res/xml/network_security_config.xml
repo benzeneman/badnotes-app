@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plain http is allowed only to the server that collects lag reports from
+     a lag build (see lib/data/lag_recorder.dart); everything else needs https,
+     as Android's default. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">141.148.205.149</domain>
+    </domain-config>
+</network-security-config>

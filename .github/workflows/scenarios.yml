@@ -1,0 +1,56 @@
+name: Editor scenarios
+
+# The editor used as a hand would, on Linux: pictures of every step and how
+# long it took, put on the 'scenario-renders' release to look at.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["perf-fixes"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  scenarios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Install Linux libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libsecret-1-dev clang cmake ninja-build pkg-config
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/shared_workflows/setup_flutter
+
+      - run: flutter config --no-cli-animations
+
+      - name: Regenerate translations
+        run: flutter pub get && dart run slang
+
+      - name: Run scenarios
+        id: run
+        continue-on-error: true
+        run: flutter test --reporter=expanded --tags scenario test/scenarios_test.dart
+
+      - name: Publish pictures
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls build/scenarios || exit 0
+          gh release view scenario-renders >/dev/null 2>&1 || \
+            gh release create scenario-renders --prerelease --title "Editor scenario pictures" --notes "From the scenarios workflow"
+          gh release upload scenario-renders build/scenarios/* --clobber
+          gh release edit scenario-renders --notes "From ${GITHUB_SHA::7} (run ${GITHUB_RUN_NUMBER}), tests: ${{ steps.run.outcome }}"
+
+      - name: Fail if the scenarios failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1

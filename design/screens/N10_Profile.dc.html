@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1C1C1E}a:hover{color:#000}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #1C1C1E;outline-offset:3px}
+.mi:hover{background:#F2F2EF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+  <div style="position: absolute; inset: 0"><dc-import name="M_Home" hint-size="1280px,800px"></dc-import></div>
+  <div style="position: absolute; inset: 0; background: rgba(22,22,26,.38); backdrop-filter: blur(3px)"></div>
+
+  <div style="position: absolute; left: 1206px; top: 33px; width: 34px; height: 34px; border-radius: 50%; background: #E9E4FB; border: 1px solid #E7E6E1; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-family: Inter, sans-serif; font-weight: 600; font-size: 18px; box-shadow: 0 0 0 4px #FFFFFF">W</div>
+
+  <div role="menu" aria-label="Account" style="position: absolute; left: 916px; top: 80px; width: 324px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); padding: 10px; box-sizing: border-box">
+    <div style="position: absolute; left: 292px; top: -11px; width: 18px; height: 18px; background: #FFFFFF; border-left: 1px solid #E7E6E1; border-top: 1px solid #E7E6E1; transform: rotate(45deg)"></div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 8px 8px 12px">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #E9E4FB; border: 1px solid #E7E6E1; display: flex; align-items: center; justify-content: center; font-family: Inter, sans-serif; font-weight: 600; font-size: 20px">W</div>
+      <div style="flex: 1; min-width: 0">
+        <div style="font-weight: 700; font-size: 15px">[Your name]</div>
+        <div style="font-size: 12px; color: #6B6B70">Synced with Google Drive</div>
+      </div>
+      <button class="rb" style="height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid #E7E6E1; font-size: 12px; font-weight: 600; display: flex; align-items: center">Edit</button>
+    </div>
+
+    <div style="padding: 4px 8px 12px">
+      <div style="font-size: 12px; font-weight: 700; color: #6B6B70; margin-bottom: 8px">Theme</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #F2F2EF; border-radius: 999px">
+        <button class="rb" style="height: 34px; border-radius: 999px; background: #F0EDFC; color: #5A43B8; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">Light</button>
+        <button class="rb" style="height: 34px; border-radius: 999px; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">Dark</button>
+        <button class="rb" style="height: 34px; border-radius: 999px; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center">Auto</button>
+      </div>
+    </div>
+    <div style="height: 1.5px; background: #EFEEEA; margin: 0 4px 6px"></div>
+
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 44px; border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>Settings</button>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 44px; border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg>Pen &amp; stylus</button>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 44px; border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 10l5 5 5-5"/><path d="M5 17v3h14v-3"/></svg>Backup &amp; export</button>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 44px; border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+      <span style="flex: 1">Trash</span>
+      <span style="font-size: 11px; font-weight: 700; background: #F2F2EF; border-radius: 99px; padding: 2px 8px">3</span>
+    </button>
+    <button class="rb mi" role="menuitem" style="width: 100%; height: 44px; border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/></svg>Help &amp; feedback</button>
+    <div style="height: 1.5px; background: #EFEEEA; margin: 6px 4px"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 12px 4px">
+      <span style="font-family: Inter, sans-serif; font-weight: 600; font-size: 14px">bad<span style="background: #F0EDFC; padding: 0 4px; border-radius: 4px">notes</span></span>
+      <span style="font-size: 11px; color: #6B6B70">version [x.y.z]</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

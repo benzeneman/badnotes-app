@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zoom window</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Lora:wght@500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Nunito:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E56CF;text-decoration:none}a:hover{color:#5A43B8}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.pop{position:absolute;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:18px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(0,0,0,.12);padding:16px;box-sizing:border-box;font-family:Inter,system-ui,sans-serif;color:#1C1C1E}
+.pt{font-family:Inter,sans-serif;font-weight:600;font-size:15px;margin:0;letter-spacing:-.1px}
+.ps{font-size:12px;color:#6B6B70;margin-top:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:14px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.tg{width:40px;height:24px;border-radius:99px;background:#E2E1DC;position:relative;display:inline-block;flex:none}
+.tg i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tg.on{background:#6E56CF}
+.tg.on i{left:18px}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;font-size:13px;font-weight:500}
+.ds{font-size:12px;color:#6B6B70;line-height:1.45;margin:-4px 0 6px}
+.sep{height:1px;background:#EFEEEA;margin:10px 0}
+.sg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:#EDEDEA;border-radius:10px}
+.sg .rb{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#55555A}
+.sg .rb.on{background:#FFFFFF;color:#1C1C1E;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.pv{height:80px;border-radius:12px;background:#F6F6F4;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;height:40px;border-radius:10px;padding:0 10px;font-size:13px;font-weight:500;color:#1C1C1E}
+.mi:hover{background:#F4F4F1}
+.sub{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);font-family:Inter,sans-serif;color:#1C1C1E}
+.sb{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.sb.on{background:#F2F2EF}
+.pill{height:32px;padding:0 10px;border-radius:9px;background:#F0EDFC;color:#5A43B8;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.vs{width:1px;height:18px;background:#E7E6E1;margin:0 6px}
+.sw{width:22px;height:22px;margin:0 4px;border-radius:50%}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+.note{position:absolute;font-family:Inter,sans-serif;font-weight:400;font-size:13px;line-height:1.45;color:#3A3A3F;background:#FFFFFF;padding:12px 14px;border:1px solid #E7E6E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dim{position:absolute;inset:0;background:rgba(20,20,22,.28);backdrop-filter:blur(4px)}
+.chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid #E7E6E1;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;background:#FFFFFF;color:#3A3A3F}
+.chip.on{background:#F0EDFC;color:#5A43B8;border-color:#E0D9FA;font-weight:600}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:1px solid #E7E6E1;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;color:#1C1C1E}
+.btn.go{background:#6E56CF;border-color:#6E56CF;color:#FFFFFF;font-weight:600}
+.red{color:#D93A2B}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+<div style="position: absolute; inset: 0"><dc-import name="M_Editor" tool="pen" show-sub="false" show-pop="false" hint-size="1280px,800px"></dc-import></div>
+<div style="position: absolute; left: 405px; top: 222px; width: 400px; height: 54px; border: 3px solid #6E56CF; border-radius: 6px; box-shadow: 0 0 0 1.5px #1C1C1E"></div>
+<div role="region" aria-label="Zoom window" style="position: absolute; left: 120px; right: 120px; bottom: 102px; height: 270px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.08); display: flex; overflow: hidden">
+  <div style="width: 70px; border-right: 1.5px solid #EFEEEA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+    <button class="rb ib" aria-label="Move left" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #E7E6E1; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <button class="rb" aria-label="Move right" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #E7E6E1; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button class="rb" aria-label="New line" style="width: 40px; height: 40px; border-radius: 50%; background: #F0EDFC; color: #5A43B8; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 5v7a3 3 0 0 1-3 3H5M9 11l-4 4 4 4"/></svg></button>
+  </div>
+  <div style="flex: 1; position: relative; background-color: #FFFFFF; background-image: linear-gradient(#DCE3F2 2px, transparent 2px); background-size: 100% 80px; background-position: 0 50px">
+    <span style="position: absolute; left: 30px; top: 44px; font: 700 76px Caveat, cursive; color: #2A4BD0; white-space: nowrap">2nd law: F = m · a</span>
+    <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 90px; background: rgba(110,86,207,.12); border-left: 2px dashed #1C1C1E; display: flex; align-items: center; justify-content: center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></div>
+    <div style="position: absolute; left: 16px; top: 12px; display: flex; gap: 6px">
+      <span class="chip on">Zoom window</span><span class="chip">2.5×</span><span class="chip">Auto-advance on</span>
+    </div>
+    <button class="rb" aria-label="Close zoom window" style="position: absolute; right: 104px; top: 12px; width: 34px; height: 34px; border-radius: 50%; background: #F2F2EF; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+</div>
+<div class="note" style="left: 830px; top: 150px; width: 230px">write big below, it lands small on the page. Touching the lime zone jumps ahead</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

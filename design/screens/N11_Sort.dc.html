@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sort and view</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1C1C1E}a:hover{color:#000}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #1C1C1E;outline-offset:3px}
+.mi:hover{background:#F2F2EF}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+  <div style="position: absolute; inset: 0"><dc-import name="M_Home" hint-size="1280px,800px"></dc-import></div>
+  <div style="position: absolute; inset: 0; background: rgba(22,22,26,.32); backdrop-filter: blur(2px)"></div>
+
+  <div style="position: absolute; left: 846px; top: 338px; height: 36px; padding: 0 12px; border-radius: 999px; background: #1C1C1E; color: #FFFFFF; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; box-shadow: 0 0 0 4px #FFFFFF">{{sortShort}}
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+  </div>
+
+  <div role="menu" aria-label="Sort and view" style="position: absolute; left: 676px; top: 380px; width: 270px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,.08); padding: 10px; box-sizing: border-box">
+    <div style="font-size: 12px; font-weight: 700; color: #6B6B70; padding: 6px 12px 6px">Sort by</div>
+    <sc-for list="{{sorts}}" as="s" hint-placeholder-count="4">
+      <button class="rb mi" role="menuitemradio" onClick="{{s.pick}}" style="width: 100%; height: 42px; border-radius: 12px; padding: 0 12px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600">
+        <span style="flex: 1">{{s.name}}</span>
+        <sc-if value="{{s.on}}" hint-placeholder-val="{{ false }}">
+          <span style="width: 22px; height: 22px; border-radius: 50%; background: #F0EDFC; border: 1px solid #E7E6E1; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+        </sc-if>
+      </button>
+    </sc-for>
+    <div style="height: 1.5px; background: #EFEEEA; margin: 8px 4px"></div>
+    <div style="font-size: 12px; font-weight: 700; color: #6B6B70; padding: 4px 12px 8px">View</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 0 6px; background: #F2F2EF; border-radius: 999px">
+      <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+        <button class="rb" onClick="{{v.pick}}" style="height: 34px; border-radius: 999px; background: {{v.bg}}; color: {{v.fg}}; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{v.name}}</button>
+      </sc-for>
+    </div>
+    <div style="font-size: 12px; font-weight: 700; color: #6B6B70; padding: 14px 12px 8px">Cover size</div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 0 6px 6px; background: #F2F2EF; border-radius: 999px">
+      <sc-for list="{{sizes}}" as="z" hint-placeholder-count="3">
+        <button class="rb" onClick="{{z.pick}}" style="height: 34px; border-radius: 999px; background: {{z.bg}}; color: {{z.fg}}; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{z.name}}</button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sort: 0, view: 0, size: 1 };
+  }
+  renderVals() {
+    const S = [['Recently opened', 'Recent'], ['Recently edited', 'Edited'], ['Name A–Z', 'A–Z'], ['Date created', 'Created']];
+    const V = ['Grid', 'List'];
+    const Z = ['S', 'M', 'L'];
+    const st = this.state;
+    const seg = (on) => ({ bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#5A43B8' : '#3A3A3F' });
+    return {
+      sortShort: S[st.sort][1],
+      sorts: S.map((s, i) => ({ name: s[0], on: i === st.sort, pick: () => this.setState({ sort: i }) })),
+      views: V.map((n, i) => Object.assign({ name: n, pick: () => this.setState({ view: i }) }, seg(i === st.view))),
+      sizes: Z.map((n, i) => Object.assign({ name: n, pick: () => this.setState({ size: i }) }, seg(i === st.size)))
+    };
+  }
+}
+</script>
+</body>
+</html>

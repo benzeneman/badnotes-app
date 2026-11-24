@@ -1,0 +1,31 @@
+name: Make icons
+
+# Draws the launcher and splash pictures from assets/icon/generate_icons.py
+# and keeps them as an artifact to be put in the repository.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: assets/icon/generate_icons.py
+      - run: pip install pillow
+      - run: python3 assets/icon/generate_icons.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: icons
+          path: |
+            android/app/src/main/res/mipmap-*/ic_launcher*.png
+            android/app/src/main/res/drawable-xxxhdpi/splash_logo.png
+            assets/icon/icon.png

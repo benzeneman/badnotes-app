@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Lora:wght@500;700&amp;family=JetBrains+Mono:wght@500&amp;family=Nunito:wght@700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E56CF;text-decoration:none}a:hover{color:#5A43B8}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #6E56CF;outline-offset:3px}
+.pop{position:absolute;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:18px;box-shadow:0 2px 4px rgba(0,0,0,.04),0 18px 48px rgba(0,0,0,.12);padding:16px;box-sizing:border-box;font-family:Inter,system-ui,sans-serif;color:#1C1C1E}
+.pt{font-family:Inter,sans-serif;font-weight:600;font-size:15px;margin:0;letter-spacing:-.1px}
+.ps{font-size:12px;color:#6B6B70;margin-top:2px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab{display:flex;justify-content:space-between;font-size:12px;font-weight:500;color:#6B6B70;margin-top:14px}
+.sl{position:relative;height:22px;margin-top:4px}
+.sl .tr{position:absolute;left:0;right:0;top:9px;height:4px;border-radius:99px;background:#E7E6E1}
+.sl .fi{position:absolute;left:0;top:9px;height:4px;border-radius:99px;background:#6E56CF}
+.sl .kn{position:absolute;top:1px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.08)}
+.tg{width:40px;height:24px;border-radius:99px;background:#E2E1DC;position:relative;display:inline-block;flex:none}
+.tg i{position:absolute;left:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tg.on{background:#6E56CF}
+.tg.on i{left:18px}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;font-size:13px;font-weight:500}
+.ds{font-size:12px;color:#6B6B70;line-height:1.45;margin:-4px 0 6px}
+.sep{height:1px;background:#EFEEEA;margin:10px 0}
+.sg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:3px;background:#EDEDEA;border-radius:10px}
+.sg .rb{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#55555A}
+.sg .rb.on{background:#FFFFFF;color:#1C1C1E;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:12px;font-size:12px;font-weight:500;color:#3A3A3F}
+.ty.on{background:#F0EDFC;color:#5A43B8;font-weight:600}
+.pv{height:80px;border-radius:12px;background:#F6F6F4;display:flex;align-items:center;justify-content:center;margin-top:12px}
+.mi{display:flex;align-items:center;gap:12px;width:100%;height:40px;border-radius:10px;padding:0 10px;font-size:13px;font-weight:500;color:#1C1C1E}
+.mi:hover{background:#F4F4F1}
+.sub{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:5px;background:#FFFFFF;border:1px solid #E7E6E1;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);font-family:Inter,sans-serif;color:#1C1C1E}
+.sb{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3A3A3F}
+.sb.on{background:#F2F2EF}
+.pill{height:32px;padding:0 10px;border-radius:9px;background:#F0EDFC;color:#5A43B8;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.vs{width:1px;height:18px;background:#E7E6E1;margin:0 6px}
+.sw{width:22px;height:22px;margin:0 4px;border-radius:50%}
+.sw.on{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px #6E56CF}
+.note{position:absolute;font-family:Inter,sans-serif;font-weight:400;font-size:13px;line-height:1.45;color:#3A3A3F;background:#FFFFFF;padding:12px 14px;border:1px solid #E7E6E1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.dim{position:absolute;inset:0;background:rgba(20,20,22,.28);backdrop-filter:blur(4px)}
+.chip{height:30px;padding:0 12px;border-radius:8px;border:1px solid #E7E6E1;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;background:#FFFFFF;color:#3A3A3F}
+.chip.on{background:#F0EDFC;color:#5A43B8;border-color:#E0D9FA;font-weight:600}
+.btn{height:40px;padding:0 18px;border-radius:10px;border:1px solid #E7E6E1;font-size:13px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#FFFFFF;color:#1C1C1E}
+.btn.go{background:#6E56CF;border-color:#6E56CF;color:#FFFFFF;font-weight:600}
+.red{color:#D93A2B}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+<div style="position: absolute; inset: 0"><dc-import name="M_Editor" tool="pen" show-sub="false" show-pop="false" hint-size="1280px,800px"></dc-import></div>
+<div class="dim"></div>
+<div class="pop" role="dialog" aria-label="Add page" style="left: 170px; top: 90px; width: 940px; height: 620px; padding: 24px 28px; display: flex; flex-direction: column; gap: 6px">
+  <div class="hd"><h2 class="pt" style="font-size: 26px">{{heading}}</h2><button class="rb sb" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div style="display: flex; gap: 24px; align-items: flex-end">
+    <div style="flex: 1"><div class="lab"><span>Where</span><span></span></div>
+      <div class="sg" style="margin-top: 6px"><button class="rb">Before this page</button><button class="rb on">After this page</button><button class="rb">At the end</button></div></div>
+    <div><div class="lab"><span>How many</span><span></span></div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 6px; height: 42px"><button class="rb sb" aria-label="Fewer" style="border: 1px solid #E7E6E1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><span style="font: 600 18px Inter; width: 18px; text-align: center">1</span><button class="rb sb" aria-label="More" style="border: 1px solid #E7E6E1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+  </div>
+  <div class="lab"><span>Template</span><span></span></div>
+  <div style="display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 14px; margin-top: 8px">
+    <sc-for list="{{temps}}" as="t" hint-placeholder-count="8">
+      <button class="rb" onClick="{{t.pick}}" style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+        <span style="display: block; width: 88px; height: 116px; border: 1px solid #E7E6E1; border-radius: 8px; background: {{t.bg}}; box-shadow: {{t.ring}}"></span>
+        <span style="font-size: 12px; font-weight: {{t.w}}">{{t.name}}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div class="lab" style="margin-top: 16px"><span>Paper color</span><span></span></div>
+  <div style="display: flex; gap: 10px; margin-top: 6px">
+    <sc-for list="{{papers}}" as="p" hint-placeholder-count="4"><button class="rb chip" onClick="{{p.pick}}" style="background: {{p.bg}}; color: {{p.fg}}"><span style="width: 16px; height: 16px; border-radius: 50%; background: {{p.hex}}; border: 1px solid #E7E6E1"></span>{{p.name}}</button></sc-for>
+  </div>
+  <div class="rw" style="margin-top: 8px"><span>Change template for the whole notebook</span><button class="rb tg" role="switch" aria-label="Whole notebook" onClick="{{toggleAll}}" style="background: {{allBg}}"><i style="left: {{allKnob}}; background: {{allKnobBg}}"></i></button></div>
+  <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: auto"><button class="rb btn">Cancel</button><button class="rb btn go">{{cta}}</button></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { t: 1, p: 0, all: false }; }
+  renderVals() {
+    const s = this.state;
+    const PAP = [['White', '#FFFFFF', '#CBD5EA'], ['Ivory', '#FBF6E9', '#E2D6B8'], ['Grey', '#2B2D33', '#4D515C'], ['Navy', '#1E2A4A', '#3A4A72']];
+    const [pn, bg, L] = PAP[s.p];
+    const T = [
+      ['Blank', bg],
+      ['Open lines', `linear-gradient(${L} 1px, transparent 1px) 0 12px / 100% 9px, ${bg}`],
+      ['Fine graph', `linear-gradient(${L} 1px, transparent 1px) 0 0 / 9px 9px, linear-gradient(90deg, ${L} 1px, transparent 1px) 0 0 / 9px 9px, ${bg}`],
+      ['Dot grid', `radial-gradient(${L} 1.2px, transparent 1.4px) 0 0 / 9px 9px, ${bg}`],
+      ['Study notes', `linear-gradient(90deg, transparent 22px, #FF8A6B 22px 23.5px, transparent 23.5px), linear-gradient(transparent 86px, #FF8A6B 86px 87.5px, transparent 87.5px), linear-gradient(${L} 1px, transparent 1px) 0 6px / 100% 9px, ${bg}`],
+      ['Week planner', `linear-gradient(90deg, transparent 49%, ${L} 49% 51%, transparent 51%), linear-gradient(${L} 1px, transparent 1px) 0 0 / 100% 18px, ${bg}`],
+      ['Sheet music', `repeating-linear-gradient(${L} 0 1px, transparent 1px 5px, ${L} 5px 6px, transparent 6px 10px, ${L} 10px 11px, transparent 11px 15px, ${L} 15px 16px, transparent 16px 20px, ${L} 20px 21px, transparent 21px 34px), ${bg}`],
+      ['Isometric', `repeating-linear-gradient(30deg, ${L} 0 1px, transparent 1px 10px), repeating-linear-gradient(150deg, ${L} 0 1px, transparent 1px 10px), ${bg}`]
+    ];
+    const ring = '0 0 0 2px #FFFFFF, 0 0 0 4px #6E56CF';
+    return {
+      heading: s.all ? 'Change template' : 'Add page',
+      cta: s.all ? 'Apply to all 24 pages' : 'Add 1 ' + T[s.t][0].toLowerCase() + ' page',
+      temps: T.map((t, i) => ({ name: t[0], bg: t[1], ring: i === s.t ? ring : 'none', w: i === s.t ? 800 : 500, pick: () => this.setState({ t: i }) })),
+      papers: PAP.map((p, i) => ({ name: p[0], hex: p[1], bg: i === s.p ? '#F0EDFC' : '#FFFFFF', fg: i === s.p ? '#5A43B8' : '#3A3A3F', pick: () => this.setState({ p: i }) })),
+      toggleAll: () => this.setState({ all: !s.all }),
+      allBg: s.all ? '#6E56CF' : '#E2E1DC', allKnob: s.all ? '18px' : '2px', allKnobBg: '#FFFFFF'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+ "book": {
+  "lucide": "book-open",
+  "svgPath24": "M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M8 7h7"
+ },
+ "flask": {
+  "lucide": "flask-conical",
+  "svgPath24": "M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M7.5 15h9"
+ },
+ "calc": {
+  "lucide": "calculator",
+  "svgPath24": "M6 3h12v18H6zM9 7h6M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"
+ },
+ "work": {
+  "lucide": "briefcase",
+  "svgPath24": "M3 8h18v11H3zM9 8V5h6v3M3 13h18"
+ },
+ "heart": {
+  "lucide": "heart",
+  "svgPath24": "M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-2.5A4.5 4.5 0 0 1 20 9c0 6-8 11-8 11z"
+ },
+ "plane": {
+  "lucide": "plane",
+  "svgPath24": "M2 13l20-8-6 16-4-6-6-2zM12 15l4-4"
+ },
+ "music": {
+  "lucide": "music",
+  "svgPath24": "M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0a3 3 0 1 1 6 0M20 16a3 3 0 1 1-6 0a3 3 0 1 1 6 0"
+ },
+ "code": {
+  "lucide": "code",
+  "svgPath24": "M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"
+ },
+ "palette": {
+  "lucide": "palette",
+  "svgPath24": "M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-2 0-3 2 0 3 0a4 4 0 0 0 4-4c0-5-4-9-9-9zM7.5 11h.01M10 7h.01M15 7h.01"
+ },
+ "cap": {
+  "lucide": "graduation-cap",
+  "svgPath24": "M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5M22 9v6"
+ },
+ "pen": {
+  "lucide": "pencil",
+  "svgPath24": "M4 20l1-5L16 4l4 4L9 19zM14 6l4 4"
+ },
+ "star": {
+  "lucide": "star",
+  "svgPath24": "M12 4l2.5 5.2 5.5.8-4 3.9.9 5.6L12 16.9 7.1 19.5l.9-5.6-4-3.9 5.5-.8z"
+ },
+ "home": {
+  "lucide": "house",
+  "svgPath24": "M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"
+ },
+ "camera": {
+  "lucide": "camera",
+  "svgPath24": "M4 8h3l2-3h6l2 3h3v11H4zM8.5 13a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0"
+ },
+ "leaf": {
+  "lucide": "leaf",
+  "svgPath24": "M5 19c0-9 6-14 15-14 0 9-5 15-14 15zM5 19l8-8"
+ },
+ "globe": {
+  "lucide": "globe",
+  "svgPath24": "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"
+ }
+}

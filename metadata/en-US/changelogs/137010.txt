@@ -1,0 +1,3 @@
+• Smoother fountain pen: no more beads along long lines.
+• Pressure sensitivity now works with pens that report as touch.
+• New logo, and a privacy policy and terms of use in About.

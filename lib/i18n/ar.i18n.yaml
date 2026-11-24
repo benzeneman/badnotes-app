@@ -1,0 +1,391 @@
+common:
+  done: تم
+  continueBtn: متابعة
+  cancel: إلغاء
+home:
+  tabs:
+    home: الرئيسية
+    browse: تصفح
+    whiteboard: السبورة
+    settings: الإعدادات
+  titles:
+    home: الملاحظات الأخيرة
+    browse: تصفح
+    whiteboard: السبورة
+    settings: الإعدادات
+  tooltips:
+    newNote: ملاحظة جديدة
+    showUpdateDialog: عرض نافذة التحديث
+    exportNote: تصدير الملاحظة
+  create:
+    newNote: ملاحظة جديدة
+    importNote: استيراد ملاحظة
+  welcome: مرحبًا بك في BadNotes
+  invalidFormat: الملف الذي اخترته غير مدعوم. يُرجى اختيار ملف sbn أو sbn2 أو sba أو pdf.
+  noFiles: لا توجد ملفات
+  noPreviewAvailable: لا توجد معاينة
+  createNewNote: اضغط على زر + لإنشاء ملاحظة جديدة
+  backFolder: العودة إلى المجلد السابق
+  newFolder:
+    newFolder: مجلد جديد
+    folderName: اسم المجلد
+    create: إنشاء
+    folderNameEmpty: لا يمكن ترك اسم المجلد فارغًا
+    folderNameContainsSlash: لا يمكن أن يحتوي اسم المجلد على شرطة مائلة
+    folderNameExists: المجلد موجود بالفعل
+  renameNote:
+    renameNote: إعادة تسمية الملاحظة
+    noteName: اسم الملاحظة
+    rename: إعادة تسمية
+    noteNameEmpty: لا يمكن ترك اسم الملاحظة فارغًا
+    noteNameExists: توجد ملاحظة بهذا الاسم بالفعل
+    noteNameForbiddenCharacters: يحتوي اسم الملاحظة على أحرف غير مسموح بها
+    noteNameReserved: اسم الملاحظة محجوز
+  moveNote:
+    moveNote: نقل الملاحظة
+    moveNotes: نقل $n ملاحظات
+    moveName: نقل $f
+    move: نقل
+    renamedTo: ستُعاد تسمية الملاحظة إلى $newName
+    multipleRenamedTo: "ستُعاد تسمية الملاحظات التالية:"
+    numberRenamedTo: ستُعاد تسمية $n ملاحظات لتجنب التعارض
+  deleteNote: حذف الملاحظة
+  deleteNoteDialog:
+    deleteNotes: حذف $n ملاحظات
+    deleteName: حذف $f
+    confirmDelete:
+      one: هل تريد حذف الملاحظة المحددة نهائيًا؟
+      other: هل تريد حذف الملاحظات المحددة نهائيًا؟
+    delete: حذف
+  renameFolder:
+    renameFolder: إعادة تسمية المجلد
+    folderName: اسم المجلد
+    rename: إعادة تسمية
+    folderNameEmpty: لا يمكن ترك اسم المجلد فارغًا
+    folderNameContainsSlash: لا يمكن أن يحتوي اسم المجلد على شرطة مائلة
+    folderNameExists: يوجد مجلد بهذا الاسم بالفعل
+  deleteFolder:
+    deleteFolder: حذف المجلد
+    deleteName: حذف $f
+    delete: حذف
+    alsoDeleteContents: حذف جميع الملاحظات داخل هذا المجلد أيضًا
+  sort:
+    sortBy: ترتيب حسب
+    nameAToZ: الاسم (أ-ي)
+    nameZToA: الاسم (ي-أ)
+    lastModifiedNewToOld: التعديل (الأحدث أولًا)
+    lastModifiedOldToNew: التعديل (الأقدم أولًا)
+  layout:
+    layout: التخطيط
+    masonryGrid: شبكة متدرجة
+    simpleGrid: شبكة بسيطة
+sentry:
+  consent:
+    title: هل تساعد في تحسين BadNotes؟
+    description:
+      question: هل تريد الإبلاغ تلقائيًا عن الأخطاء غير المتوقعة؟ هذا يساعدني على اكتشاف المشكلات وإصلاحها بشكل أسرع.
+      scope: قد تحتوي التقارير على معلومات عن الخطأ وعن جهازك. بذلتُ كل جهد لاستبعاد البيانات الشخصية، لكن قد يبقى بعضها.
+      currentlyOff: إذا منحت موافقتك، فسيُفعَّل الإبلاغ عن الأخطاء بعد إعادة تشغيل التطبيق.
+      currentlyOn: إذا سحبت موافقتك، فيُرجى إعادة تشغيل التطبيق لإيقاف الإبلاغ عن الأخطاء.
+      learnMoreInPrivacyPolicy(rich): اعرف المزيد في ${link(سياسة الخصوصية)}.
+    answers:
+      yes: نعم
+      no: لا
+      later: اسألني لاحقًا
+settings:
+  prefCategories:
+    general: عام
+    writing: الكتابة
+    editor: المحرر
+    performance: الأداء
+    advanced: متقدم
+  prefLabels:
+    locale: اللغة
+    appTheme: سمة التطبيق
+    platform: نوع السمة
+    layoutSize: نوع التخطيط
+    customAccentColor: لون مميز مخصص
+    hyperlegibleFont: خط Atkinson Hyperlegible
+    shouldCheckForUpdates: التحقق من تحديثات BadNotes
+    shouldAlwaysAlertForUpdates: تحديثات أسرع
+    allowInsecureConnections: السماح بالاتصالات غير الآمنة
+    syncOnlyOnWifi: المزامنة عبر Wi-Fi فقط
+    syncPreviewsOnMobileData: رفع المعاينات عبر بيانات الجوال
+    editorToolbarAlignment: موضع شريط الأدوات
+    editorToolbarShowInFullscreen: إظهار شريط الأدوات في وضع ملء الشاشة
+    editorAutoInvert: عكس ألوان الملاحظات في الوضع الداكن
+    preferGreyscale: تفضيل الألوان الرمادية
+    maxImageSize: الحد الأقصى لحجم الصورة
+    autoClearWhiteboardOnExit: مسح السبورة تلقائيًا
+    disableEraserAfterUse: إيقاف الممحاة تلقائيًا
+    hideFingerDrawingToggle: إخفاء مفتاح الرسم بالإصبع
+    autoDisableFingerDrawingWhenStylusDetected: إيقاف الرسم بالإصبع تلقائيًا
+    editorPromptRename: مطالبتك بتسمية الملاحظات الجديدة
+    recentColorsDontSavePresets: عدم حفظ الألوان الجاهزة في الألوان الأخيرة
+    recentColorsLength: عدد الألوان الأخيرة المحفوظة
+    printPageIndicators: طباعة أرقام الصفحات
+    autosave: الحفظ التلقائي
+    shapeRecognitionDelay: مهلة التعرف على الأشكال
+    autoStraightenLines: تقويم الخطوط تلقائيًا
+    customDataDir: مجلد BadNotes مخصص
+    sentry: الإبلاغ عن الأخطاء
+  prefDescriptions:
+    syncOnlyOnWifi: "معطّل: تُزامَن الملاحظات عبر بيانات الجوال أيضًا. مفعّل: تنتظر المزامنة شبكة Wi-Fi"
+    syncPreviewsOnMobileData: تنتظر الصور المصغرة للملاحظات عادةً شبكة Wi-Fi لتوفير البيانات
+    hyperlegibleFont: يُحسّن وضوح القراءة لضعاف البصر
+    allowInsecureConnections: (غير مستحسن) السماح لـ BadNotes بالاتصال بخوادم ذات شهادات موقعة ذاتيًا أو غير موثوقة
+    preferGreyscale: لشاشات الحبر الإلكتروني
+    autoClearWhiteboardOnExit: يمسح السبورة بعد الخروج من التطبيق
+    disableEraserAfterUse: يعود تلقائيًا إلى القلم بعد استخدام الممحاة
+    maxImageSize: ستُضغط الصور الأكبر من ذلك
+    hideFingerDrawing:
+      shown: يمنع التبديل غير المقصود
+      fixedOn: الرسم بالإصبع مفعّل دائمًا
+      fixedOff: الرسم بالإصبع معطّل دائمًا
+    autoDisableFingerDrawingWhenStylusDetected: إيقاف الرسم بالإصبع عند اكتشاف قلم
+    editorPromptRename: يمكنك دائمًا إعادة تسمية الملاحظات لاحقًا
+    printPageIndicators: إظهار أرقام الصفحات في الملفات المصدّرة
+    autosave: الحفظ التلقائي بعد مهلة قصيرة، أو عدم الحفظ أبدًا
+    shapeRecognitionDelay: مدة تثبيت القلم قبل أن يتحول الحبر إلى شكل
+    autoStraightenLines: يقوّم الخطوط الطويلة دون الحاجة إلى قلم الأشكال
+    shouldAlwaysAlertForUpdates: أبلغني بالتحديثات فور توفرها
+    sentry:
+      active: نشط
+      inactive: غير نشط
+      activeUntilRestart: نشط حتى إعادة تشغيل التطبيق
+      inactiveUntilRestart: غير نشط حتى إعادة تشغيل التطبيق
+  themeModes:
+    system: النظام
+    light: فاتح
+    dark: داكن
+  layoutSizes:
+    auto: تلقائي
+    phone: هاتف
+    tablet: جهاز لوحي
+  accentColorPicker:
+    pickAColor: اختر لونًا
+  systemLanguage: تلقائي
+  axisDirections:
+  - أعلى
+  - يمين
+  - أسفل
+  - يسار
+  reset:
+    title: إعادة تعيين هذا الإعداد؟
+    button: إعادة تعيين
+  resyncEverything: إعادة مزامنة الكل
+  openDataDir: فتح مجلد BadNotes
+  customDataDir:
+    cancel: إلغاء
+    select: اختيار
+    mustBeEmpty: يجب أن يكون المجلد المحدد فارغًا
+    mustBeDoneSyncing: تأكد من اكتمال المزامنة قبل تغيير المجلد
+    unsupported: هذه الميزة مخصصة للمطورين حاليًا. استخدامها قد يؤدي على الأرجح إلى فقدان البيانات.
+  autosaveDisabled: أبدًا
+  shapeRecognitionDisabled: أبدًا
+logs:
+  logs: السجلات
+  viewLogs: عرض السجلات
+  debuggingInfo: تحتوي السجلات على معلومات مفيدة لتصحيح الأخطاء والتطوير
+  noLogs: لا توجد سجلات هنا!
+  useTheApp: ستظهر السجلات هنا أثناء استخدامك للتطبيق
+login:
+  title: تسجيل الدخول
+  form:
+    agreeToPrivacyPolicy(rich): بتسجيل الدخول، فإنك توافق على ${linkToPrivacyPolicy(سياسة الخصوصية)}.
+  signup(rich): ليس لديك حساب بعد؟ ${linkToSignup(أنشئ حسابًا الآن)}!
+  notYou(rich): لست أنت؟ ${undoLogin(اختر حسابًا آخر)}.
+  status:
+    loggedOut: تم تسجيل الخروج
+    tapToLogin: اضغط للمزامنة مع Google Drive
+    hi: مرحبًا، $u!
+    almostDone: المزامنة على وشك الجاهزية، اضغط لإكمال تسجيل الدخول
+    loggedIn: المزامنة مفعّلة
+  ncLoginStep:
+    whereToStoreData: "اختر مكان تخزين بياناتك:"
+    cloudStorage: Google Drive أو OneDrive
+    loginWithGoogleDrive: المتابعة باستخدام Google Drive
+    loginWithOneDrive: المتابعة باستخدام OneDrive
+    cloudLoginFailed: تعذّر تسجيل الدخول
+    comingSoon: قريبًا
+    badnotesNcServer: خادم Nextcloud الخاص بـ BadNotes
+    otherNcServer: خادم Nextcloud آخر
+    serverUrl: عنوان URL للخادم
+    loginWithBadNotes: تسجيل الدخول باستخدام BadNotes
+    loginWithNextcloud: تسجيل الدخول باستخدام Nextcloud
+    loginFlow:
+      pleaseAuthorize: يُرجى السماح لـ BadNotes بالوصول إلى حسابك على Nextcloud
+      followPrompts: يُرجى اتباع التعليمات في واجهة Nextcloud
+      browserDidntOpen: لم تُفتح صفحة تسجيل الدخول؟ اضغط هنا
+  encLoginStep:
+    enterEncPassword: "لحماية بياناتك، يُرجى إدخال كلمة مرور التشفير:"
+    newToBadNotes: جديد على BadNotes؟ ما عليك سوى إدخال كلمة مرور تشفير جديدة.
+    encPassword: كلمة مرور التشفير
+    encFaqTitle: الأسئلة الشائعة
+    wrongEncPassword: فشل فك التشفير بكلمة المرور المُدخلة. يُرجى المحاولة مرة أخرى.
+    connectionFailed: حدث خطأ أثناء الاتصال بالخادم. يُرجى المحاولة لاحقًا.
+    encFaq:
+    - q: ما كلمة مرور التشفير؟ ولماذا كلمتا مرور؟
+      a: |-
+        يُستخدم حسابك على Google أو Microsoft للوصول إلى السحابة. أما كلمة مرور التشفير فتُشفّر بياناتك قبل أن تصل إلى السحابة.
+        حتى لو تمكّن أحد من الوصول إلى حسابك على Google أو Microsoft، ستبقى ملاحظاتك آمنة ومشفرة بكلمة مرور منفصلة. وهذا يمنحك طبقة حماية ثانية لبياناتك.
+        لا يستطيع أحد الوصول إلى ملاحظاتك على الخادم دون كلمة مرور التشفير، لكن هذا يعني أيضًا أنك إذا نسيتها فستفقد الوصول إلى بياناتك.
+    - q: لم أُعيّن كلمة مرور تشفير بعد. من أين أحصل عليها؟
+      a: |-
+        اختر كلمة مرور تشفير جديدة وأدخلها أعلاه.
+        سيُنشئ BadNotes مفاتيح التشفير من كلمة المرور هذه تلقائيًا.
+    - q: هل يمكنني استخدام كلمة مرور حسابي على Google أو Microsoft نفسها؟
+      a: يُرجى عدم ذلك. كلمة مرور تشفير منفصلة تحافظ على أمان ملاحظاتك حتى لو تمكّن أحد من الدخول إلى ذلك الحساب.
+profile:
+  title: ملفي الشخصي
+  logout: تسجيل الخروج
+  quotaUsage: أنت تستخدم $used من $total ($percent%)
+  quotaUsageUncapped: أنت تستخدم $used
+  connectedTo: متصل بـ
+  lastSynced: آخر مزامنة $time
+  notSyncedYet: لم تتم المزامنة بعد
+  justNow: الآن
+  minutesAgo: منذ $n د
+  hoursAgo: منذ $n س
+  filesWaiting: $n ملفات بانتظار المزامنة
+  signInAgainNeeded: سجّل الدخول مجددًا لمتابعة المزامنة
+  signInAgain: تسجيل الدخول مجددًا
+  wrongAccount: يُرجى اختيار $email
+  quickLinks:
+    serverHomepage: الصفحة الرئيسية للخادم
+    deleteAccount: حذف الحساب
+  faqTitle: الأسئلة الشائعة
+  faq:
+  - q: هل سأفقد ملاحظاتي إذا سجّلت الخروج؟
+    a: لا. ستبقى ملاحظاتك على جهازك وعلى الخادم معًا، لكنها لن تُزامَن مع الخادم حتى تسجّل الدخول مجددًا. تأكد من اكتمال المزامنة قبل تسجيل الخروج حتى لا تفقد أي بيانات (راجع تقدم المزامنة في الشاشة الرئيسية).
+  - q: أين تُخزَّن ملاحظاتي؟
+    a: في مجلد "BadNotes" على Google Drive، أو "Apps/BadNotes" على OneDrive. الملفات مشفرة، لذا لا يمكن فتحها إلا في BadNotes.
+  - q: كيف أغيّر كلمة مرور التشفير؟
+    a: |-
+      0. تأكد من اكتمال المزامنة (راجع تقدم المزامنة في الشاشة الرئيسية).
+      1. سجّل الخروج من BadNotes.
+      2. احذف مجلد 'BadNotes' من Google Drive أو OneDrive. هذا يحذف جميع ملاحظاتك من السحابة، وليس من جهازك.
+      3. سجّل الدخول مجددًا إلى BadNotes. يمكنك اختيار كلمة مرور تشفير جديدة أثناء تسجيل الدخول.
+      4. لا تنسَ تسجيل الخروج ثم الدخول مجددًا إلى BadNotes على أجهزتك الأخرى أيضًا.
+  - q: كيف يمكنني حذف حسابي؟
+    a: |-
+      ليس لدى BadNotes حساب خاص به. سجّل الخروج، ثم احذف مجلد 'BadNotes' من Google Drive أو OneDrive.
+      ولإلغاء وصول BadNotes أيضًا، انتقل إلى myaccount.google.com/permissions (Google) أو account.live.com/consent/Manage (Microsoft).
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: يتوفر تحديث
+  updateAvailableDescription: "يتوفر إصدار جديد من التطبيق:"
+  update: تحديث
+  downloadNotAvailableYet: التنزيل غير متاح بعد لمنصتك. يُرجى التحقق مرة أخرى قريبًا.
+editor:
+  toolbar:
+    toggleColors: تبديل الألوان (Ctrl C)
+    select: تحديد
+    toggleEraser: تبديل الممحاة (Ctrl E)
+    photo: الصور
+    text: نص
+    toggleFingerDrawing: تبديل الرسم بالإصبع (Ctrl F)
+    undo: تراجع
+    redo: إعادة
+    export: تصدير (Ctrl Shift S)
+    exportAs: "تصدير بصيغة:"
+    fullscreen: تبديل ملء الشاشة (F11)
+  pens:
+    fountainPen: قلم حبر
+    ballpointPen: قلم جاف
+    highlighter: قلم تمييز
+    pencil: قلم رصاص
+    shapePen: قلم الأشكال
+    laserPointer: مؤشر ليزر
+  penOptions:
+    size: الحجم
+  colors:
+    colorPicker: منتقي الألوان
+    customBrightnessHue: $h $b مخصص
+    customHue: $h مخصص
+    dark: داكن
+    light: فاتح
+    black: أسود
+    darkGrey: رمادي داكن
+    grey: رمادي
+    lightGrey: رمادي فاتح
+    white: أبيض
+    red: أحمر
+    green: أخضر
+    cyan: سماوي
+    blue: أزرق
+    yellow: أصفر
+    purple: بنفسجي
+    pink: وردي
+    orange: برتقالي
+    pastelRed: أحمر باستيل
+    pastelOrange: برتقالي باستيل
+    pastelYellow: أصفر باستيل
+    pastelGreen: أخضر باستيل
+    pastelCyan: سماوي باستيل
+    pastelBlue: أزرق باستيل
+    pastelPurple: بنفسجي باستيل
+    pastelPink: وردي باستيل
+  imageOptions:
+    title: خيارات الصورة
+    invertible: قابلة لعكس الألوان
+    download: تنزيل
+    setAsBackground: تعيين كخلفية
+    removeAsBackground: إزالة من الخلفية
+    delete: حذف
+  selectionBar:
+    delete: حذف
+    duplicate: تكرار
+  menu:
+    clearPage: مسح الصفحة $page/$totalPages
+    clearAllPages: مسح كل الصفحات
+    insertPage: إدراج صفحة أسفلها
+    duplicatePage: تكرار الصفحة
+    deletePage: حذف الصفحة
+    lineHeight: ارتفاع السطر
+    lineHeightDescription: يتحكم أيضًا في حجم النص في الملاحظات المكتوبة
+    lineThickness: سُمك الخط
+    lineThicknessDescription: سُمك خطوط الخلفية
+    backgroundImageFit: ملاءمة صورة الخلفية
+    backgroundPattern: نمط الخلفية
+    import: استيراد
+    watchServer: مراقبة التحديثات على الخادم
+    watchServerReadOnly: التحرير معطّل أثناء مراقبة الخادم
+    boxFits:
+      fill: تمديد
+      cover: تغطية
+      contain: احتواء
+    bgPatterns:
+      none: فارغ
+      college: مسطّر جامعي
+      collegeRtl: مسطّر جامعي (معكوس)
+      lined: مسطّر
+      grid: شبكة
+      dots: نقاط
+      staffs: مدرّج موسيقي
+      tablature: تابلاتشر
+      cornell: كورنيل
+  photoPdfError:
+    title: خطأ
+    message: "لا يمكن إضافة ملفات PDF كصورة. استخدم \"@:editor.menu.import > PDF\" لذلك."
+  readOnlyBanner:
+    title: وضع القراءة فقط
+    watchingServer: أنت تراقب التحديثات على الخادم حاليًا. التحرير معطّل في هذا الوضع.
+    corrupted: تعذّر تحميل الملاحظة. قد تكون تالفة أو لا يزال تنزيلها جاريًا.
+  versionTooNew:
+    title: عُدّلت هذه الملاحظة بإصدار أحدث من BadNotes
+    subtitle: قد يؤدي تحرير هذه الملاحظة إلى فقدان بعض المعلومات. هل تريد تجاهل ذلك وتحريرها على أي حال؟
+    allowEditing: السماح بالتحرير
+  quill:
+    typeSomething: اكتب شيئًا هنا…
+  hud:
+    unlockZoom: إلغاء قفل التكبير
+    lockZoom: قفل التكبير
+    unlockSingleFingerPan: تفعيل التحريك بإصبع واحد
+    lockSingleFingerPan: تعطيل التحريك بإصبع واحد
+    unlockAxisAlignedPan: إلغاء تقييد التحريك أفقيًا أو عموديًا
+    lockAxisAlignedPan: تقييد التحريك أفقيًا أو عموديًا
+  pages: الصفحات
+  untitled: بلا عنوان
+  needsToSaveBeforeExiting: جارٍ حفظ التغييرات… يمكنك الخروج من المحرر بأمان عند الانتهاء

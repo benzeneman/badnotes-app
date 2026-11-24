@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Delete confirm</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1C1C1E}a:hover{color:#000}
+.rb{all:unset;box-sizing:border-box;cursor:pointer}
+.rb:focus-visible{outline:2px solid #1C1C1E;outline-offset:3px}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; font-family: Inter, system-ui, sans-serif; color: #1C1C1E">
+  <div style="position: absolute; inset: 0"><dc-import name="M_Home" hint-size="1280px,800px"></dc-import></div>
+  <div style="position: absolute; inset: 0; background: rgba(22,22,26,.55); backdrop-filter: blur(5px)"></div>
+
+  <div role="alertdialog" aria-label="Move to Trash" style="position: absolute; left: 420px; top: 210px; width: 440px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,.08); padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; text-align: center">
+    <div style="position: relative; width: 120px; height: 110px">
+      <div style="position: absolute; left: 22px; top: 0; width: 74px; height: 100px; border: 1px solid #E7E6E1; border-radius: 4px 10px 10px 4px; background: #E8E1FB; transform: rotate(-12deg)"></div>
+      <div style="position: absolute; right: 6px; bottom: 0; width: 52px; height: 52px; border-radius: 50%; background: #FFE3DD; border: 1px solid #E7E6E1; display: flex; align-items: center; justify-content: center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C42F1E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+      </div>
+    </div>
+    <h2 style="margin: 18px 0 0; font-family: Inter, sans-serif; font-weight: 600; font-size: 24px; letter-spacing: -0.4px">Toss “Physics — Class 12”?</h2>
+    <p style="margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: #6B6B70">It goes to Trash with all 24 pages. You can bring it back anytime in the next 30 days.</p>
+    <div style="display: flex; gap: 10px; margin-top: 24px; width: 100%">
+      <button class="rb" style="flex: 1; height: 50px; border-radius: 999px; border: 1px solid #E7E6E1; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center">Keep it</button>
+      <button class="rb" style="flex: 1; height: 50px; border-radius: 999px; background: #C42F1E; color: #FFFFFF; border: 1px solid #E7E6E1; box-shadow: 0 10px 30px rgba(0,0,0,.08); font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center">Move to Trash</button>
+    </div>
+  </div>
+
+  <!-- Undo toast -->
+  <div role="status" style="position: absolute; left: 50%; bottom: 110px; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; padding: 10px 10px 10px 20px; background: #1C1C1E; color: #FFFFFF; border-radius: 999px; font-size: 14px">
+    <span style="color: #B8B8AF; font-size: 12px; font-weight: 700; letter-spacing: 1px">AFTER DELETE →</span>
+    <span>Moved to Trash</span>
+    <button class="rb" style="height: 36px; padding: 0 16px; border-radius: 999px; background: #6E56CF; color: #FFFFFF; font-size: 13px; font-weight: 700; display: flex; align-items: center">Undo</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+ "lav": {
+  "name": "Lavender",
+  "back": "#CFC2F5",
+  "front": "#E6DEFB",
+  "ink": "#5A43B8"
+ },
+ "peach": {
+  "name": "Peach",
+  "back": "#F2C2B1",
+  "front": "#FBE3DA",
+  "ink": "#A9502F"
+ },
+ "mint": {
+  "name": "Mint",
+  "back": "#B5DDD0",
+  "front": "#DCEFE9",
+  "ink": "#2A7660"
+ },
+ "sand": {
+  "name": "Sand",
+  "back": "#EBD69F",
+  "front": "#F7ECCF",
+  "ink": "#7E611A"
+ },
+ "sky": {
+  "name": "Sky",
+  "back": "#B9D3F2",
+  "front": "#E3EDFB",
+  "ink": "#2B5C9E"
+ },
+ "rose": {
+  "name": "Rose",
+  "back": "#EFC1D0",
+  "front": "#F8DDE6",
+  "ink": "#9E3E5E"
+ }
+}

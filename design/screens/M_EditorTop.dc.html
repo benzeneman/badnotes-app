@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BadNotes Editor — toolbar on top</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden">
+  <div style="position: absolute; inset: 0"><dc-import name="M_Editor" position="top" hint-size="1280px,800px"></dc-import></div>
+  <div style="position: absolute; right: 30px; top: 190px; width: 230px; background: #FFFFFF; border: 1px solid #E7E6E1; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.08); padding: 14px 16px; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.5; color: #3A3A3F">
+    <div style="font-weight: 600; color: #1C1C1E; margin-bottom: 4px">Floating toolbar</div>
+    Hold the dotted handle and drag. The toolbar snaps to the top or the bottom, and its options and popups open on the side with more room.
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

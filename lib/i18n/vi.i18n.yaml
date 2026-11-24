@@ -1,0 +1,391 @@
+common:
+  done: Xong
+  continueBtn: Tiếp tục
+  cancel: Hủy
+home:
+  tabs:
+    home: Trang chủ
+    browse: Duyệt
+    whiteboard: Bảng trắng
+    settings: Cài đặt
+  titles:
+    home: Ghi chú gần đây
+    browse: Duyệt
+    whiteboard: Bảng trắng
+    settings: Cài đặt
+  tooltips:
+    newNote: Ghi chú mới
+    showUpdateDialog: Hiện hộp thoại cập nhật
+    exportNote: Xuất ghi chú
+  create:
+    newNote: Ghi chú mới
+    importNote: Nhập ghi chú
+  welcome: Chào mừng đến với BadNotes
+  invalidFormat: Tệp bạn chọn không được hỗ trợ. Vui lòng chọn tệp sbn, sbn2, sba hoặc pdf.
+  noFiles: Không có tệp nào
+  noPreviewAvailable: Không có bản xem trước
+  createNewNote: Nhấn nút + để tạo ghi chú mới
+  backFolder: Quay lại thư mục trước
+  newFolder:
+    newFolder: Thư mục mới
+    folderName: Tên thư mục
+    create: Tạo
+    folderNameEmpty: Tên thư mục không được để trống
+    folderNameContainsSlash: Tên thư mục không được chứa dấu gạch chéo
+    folderNameExists: Thư mục đã tồn tại
+  renameNote:
+    renameNote: Đổi tên ghi chú
+    noteName: Tên ghi chú
+    rename: Đổi tên
+    noteNameEmpty: Tên ghi chú không được để trống
+    noteNameExists: Đã có ghi chú trùng tên
+    noteNameForbiddenCharacters: Tên ghi chú chứa ký tự không hợp lệ
+    noteNameReserved: Tên ghi chú này đã được dành riêng
+  moveNote:
+    moveNote: Di chuyển ghi chú
+    moveNotes: Di chuyển $n ghi chú
+    moveName: Di chuyển $f
+    move: Di chuyển
+    renamedTo: Ghi chú sẽ được đổi tên thành $newName
+    multipleRenamedTo: "Các ghi chú sau sẽ được đổi tên:"
+    numberRenamedTo: $n ghi chú sẽ được đổi tên để tránh trùng lặp
+  deleteNote: Xóa ghi chú
+  deleteNoteDialog:
+    deleteNotes: Xóa $n ghi chú
+    deleteName: Xóa $f
+    confirmDelete:
+      one: Xóa vĩnh viễn ghi chú đã chọn?
+      other: Xóa vĩnh viễn các ghi chú đã chọn?
+    delete: Xóa
+  renameFolder:
+    renameFolder: Đổi tên thư mục
+    folderName: Tên thư mục
+    rename: Đổi tên
+    folderNameEmpty: Tên thư mục không được để trống
+    folderNameContainsSlash: Tên thư mục không được chứa dấu gạch chéo
+    folderNameExists: Đã có thư mục trùng tên
+  deleteFolder:
+    deleteFolder: Xóa thư mục
+    deleteName: Xóa $f
+    delete: Xóa
+    alsoDeleteContents: Xóa cả mọi ghi chú trong thư mục này
+  sort:
+    sortBy: Sắp xếp theo
+    nameAToZ: Tên (A-Z)
+    nameZToA: Tên (Z-A)
+    lastModifiedNewToOld: Ngày sửa (Mới nhất trước)
+    lastModifiedOldToNew: Ngày sửa (Cũ nhất trước)
+  layout:
+    layout: Bố cục
+    masonryGrid: Lưới so le
+    simpleGrid: Lưới đơn giản
+sentry:
+  consent:
+    title: Giúp cải thiện BadNotes?
+    description:
+      question: Bạn có muốn tự động gửi báo cáo lỗi bất ngờ không? Điều này giúp tôi tìm và sửa lỗi nhanh hơn.
+      scope: Báo cáo có thể chứa thông tin về lỗi và thiết bị của bạn. Tôi đã cố gắng lọc bỏ dữ liệu cá nhân nhưng có thể vẫn còn sót.
+      currentlyOff: Nếu bạn đồng ý, tính năng báo cáo lỗi sẽ được bật sau khi khởi động lại ứng dụng.
+      currentlyOn: Nếu bạn rút lại đồng ý, hãy khởi động lại ứng dụng để tắt báo cáo lỗi.
+      learnMoreInPrivacyPolicy(rich): Tìm hiểu thêm trong ${link(chính sách quyền riêng tư)}.
+    answers:
+      yes: Có
+      no: Không
+      later: Hỏi lại sau
+settings:
+  prefCategories:
+    general: Chung
+    writing: Viết
+    editor: Trình soạn thảo
+    performance: Hiệu năng
+    advanced: Nâng cao
+  prefLabels:
+    locale: Ngôn ngữ
+    appTheme: Giao diện ứng dụng
+    platform: Kiểu giao diện
+    layoutSize: Kiểu bố cục
+    customAccentColor: Màu nhấn tùy chỉnh
+    hyperlegibleFont: Phông chữ Atkinson Hyperlegible
+    shouldCheckForUpdates: Kiểm tra cập nhật BadNotes
+    shouldAlwaysAlertForUpdates: Cập nhật nhanh hơn
+    allowInsecureConnections: Cho phép kết nối không an toàn
+    syncOnlyOnWifi: Chỉ đồng bộ qua Wi-Fi
+    syncPreviewsOnMobileData: Tải bản xem trước lên bằng dữ liệu di động
+    editorToolbarAlignment: Vị trí thanh công cụ
+    editorToolbarShowInFullscreen: Hiện thanh công cụ khi toàn màn hình
+    editorAutoInvert: Đảo màu ghi chú ở chế độ tối
+    preferGreyscale: Ưu tiên màu xám
+    maxImageSize: Kích thước ảnh tối đa
+    autoClearWhiteboardOnExit: Tự động xóa bảng trắng
+    disableEraserAfterUse: Tự động tắt tẩy
+    hideFingerDrawingToggle: Ẩn nút vẽ bằng ngón tay
+    autoDisableFingerDrawingWhenStylusDetected: Tự động tắt vẽ bằng ngón tay
+    editorPromptRename: Nhắc đổi tên ghi chú mới
+    recentColorsDontSavePresets: Không lưu màu có sẵn vào màu gần đây
+    recentColorsLength: Số màu gần đây được lưu
+    printPageIndicators: In số trang
+    autosave: Tự động lưu
+    shapeRecognitionDelay: Độ trễ nhận dạng hình
+    autoStraightenLines: Tự động làm thẳng nét
+    customDataDir: Thư mục BadNotes tùy chỉnh
+    sentry: Báo cáo lỗi
+  prefDescriptions:
+    syncOnlyOnWifi: "Tắt: ghi chú đồng bộ cả qua dữ liệu di động. Bật: chờ có Wi-Fi mới đồng bộ"
+    syncPreviewsOnMobileData: Ảnh thu nhỏ của ghi chú thường chờ Wi-Fi để tiết kiệm dữ liệu
+    hyperlegibleFont: Dễ đọc hơn cho người có thị lực kém
+    allowInsecureConnections: (Không khuyến nghị) Cho phép BadNotes kết nối tới máy chủ có chứng chỉ tự ký/không tin cậy
+    preferGreyscale: Dành cho màn hình e-ink
+    autoClearWhiteboardOnExit: Xóa bảng trắng sau khi bạn thoát ứng dụng
+    disableEraserAfterUse: Tự động chuyển về bút sau khi dùng tẩy
+    maxImageSize: Ảnh lớn hơn sẽ được nén
+    hideFingerDrawing:
+      shown: Tránh vô tình bật/tắt
+      fixedOn: Vẽ bằng ngón tay luôn bật
+      fixedOff: Vẽ bằng ngón tay luôn tắt
+    autoDisableFingerDrawingWhenStylusDetected: Tắt vẽ bằng ngón tay khi phát hiện bút cảm ứng
+    editorPromptRename: Bạn luôn có thể đổi tên ghi chú sau
+    printPageIndicators: Hiện số trang trong tệp xuất
+    autosave: Tự động lưu sau một lúc, hoặc không bao giờ
+    shapeRecognitionDelay: Thời gian giữ yên bút trước khi nét vẽ chuyển thành hình
+    autoStraightenLines: Làm thẳng các nét dài mà không cần dùng bút hình
+    shouldAlwaysAlertForUpdates: Báo cho tôi ngay khi có bản cập nhật
+    sentry:
+      active: Đang bật
+      inactive: Đang tắt
+      activeUntilRestart: Bật cho đến khi khởi động lại ứng dụng
+      inactiveUntilRestart: Tắt cho đến khi khởi động lại ứng dụng
+  themeModes:
+    system: Hệ thống
+    light: Sáng
+    dark: Tối
+  layoutSizes:
+    auto: Tự động
+    phone: Điện thoại
+    tablet: Máy tính bảng
+  accentColorPicker:
+    pickAColor: Chọn màu
+  systemLanguage: Tự động
+  axisDirections:
+  - Trên
+  - Phải
+  - Dưới
+  - Trái
+  reset:
+    title: Đặt lại cài đặt này?
+    button: Đặt lại
+  resyncEverything: Đồng bộ lại tất cả
+  openDataDir: Mở thư mục BadNotes
+  customDataDir:
+    cancel: Hủy
+    select: Chọn
+    mustBeEmpty: Thư mục được chọn phải trống
+    mustBeDoneSyncing: Hãy đảm bảo đồng bộ đã xong trước khi đổi thư mục
+    unsupported: Tính năng này hiện chỉ dành cho nhà phát triển. Sử dụng nó có thể làm mất dữ liệu.
+  autosaveDisabled: Không bao giờ
+  shapeRecognitionDisabled: Không bao giờ
+logs:
+  logs: Nhật ký
+  viewLogs: Xem nhật ký
+  debuggingInfo: Nhật ký chứa thông tin hữu ích cho việc gỡ lỗi và phát triển
+  noLogs: Chưa có nhật ký nào!
+  useTheApp: Nhật ký sẽ xuất hiện ở đây khi bạn dùng ứng dụng
+login:
+  title: Đăng nhập
+  form:
+    agreeToPrivacyPolicy(rich): Khi đăng nhập, bạn đồng ý với ${linkToPrivacyPolicy(Chính sách quyền riêng tư)}.
+  signup(rich): Chưa có tài khoản? ${linkToSignup(Đăng ký ngay)}!
+  notYou(rich): Không phải bạn? ${undoLogin(Chọn tài khoản khác)}.
+  status:
+    loggedOut: Đã đăng xuất
+    tapToLogin: Nhấn để đồng bộ với Google Drive
+    hi: Xin chào, $u!
+    almostDone: Sắp sẵn sàng đồng bộ, nhấn để hoàn tất đăng nhập
+    loggedIn: Đồng bộ đang bật
+  ncLoginStep:
+    whereToStoreData: "Chọn nơi bạn muốn lưu dữ liệu:"
+    cloudStorage: Google Drive hoặc OneDrive
+    loginWithGoogleDrive: Tiếp tục với Google Drive
+    loginWithOneDrive: Tiếp tục với OneDrive
+    cloudLoginFailed: Không thể đăng nhập
+    comingSoon: Sắp ra mắt
+    badnotesNcServer: Máy chủ Nextcloud của BadNotes
+    otherNcServer: Máy chủ Nextcloud khác
+    serverUrl: URL máy chủ
+    loginWithBadNotes: Đăng nhập bằng BadNotes
+    loginWithNextcloud: Đăng nhập bằng Nextcloud
+    loginFlow:
+      pleaseAuthorize: Vui lòng cho phép BadNotes truy cập tài khoản Nextcloud của bạn
+      followPrompts: Vui lòng làm theo hướng dẫn trên giao diện Nextcloud
+      browserDidntOpen: Trang đăng nhập không mở? Nhấn vào đây
+  encLoginStep:
+    enterEncPassword: "Để bảo vệ dữ liệu, vui lòng nhập mật khẩu mã hóa của bạn:"
+    newToBadNotes: Mới dùng BadNotes? Chỉ cần nhập một mật khẩu mã hóa mới.
+    encPassword: Mật khẩu mã hóa
+    encFaqTitle: Câu hỏi thường gặp
+    wrongEncPassword: Giải mã thất bại với mật khẩu đã nhập. Vui lòng thử nhập lại.
+    connectionFailed: Đã xảy ra lỗi khi kết nối tới máy chủ. Vui lòng thử lại sau.
+    encFaq:
+    - q: Mật khẩu mã hóa là gì? Tại sao cần hai mật khẩu?
+      a: |-
+        Tài khoản Google hoặc Microsoft của bạn dùng để truy cập đám mây. Mật khẩu mã hóa sẽ "xáo trộn" dữ liệu của bạn trước khi nó được gửi lên đám mây.
+        Ngay cả khi ai đó truy cập được tài khoản Google hoặc Microsoft của bạn, ghi chú vẫn an toàn và được mã hóa bằng một mật khẩu riêng. Đây là lớp bảo mật thứ hai để bảo vệ dữ liệu của bạn.
+        Không ai có thể xem ghi chú của bạn trên máy chủ nếu không có mật khẩu mã hóa, nhưng điều này cũng có nghĩa là nếu bạn quên mật khẩu mã hóa, bạn sẽ mất quyền truy cập dữ liệu.
+    - q: Tôi chưa đặt mật khẩu mã hóa. Lấy nó ở đâu?
+      a: |-
+        Hãy chọn một mật khẩu mã hóa mới và nhập vào ô phía trên.
+        BadNotes sẽ tự động tạo khóa mã hóa từ mật khẩu này.
+    - q: Tôi có thể dùng mật khẩu giống tài khoản Google hoặc Microsoft không?
+      a: Xin đừng. Một mật khẩu mã hóa riêng giúp ghi chú của bạn an toàn ngay cả khi ai đó vào được tài khoản đó.
+profile:
+  title: Hồ sơ của tôi
+  logout: Đăng xuất
+  quotaUsage: Bạn đang dùng $used trên $total ($percent%)
+  quotaUsageUncapped: Bạn đang dùng $used
+  connectedTo: Đã kết nối với
+  lastSynced: Đồng bộ lần cuối $time
+  notSyncedYet: Chưa đồng bộ
+  justNow: vừa xong
+  minutesAgo: $n phút trước
+  hoursAgo: $n giờ trước
+  filesWaiting: $n tệp đang chờ đồng bộ
+  signInAgainNeeded: Đăng nhập lại để tiếp tục đồng bộ
+  signInAgain: Đăng nhập lại
+  wrongAccount: Vui lòng chọn $email
+  quickLinks:
+    serverHomepage: Trang chủ máy chủ
+    deleteAccount: Xóa tài khoản
+  faqTitle: Câu hỏi thường gặp
+  faq:
+  - q: Tôi có mất ghi chú nếu đăng xuất không?
+    a: Không. Ghi chú của bạn vẫn còn trên cả thiết bị và máy chủ. Chúng sẽ không được đồng bộ với máy chủ cho đến khi bạn đăng nhập lại. Hãy đảm bảo đồng bộ đã xong trước khi đăng xuất để không mất dữ liệu (xem tiến trình đồng bộ trên màn hình chính).
+  - q: Ghi chú của tôi được lưu ở đâu?
+    a: Trong thư mục "BadNotes" trên Google Drive, hoặc "Apps/BadNotes" trên OneDrive của bạn. Các tệp đã được mã hóa nên chỉ có thể mở bằng BadNotes.
+  - q: Làm sao để đổi mật khẩu mã hóa?
+    a: |-
+      0. Đảm bảo đồng bộ đã xong (xem tiến trình đồng bộ trên màn hình chính).
+      1. Đăng xuất khỏi BadNotes.
+      2. Xóa thư mục 'BadNotes' trên Google Drive hoặc OneDrive. Thao tác này xóa mọi ghi chú trên đám mây, không xóa trên thiết bị của bạn.
+      3. Đăng nhập lại BadNotes. Bạn có thể chọn mật khẩu mã hóa mới khi đăng nhập.
+      4. Đừng quên đăng xuất rồi đăng nhập lại BadNotes trên các thiết bị khác.
+  - q: Làm sao để xóa tài khoản?
+    a: |-
+      BadNotes không có tài khoản riêng. Hãy đăng xuất, rồi xóa thư mục 'BadNotes' trên Google Drive hoặc OneDrive.
+      Để thu hồi cả quyền truy cập của BadNotes, hãy vào myaccount.google.com/permissions (Google) hoặc account.live.com/consent/Manage (Microsoft).
+appInfo:
+  debug: DEBUG
+update:
+  updateAvailable: Có bản cập nhật
+  updateAvailableDescription: "Đã có phiên bản mới của ứng dụng:"
+  update: Cập nhật
+  downloadNotAvailableYet: Bản tải xuống cho nền tảng của bạn chưa sẵn sàng. Vui lòng quay lại sau ít phút.
+editor:
+  toolbar:
+    toggleColors: Bật/tắt màu (Ctrl C)
+    select: Chọn
+    toggleEraser: Bật/tắt tẩy (Ctrl E)
+    photo: Hình ảnh
+    text: Văn bản
+    toggleFingerDrawing: Bật/tắt vẽ bằng ngón tay (Ctrl F)
+    undo: Hoàn tác
+    redo: Làm lại
+    export: Xuất (Ctrl Shift S)
+    exportAs: "Xuất dưới dạng:"
+    fullscreen: Bật/tắt toàn màn hình (F11)
+  pens:
+    fountainPen: Bút máy
+    ballpointPen: Bút bi
+    highlighter: Bút dạ quang
+    pencil: Bút chì
+    shapePen: Bút hình
+    laserPointer: Bút laser
+  penOptions:
+    size: Cỡ
+  colors:
+    colorPicker: Bảng chọn màu
+    customBrightnessHue: $h $b tùy chỉnh
+    customHue: $h tùy chỉnh
+    dark: đậm
+    light: nhạt
+    black: Đen
+    darkGrey: Xám đậm
+    grey: Xám
+    lightGrey: Xám nhạt
+    white: Trắng
+    red: Đỏ
+    green: Xanh lá
+    cyan: Xanh lơ
+    blue: Xanh dương
+    yellow: Vàng
+    purple: Tím
+    pink: Hồng
+    orange: Cam
+    pastelRed: Đỏ pastel
+    pastelOrange: Cam pastel
+    pastelYellow: Vàng pastel
+    pastelGreen: Xanh lá pastel
+    pastelCyan: Xanh lơ pastel
+    pastelBlue: Xanh dương pastel
+    pastelPurple: Tím pastel
+    pastelPink: Hồng pastel
+  imageOptions:
+    title: Tùy chọn ảnh
+    invertible: Có thể đảo màu
+    download: Tải xuống
+    setAsBackground: Đặt làm nền
+    removeAsBackground: Bỏ làm nền
+    delete: Xóa
+  selectionBar:
+    delete: Xóa
+    duplicate: Nhân bản
+  menu:
+    clearPage: Xóa trang $page/$totalPages
+    clearAllPages: Xóa tất cả trang
+    insertPage: Chèn trang bên dưới
+    duplicatePage: Nhân bản trang
+    deletePage: Xóa trang
+    lineHeight: Chiều cao dòng
+    lineHeightDescription: Cũng điều chỉnh cỡ chữ cho ghi chú đánh máy
+    lineThickness: Độ dày đường kẻ
+    lineThicknessDescription: Độ dày đường kẻ nền
+    backgroundImageFit: Cách hiển thị ảnh nền
+    backgroundPattern: Mẫu nền
+    import: Nhập
+    watchServer: Theo dõi cập nhật trên máy chủ
+    watchServerReadOnly: Không thể chỉnh sửa khi đang theo dõi máy chủ
+    boxFits:
+      fill: Kéo giãn
+      cover: Phủ kín
+      contain: Vừa khung
+    bgPatterns:
+      none: Trống
+      college: Kẻ dòng hẹp
+      collegeRtl: Kẻ dòng hẹp (Đảo ngược)
+      lined: Kẻ dòng
+      grid: Ô vuông
+      dots: Chấm
+      staffs: Khuông nhạc
+      tablature: Tab đàn
+      cornell: Cornell
+  photoPdfError:
+    title: Lỗi
+    message: "Không thể thêm tệp PDF dưới dạng ảnh. Hãy dùng \"@:editor.menu.import > PDF\" để làm việc đó."
+  readOnlyBanner:
+    title: Chế độ chỉ đọc
+    watchingServer: Bạn đang theo dõi cập nhật trên máy chủ. Không thể chỉnh sửa ở chế độ này.
+    corrupted: Không tải được ghi chú. Ghi chú có thể bị hỏng hoặc vẫn đang được tải xuống.
+  versionTooNew:
+    title: Ghi chú này được sửa bằng phiên bản BadNotes mới hơn
+    subtitle: Chỉnh sửa ghi chú này có thể làm mất một số thông tin. Bạn vẫn muốn bỏ qua và chỉnh sửa?
+    allowEditing: Cho phép chỉnh sửa
+  quill:
+    typeSomething: Nhập nội dung tại đây…
+  hud:
+    unlockZoom: Mở khóa thu phóng
+    lockZoom: Khóa thu phóng
+    unlockSingleFingerPan: Bật kéo bằng một ngón tay
+    lockSingleFingerPan: Tắt kéo bằng một ngón tay
+    unlockAxisAlignedPan: Bỏ khóa kéo theo chiều ngang hoặc dọc
+    lockAxisAlignedPan: Khóa kéo theo chiều ngang hoặc dọc
+  pages: Trang
+  untitled: Không có tiêu đề
+  needsToSaveBeforeExiting: Đang lưu thay đổi… Bạn có thể thoát trình soạn thảo khi lưu xong
