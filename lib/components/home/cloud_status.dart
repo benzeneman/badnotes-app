@@ -19,12 +19,14 @@ enum SyncProblem {
   storageFull,
   signIn,
   offline,
+  wrongKey,
   other;
 
   static SyncProblem? of(Object? error) => switch (error) {
     null => null,
     CloudAuthRequired() => signIn,
     SocketException() => offline,
+    CloudCannotDecrypt() => wrongKey,
     CloudHttpException(:final statusCode, :final body)
         when statusCode == 507 ||
             body.contains('storageQuotaExceeded') ||
@@ -36,12 +38,13 @@ enum SyncProblem {
   };
 
   /// Worth a banner, as it won't fix itself.
-  bool get serious => this == storageFull || this == signIn;
+  bool get serious => this == storageFull || this == signIn || this == wrongKey;
 
   String get title => switch (this) {
     storageFull => 'Not Enough ${_provider()} Storage',
     signIn => 'Sign In to ${_provider()} Again',
     offline => "You're Offline",
+    wrongKey => "Can't Open Notes From ${_provider()}",
     other => "Some Notes Couldn't Sync",
   };
 
@@ -54,6 +57,11 @@ enum SyncProblem {
           'this device until you sign in again.',
     offline => 'Your notes are saved on this device and sync once you are '
         'back online.',
+    wrongKey =>
+      'Some notes in ${_provider()} were locked with a different password or '
+          'key, so they cannot be opened here. Your notes on this device are '
+          'safe. Sign out, then sign in again and type the password from the '
+          'device that made them.',
     other => 'Your notes are still saved on this device. BadNotes keeps '
         'trying to sync them.',
   };

@@ -95,11 +95,20 @@ class const BadNotesSyncInterface()
     remoteFiles = await findRemoteFiles();
     if (remoteFiles.isEmpty) return const [];
 
+    _undecryptable = 0;
     final candidates = await Future.wait(remoteFiles.map(_remoteChangeOf));
+    // files that can't be opened with this device's key would otherwise
+    // just never appear, so say so
+    if (_undecryptable > 0) {
+      SyncStatus.error.value = CloudCannotDecrypt(_undecryptable);
+    }
     final toDownload = candidates.nonNulls.toList();
     _putPreviewsBeforeTheirNotes(toDownload);
     return toDownload;
   }
+
+  /// How many cloud files the last look could not decrypt the name of.
+  static var _undecryptable = 0;
 
   /// The file to download for [remoteFile], or null when the local copy is
   /// as new, or when both sides have already deleted it.
@@ -109,6 +118,9 @@ class const BadNotesSyncInterface()
       syncFile = await getSyncFileFromRemoteFile(remoteFile);
     } catch (e, st) {
       log.warning('Failed to get sync file from remote file: $e', e, st);
+      if (!remoteFile.path.endsWith(RemoteStore.configFileName)) {
+        _undecryptable++;
+      }
       return null;
     }
 

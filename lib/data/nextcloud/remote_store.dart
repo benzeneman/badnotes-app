@@ -44,6 +44,18 @@ class RemoteNotFound implements Exception {}
 /// Google or Microsoft need the user to sign in again.
 class CloudAuthRequired implements Exception {}
 
+/// Files in the cloud can't be opened with the key saved on this device,
+/// e.g. they were locked on another device with a different password.
+class CloudCannotDecrypt implements Exception {
+  const new(this.count);
+
+  /// How many cloud files could not be opened.
+  final int count;
+
+  @override
+  String toString() => '$count cloud files cannot be opened with this key';
+}
+
 class CloudHttpException implements Exception {
   CloudHttpException(this.statusCode, this.body);
   final int statusCode;

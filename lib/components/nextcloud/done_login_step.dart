@@ -1,9 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:badnotes/components/misc/faq.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:badnotes/components/nextcloud/enc_login_step.dart';
+import 'package:badnotes/components/theming/badnotes_theme.dart';
+import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
 import 'package:badnotes/data/nextcloud/remote_store.dart';
 import 'package:badnotes/data/prefs.dart';
@@ -17,7 +17,7 @@ class const DoneLoginStep({
   required final void Function() recheckCurrentStep,
 }) extends HookWidget {
   /// The widest the column of content gets on large screens.
-  static const width = 400.0;
+  static const width = 420.0;
 
   /// Asks Google or Microsoft for a fresh token after the old one stopped
   /// working. Only the account already linked is accepted, because another
@@ -67,6 +67,7 @@ class const DoneLoginStep({
 
   @override
   Widget build(BuildContext context) {
+    final colors = BadNotesColors.of(context);
     // Rebuild whenever any of these move, so the status lines stay fresh.
     final needsLogin = useValueListenable(stows.syncNeedsLogin);
     final quota = useValueListenable(stows.lastStorageQuota);
@@ -74,9 +75,8 @@ class const DoneLoginStep({
     useStream(syncer.uploader.queueStream);
     useStream(syncer.downloader.queueStream);
 
-    final headline = TextTheme.of(context).headlineSmall;
     final screen = MediaQuery.sizeOf(context);
-    final avatar = stows.pfp.value;
+    final username = stows.username.value;
     final providerName = switch (stows.syncProvider.value) {
       .googleDrive => 'Google Drive',
       .oneDrive => 'OneDrive',
@@ -84,82 +84,110 @@ class const DoneLoginStep({
 
     return ListView(
       padding: .symmetric(
-        horizontal: screen.width > width ? (screen.width - width) / 2 : 16,
-        vertical: 16,
+        horizontal: screen.width > width + 64
+            ? (screen.width - width) / 2
+            : BnSpace.xl,
+        vertical: BnSpace.xl,
       ),
       children: [
-        const SizedBox(height: 16),
-        if (screen.height > 500) ...[
-          SvgPicture.asset(
-            'assets/images/sync_done.svg',
-            width: width,
-            height: min(width * 576 / 844.6693, screen.height * 0.25),
-            excludeFromSemantics: true,
-          ),
-          SizedBox(height: min(64, screen.height * 0.05)),
-        ],
         Row(
           children: [
-            if (avatar case final picture?)
-              Image.memory(picture, width: 32, height: 32)
-            else
-              const Icon(Icons.account_circle, size: 32),
-            const SizedBox(width: 16),
+            BnAvatar(
+              size: 56,
+              iconSize: 24,
+              username: username,
+              signedIn: username.isNotEmpty,
+              textStyle: BnType.display.copyWith(
+                fontSize: 22,
+                color: colors.accentStrong,
+              ),
+            ),
+            const SizedBox(width: BnSpace.l),
             Expanded(
-              child: Text(
-                t.login.status.hi(u: stows.username.value),
-                style: headline,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    username,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BnType.title.copyWith(color: colors.text),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Connected to $providerName',
+                    style: BnType.caption.copyWith(color: colors.muted),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        if (needsLogin) ..._reconnectPrompt(context),
-        Text(describeSyncStatus()),
-        const SizedBox(height: 8),
-        Text(quota?.describe() ?? Quota.describePlaceholder()),
-        const SizedBox(height: 2),
-        LinearProgressIndicator(
-          value: quota?.progressIndicatorValue,
-          minHeight: 32,
-          borderRadius: _buttonCorners(context),
+        const SizedBox(height: BnSpace.xl),
+        BnCard(
+          padding: const .all(BnSpace.l),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    needsLogin ? LucideIcons.triangleAlert : LucideIcons.check,
+                    size: 16,
+                    color: needsLogin ? colors.danger : colors.success,
+                  ),
+                  const SizedBox(width: BnSpace.s),
+                  Expanded(
+                    child: Text(
+                      describeSyncStatus(),
+                      style: BnType.body.copyWith(color: colors.text),
+                    ),
+                  ),
+                ],
+              ),
+              if (needsLogin) ...[
+                const SizedBox(height: BnSpace.m),
+                Text(
+                  t.profile.signInAgainNeeded,
+                  style: BnType.caption.copyWith(color: colors.danger),
+                ),
+                const SizedBox(height: BnSpace.s),
+                BnButton.primary(
+                  label: t.profile.signInAgain,
+                  expand: true,
+                  onPressed: () => signInAgain(context),
+                ),
+              ],
+              const SizedBox(height: BnSpace.l),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: quota?.progressIndicatorValue,
+                  minHeight: 8,
+                  backgroundColor: colors.sunken,
+                  color: colors.accent,
+                ),
+              ),
+              const SizedBox(height: BnSpace.s),
+              Text(
+                quota?.describe() ?? Quota.describePlaceholder(),
+                style: BnType.caption.copyWith(color: colors.muted),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 4),
-        ElevatedButton(onPressed: _signOut, child: Text(t.profile.logout)),
-        const SizedBox(height: 32),
-        Text(t.profile.connectedTo, style: const TextStyle(height: 0.8)),
-        Text(providerName, style: headline),
-        const SizedBox(height: 32),
-        Text(t.profile.faqTitle, style: headline),
-        FaqListView(
-          shrinkWrap: true,
-          items: [for (final entry in t.profile.faq) FaqItem(entry.q, entry.a)],
+        const SizedBox(height: BnSpace.l),
+        BnButton.destructive(
+          label: t.profile.logout,
+          expand: true,
+          height: 44,
+          onPressed: _signOut,
         ),
+        const SizedBox(height: BnSpace.xl),
+        const BnSectionHeader(title: 'Questions'),
+        for (final entry in t.profile.faq)
+          LoginQuestion(question: entry.q, answer: entry.a),
       ],
     );
   }
-
-  /// The warning and button shown when the cloud token has expired.
-  List<Widget> _reconnectPrompt(BuildContext context) => [
-    Text(
-      t.profile.signInAgainNeeded,
-      style: TextStyle(color: ColorScheme.of(context).error),
-    ),
-    const SizedBox(height: 4),
-    FilledButton(
-      onPressed: () => signInAgain(context),
-      child: Text(t.profile.signInAgain),
-    ),
-    const SizedBox(height: 8),
-  ];
-
-  /// Matches the quota bar's corners to the app's raised buttons, falling
-  /// back to an 8 px rounding when the theme doesn't say.
-  static BorderRadius _buttonCorners(BuildContext context) =>
-      switch (ElevatedButtonTheme.of(context).style?.shape?.resolve({})) {
-        final RoundedRectangleBorder rounded => rounded.borderRadius.resolve(
-          TextDirection.ltr,
-        ),
-        _ => const .all(.circular(8)),
-      };
 }
