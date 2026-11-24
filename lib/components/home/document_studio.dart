@@ -305,8 +305,8 @@ class _DocumentStudioState extends State<_DocumentStudio> {
           boxShadow: const [
             BoxShadow(
               color: Color(0x2E000000),
-              blurRadius: 40,
-              offset: Offset(0, 20),
+              blurRadius: 16,
+              offset: Offset(0, 8),
             ),
           ],
         ),
@@ -389,8 +389,8 @@ class _DocumentStudioState extends State<_DocumentStudio> {
                     boxShadow: [
                       BoxShadow(
                         color: Color(0x2E000000),
-                        blurRadius: 40,
-                        offset: Offset(0, 20),
+                        blurRadius: 16,
+                        offset: Offset(0, 8),
                       ),
                     ],
                   ),

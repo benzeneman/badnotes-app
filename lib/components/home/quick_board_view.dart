@@ -900,7 +900,7 @@ class _BigNote extends HookWidget {
       boxShadow: const [
         BoxShadow(
           color: Color(0x40000000),
-          blurRadius: 40,
+          blurRadius: 16,
           offset: Offset(0, 20),
         ),
       ],

@@ -1878,7 +1878,9 @@ class _LongStroke {
       ..scale(pixels);
     _drawInk(canvas, piece, Paint()..color = color);
     final picture = recorder.endRecording();
+    LagRecorder.step('long stroke image');
     final made = picture.toImageSync(width, height);
+    LagRecorder.step('long stroke image done');
     picture.dispose();
     image?.dispose();
     image = made;

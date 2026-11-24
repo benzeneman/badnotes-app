@@ -2,6 +2,7 @@ import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/components/ui/bn_controls.dart';
 import 'package:badnotes/components/ui/bn_surfaces.dart';
+import 'package:badnotes/components/ui/editor_signals.dart';
 import 'package:flutter/material.dart';
 
 /// Keeps [child] (a popup, dialog or sheet) above the on-screen keyboard:
@@ -69,6 +70,7 @@ Future<T?> showBnPopover<T>({
     box.localToGlobal(Offset.zero, ancestor: overlay),
     box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay),
   );
+  EditorSignals.covered.value++;
   return showGeneralDialog<T>(
     context: anchor,
     barrierDismissible: true,
@@ -99,7 +101,7 @@ Future<T?> showBnPopover<T>({
         ),
       );
     },
-  );
+  ).whenComplete(() => EditorSignals.covered.value--);
 }
 
 class _PopoverLayout extends SingleChildLayoutDelegate {

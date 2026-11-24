@@ -223,14 +223,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 Expanded(
                   child: ValueListenableBuilder(
                     valueListenable: _chosen,
-                    builder: (context, chosen, _) => AnimatedSwitcher(
-                      duration: BnMotion.fast,
-                      switchInCurve: BnMotion.curve,
-                      switchOutCurve: BnMotion.curve,
-                      layoutBuilder: (current, previous) => Stack(
-                        alignment: Alignment.topCenter,
-                        children: [...previous, ?current],
-                      ),
+                    // switched at once: fading two whole panes into each
+                    // other cost the GPU every frame and stuttered
+                    builder: (context, chosen, _) => KeyedSubtree(
+                      key: ValueKey(chosen),
                       child: ListView(
                         key: ValueKey(chosen),
                         padding: EdgeInsets.only(top: 6, bottom: bottom),

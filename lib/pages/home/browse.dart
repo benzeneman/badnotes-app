@@ -136,6 +136,11 @@ class _BrowsePageState extends State<BrowsePage> {
           path ?? '/',
           sortMetric: stows.browseSortMetric.value,
         );
+    // right after installing, the notes folder may not exist yet: that's
+    // an empty desk (the welcome), not one still loading
+    if (children == null && (path == null || path == '/')) {
+      children = DirectoryChildren([], []);
+    }
 
     if (mounted) setState(() {});
   }

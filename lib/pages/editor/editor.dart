@@ -322,6 +322,7 @@ class EditorState extends State<Editor> {
 
   @override
   void initState() {
+    EditorSignals.covered.addListener(_onCovered);
     // the tools move between the header and a floating bar with its edge
     stows.floatingToolbarEdge.addListener(_toolbarMoved);
     // the page as it was left, shown at once while the note opens
@@ -3122,6 +3123,7 @@ class EditorState extends State<Editor> {
   var _selectionBusy = false;
 
   void _onDrawEnd(ScaleEndDetails details) {
+    LagRecorder.step('stroke end');
     LagRecorder.note('pen pressure', {
       ...PointerPressureLog.take(),
       'low': _pressureLow.isFinite ? _pressureLow : null,
@@ -3843,7 +3845,9 @@ class EditorState extends State<Editor> {
     if (history.isCurrentStateSaved) return cancelAutosaveAndMarkSaved();
 
     final saveWatch = Stopwatch()..start();
+    LagRecorder.step('save: rename');
     await _renameFileNow();
+    LagRecorder.step('save: pack');
 
     final sbnPath = coreInfo.filePath + Editor.extension;
     final savePoint = history.savePoint;
@@ -3859,6 +3863,7 @@ class EditorState extends State<Editor> {
     } finally {
       coreInfo.assetCache.allowRemovingAssets = true;
     }
+    LagRecorder.step('save: write');
     try {
       await Future.wait([
         FileManager.writeFile(
@@ -7322,7 +7327,7 @@ class EditorState extends State<Editor> {
             if (_pointersDown == 0) _hadMultiTouch = false;
             _tapDownAt = null;
           },
-          child: RepaintBoundary(
+          child: _withFrozenView(RepaintBoundary(
             key: _screenshotBoundaryKey,
             child: boardSheet == null
                 ? canvas
@@ -7345,7 +7350,7 @@ class EditorState extends State<Editor> {
                       canvas,
                     ],
                   ),
-          ),
+          )),
         ),
         if (_ruler != null && !_readingMode)
           Positioned.fill(child: RulerOverlay(ruler: _ruler!)),
@@ -7913,6 +7918,7 @@ class EditorState extends State<Editor> {
   /// saved first and the note is then left by itself, without a second
   /// press; during a save the user is asked to wait.
   void _onLeave(BuildContext context, SavingState state, bool didPop) {
+    LagRecorder.step('leave pressed');
     LagRecorder.doing('leaving note', lasts: const Duration(seconds: 3));
     LagRecorder.note('leave pressed', {'saving': state.name});
     switch (state) {
@@ -8389,11 +8395,62 @@ class EditorState extends State<Editor> {
   /// The note as it was left, shown while it opens (see [deactivate]).
   File? _openingPicture;
 
+  /// A still picture of the pages while a popover is open over the note
+  /// ([EditorSignals.covered]). The pages under it took the GPU most of a
+  /// frame to draw, so a popover's scrolling stuttered.
+  ui.Image? _frozenView;
+
+  void _onCovered() {
+    if (!mounted) return;
+    if (EditorSignals.covered.value > 0) {
+      if (_frozenView != null || EditorSignals.drawing.value) return;
+      final box = _screenshotBoundaryKey.currentContext?.findRenderObject();
+      if (box is! RenderRepaintBoundary || !box.hasSize || !box.attached) {
+        return;
+      }
+      try {
+        final picture = box.toImageSync(
+          pixelRatio: MediaQuery.devicePixelRatioOf(context),
+        );
+        setState(() => _frozenView = picture);
+      } catch (e) {
+        log.fine('No still picture under the popover: $e');
+      }
+    } else if (_frozenView case final old?) {
+      setState(() => _frozenView = null);
+      // after the live pages have been drawn again
+      WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+    }
+  }
+
+  /// [live] (the pages), or while a popover is open the still picture of
+  /// them on top, the pages kept but not drawn.
+  Widget _withFrozenView(Widget live) {
+    final frozen = _frozenView;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Offstage(offstage: frozen != null, child: live),
+        if (frozen != null)
+          IgnorePointer(
+            child: RawImage(image: frozen, fit: BoxFit.fill),
+          ),
+      ],
+    );
+  }
+
   /// Keeps a picture of the screen as the note is left, for next time: a
   /// note opens with it showing at once instead of a blank page.
   @override
   void deactivate() {
-    if (coreInfo.readOnlyReason != .placeholder &&
+    // right after a stroke the GPU is still busy with it: no picture then
+    // (leaving at that moment was when the app hung)
+    final justDrew =
+        EditorSignals.drawing.value ||
+        DateTime.now().difference(EditorSignals.lastLift) <
+            const Duration(seconds: 1);
+    if (!justDrew &&
+        coreInfo.readOnlyReason != .placeholder &&
         coreInfo.filePath.isNotEmpty &&
         !_isBoard) {
       try {
@@ -8403,10 +8460,12 @@ class EditorState extends State<Editor> {
         // ignore: invalid_use_of_protected_member
         final layer = boundary?.layer;
         if (boundary != null && boundary.attached && layer is OffsetLayer) {
+          LagRecorder.step('leave: picture of the note');
           final image = layer.toImageSync(
             Offset.zero & boundary.size,
             pixelRatio: 1,
           );
+          LagRecorder.step('leave: picture taken');
           final file = FileManager.getFile('${coreInfo.filePath}.open.png');
           unawaited(() async {
             final png = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -8425,6 +8484,10 @@ class EditorState extends State<Editor> {
 
   @override
   void dispose() {
+    LagRecorder.step('editor dispose');
+    EditorSignals.covered.removeListener(_onCovered);
+    _frozenView?.dispose();
+    _frozenView = null;
     stows.floatingToolbarEdge.removeListener(_toolbarMoved);
     _lifecycle.dispose();
     NoteTabs.paths.removeListener(_setState);
@@ -8484,6 +8547,7 @@ class EditorState extends State<Editor> {
     if (_lastTouched == this) _lastTouched = null;
 
     super.dispose();
+    LagRecorder.step('editor disposed');
   }
 
   /// What's left to do once the editor has gone: a rename still waiting
@@ -8496,7 +8560,9 @@ class EditorState extends State<Editor> {
         await _renameFileNow();
         filenameTextEditingController.dispose();
       }
+      LagRecorder.step('leave: last save');
       await saveToFile(thumbnail: false);
+      LagRecorder.step('leave: saved');
       _announceQuietWrites();
       // autosaves leave the thumbnail for now (a test's editor is gone
       // with its fake clock before the thumbnail could be drawn). It's
@@ -8504,7 +8570,9 @@ class EditorState extends State<Editor> {
       // thread a quarter to half a second, and made that stutter.
       if (_editedThisSession && !coreInfo.readOnly && !isThisATest) {
         await Future<void>.delayed(const Duration(milliseconds: 900));
+        LagRecorder.step('leave: thumbnail');
         await _saveThumbnail();
+        LagRecorder.step('leave: thumbnail done');
       }
       if (_editedThisSession &&
           !coreInfo.readOnly &&

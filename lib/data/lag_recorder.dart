@@ -74,6 +74,19 @@ abstract final class LagRecorder {
     }
   }
 
+  /// The last step passed (see [step]), sent to the hang watchdog at once.
+  static String _step = '';
+  static SendPort? _toWatchdog;
+  static bool _shown = true;
+
+  /// Marks a step of work that might hold up the main thread: if the app
+  /// hangs, the "stuck now" report names the last step reached.
+  static void step(String what) {
+    if (!enabled) return;
+    _step = what;
+    _toWatchdog?.send((action, pageStrokes, noteStrokes, _shown, what));
+  }
+
   /// Times [run] as [name], counted with the frame it happens in.
   static T span<T>(String name, T Function() run) {
     if (!enabled) return run();
@@ -208,27 +221,25 @@ abstract final class LagRecorder {
   static void _watchForHangs() {
     final port = ReceivePort();
     Isolate.spawn(_watchdog, (port.sendPort, url, _session));
-    SendPort? toWatchdog;
     port.listen((message) {
-      if (message is SendPort) toWatchdog = message;
+      if (message is SendPort) _toWatchdog = message;
     });
     var last = _clock.elapsedMilliseconds;
     // In the background Android can stop the app for a while: that's not a
     // hang, though it looked like one of 20 s when the app came back.
-    var shown = true;
     AppLifecycleListener(
       onShow: () {
-        shown = true;
+        _shown = true;
         last = _clock.elapsedMilliseconds;
       },
-      onHide: () => shown = false,
+      onHide: () => _shown = false,
     );
     Timer.periodic(const Duration(milliseconds: 100), (_) {
       final now = _clock.elapsedMilliseconds;
       final gap = now - last;
       last = now;
-      toWatchdog?.send((action, pageStrokes, noteStrokes, shown));
-      if (gap > 700 && shown) {
+      _toWatchdog?.send((action, pageStrokes, noteStrokes, _shown, _step));
+      if (gap > 700 && _shown) {
         _event('hang', {'ms': gap, 'spans': _topSpans()});
         if (gap > 2000) _send();
       }
@@ -240,18 +251,18 @@ abstract final class LagRecorder {
     final port = ReceivePort();
     toMain.send(port.sendPort);
     var lastSeen = DateTime.now();
-    (String, int, int, bool)? last;
+    (String, int, int, bool, String)? last;
     var reported = false;
     port.listen((message) {
       lastSeen = DateTime.now();
-      last = message as (String, int, int, bool);
+      last = message as (String, int, int, bool, String);
       reported = false;
     });
     Timer.periodic(const Duration(milliseconds: 500), (_) {
       final stuck = DateTime.now().difference(lastSeen).inMilliseconds;
       if (stuck < 3000 || reported) return;
       reported = true;
-      final (action, page, note, shown) = last ?? ('?', 0, 0, true);
+      final (action, page, note, shown, step) = last ?? ('?', 0, 0, true, '');
       // stopped in the background, not stuck
       if (!shown) return;
       _post(url, {
@@ -261,6 +272,7 @@ abstract final class LagRecorder {
             'kind': 'stuck now',
             'ms': stuck,
             'action': action,
+            'step': step,
             'pageStrokes': page,
             'noteStrokes': note,
           },

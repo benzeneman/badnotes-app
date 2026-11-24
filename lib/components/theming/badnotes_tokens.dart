@@ -127,12 +127,15 @@ abstract final class BnShadows {
   static const card = [
     BoxShadow(color: Color(0x08000000), blurRadius: 2, offset: Offset(0, 1)),
   ];
+  // Shadows are blurred again by the GPU on every frame (no caching), and
+  // wide ones under scrolling lists and dialogs made frames slow: kept
+  // tight, they look much the same.
   static const floating = [
-    BoxShadow(color: Color(0x14000000), blurRadius: 30, offset: Offset(0, 10)),
+    BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 8)),
   ];
   static const popover = [
     BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2)),
-    BoxShadow(color: Color(0x1F000000), blurRadius: 48, offset: Offset(0, 18)),
+    BoxShadow(color: Color(0x1F000000), blurRadius: 20, offset: Offset(0, 10)),
   ];
   /// A tall panel that scrolls (the ⋯ menu): the GPU blurs a shadow again
   /// on every frame, and the popover's wide one under a long panel made its
@@ -143,7 +146,7 @@ abstract final class BnShadows {
   ];
   static const cover = [
     BoxShadow(color: Color(0x0F000000), blurRadius: 2, offset: Offset(0, 1)),
-    BoxShadow(color: Color(0x14000000), blurRadius: 24, offset: Offset(0, 10)),
+    BoxShadow(color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 5)),
   ];
 }
 

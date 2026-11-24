@@ -1096,6 +1096,7 @@ class _InkImage {
     final picture = _record(key, null, strokes, draw);
     final ui.Image image;
     try {
+      LagRecorder.step('page into an image');
       image = LagRecorder.span(
         'whole page into an image',
         () => picture.toImageSync(

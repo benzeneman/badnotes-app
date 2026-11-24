@@ -9,6 +9,11 @@ abstract final class EditorSignals {
   /// for the tool dock's "Hide while writing".
   static final drawing = ValueNotifier(false);
 
+  /// How many popovers are open. While one is, an open note shows a still
+  /// picture of its pages instead of drawing them on every frame of the
+  /// popover's animation and scrolling.
+  static final covered = ValueNotifier(0);
+
   static Timer? _afterLift;
 
   /// A stroke starts.
@@ -17,8 +22,12 @@ abstract final class EditorSignals {
     drawing.value = true;
   }
 
+  /// When the last stroke ended.
+  static var lastLift = DateTime.fromMillisecondsSinceEpoch(0);
+
   /// A stroke ends: the dock comes back 300 ms later, unless another starts.
   static void penUp() {
+    lastLift = DateTime.now();
     _afterLift?.cancel();
     // only the dock's "Hide while writing" waits for it
     if (!stows.toolbarAutoHide.value) {

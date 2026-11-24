@@ -460,8 +460,8 @@ class _CoverLibraryState extends State<_CoverLibrary> {
             ),
             BoxShadow(
               color: Color(0x24000000),
-              blurRadius: 40,
-              offset: Offset(0, 18),
+              blurRadius: 16,
+              offset: Offset(0, 8),
             ),
           ],
         ),
