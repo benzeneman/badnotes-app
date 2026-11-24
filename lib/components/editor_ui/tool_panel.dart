@@ -36,10 +36,19 @@ Future<void> showToolPanel(
   BuildContext context, {
   required Rect anchor,
   required PanelPage page,
+  bool freezeEditor = false,
 }) {
   HapticFeedback.selectionClick();
   final screen = MediaQuery.sizeOf(context);
   final colors = BadNotesColors.of(context);
+  // [freezeEditor]: the editor shows a still picture of its pages while this
+  // is open, so a scroll here doesn't draw every live page under it again
+  // each frame. Off for panels whose changes show live on the page.
+  if (freezeEditor) EditorSignals.covered.value++;
+  void done() {
+    if (freezeEditor) EditorSignals.covered.value--;
+  }
+
   if (screen.width < 600) {
     return showModalBottomSheet<void>(
       context: context,
@@ -56,7 +65,7 @@ Future<void> showToolPanel(
       builder: (context) => BnAboveKeyboard(
         child: RepaintBoundary(child: ToolPanel(first: page, sheet: true)),
       ),
-    );
+    ).whenComplete(done);
   }
   return showGeneralDialog<void>(
     context: context,
@@ -66,7 +75,7 @@ Future<void> showToolPanel(
     transitionDuration: BnMotion.normal,
     pageBuilder: (context, animation, _) =>
         _Placed(anchor: anchor, animation: animation, page: page),
-  );
+  ).whenComplete(done);
 }
 
 /// Places the panel above or under its button (or beside it, at the side

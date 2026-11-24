@@ -70,9 +70,7 @@ class _SaveTemplatePanelState extends State<_SaveTemplatePanel> {
   Widget build(BuildContext context) {
     final ink = InkPalette.of(context);
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -294,7 +292,9 @@ class _MyTemplatesRailState extends State<MyTemplatesRail> {
                       color: ink.raised,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: chosen ? ink.accent : ink.muted.withValues(alpha: 0.3),
+                        color: chosen
+                            ? ink.accent
+                            : ink.muted.withValues(alpha: 0.3),
                         width: chosen ? 2.5 : 1,
                       ),
                     ),
@@ -327,7 +327,14 @@ class _MyTemplatesRailState extends State<MyTemplatesRail> {
 
   Widget _picture(MyTemplate template) {
     if (template.thumbnail case final png?) {
-      return Image.memory(png, fit: BoxFit.cover, alignment: Alignment.topCenter);
+      return Image.memory(
+        png,
+        // decoded at the tile's size, not the thumbnail's full size
+        cacheWidth: (widget.tileWidth * MediaQuery.devicePixelRatioOf(context))
+            .round(),
+        fit: BoxFit.cover,
+        alignment: Alignment.topCenter,
+      );
     }
     final paper = template.paper;
     return FittedBox(
@@ -355,9 +362,8 @@ class _MyTemplatesRailState extends State<MyTemplatesRail> {
           picture: _picture(template),
           chosen: template.name == widget.selected,
           star: template.isDefault,
-          onTap: () => widget.onPick(
-            template.name == widget.selected ? null : template,
-          ),
+          onTap: () =>
+              widget.onPick(template.name == widget.selected ? null : template),
           onLongPress: () => _hold(template),
         ),
       if (widget.note != null)

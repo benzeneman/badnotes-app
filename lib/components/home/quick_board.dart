@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:badnotes/components/home/quick_ink.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 
@@ -46,7 +47,35 @@ class BoardItem {
     this.corners = 0.12,
     this.crop = const Rect.fromLTRB(0, 0, 1, 1),
     this.aspect = 0,
+    this.labels = const [],
+    this.due,
+    this.link,
+    this.decoColor,
+    this.noteShape = 0,
   });
+
+  /// The note's labels, for the board's filter chips.
+  final List<String> labels;
+
+  /// When it's due, shown on the card (red from that day on).
+  final DateTime? due;
+
+  /// A notebook it links to, by its path.
+  final String? link;
+
+  /// The pin's, tape's or clip's colour (ARGB); null for its own.
+  final int? decoColor;
+
+  /// A note's paper: 0 square, 1 rounded, 2 torn edge, 3 index card.
+  final int noteShape;
+
+  /// Due today or before.
+  bool get dueNow {
+    final d = due;
+    if (d == null) return false;
+    final now = DateTime.now();
+    return d.isBefore(DateTime(now.year, now.month, now.day + 1));
+  }
 
   /// Where it is on the board, in units of a board 1000 wide; null until
   /// it has a place (it gets the first free one).
@@ -58,7 +87,7 @@ class BoardItem {
   /// Drawn over the ones with a lower [z].
   final int z;
 
-  /// 0 nothing on it, 1 a pin, 2 a strip of tape.
+  /// 0 nothing on it, 1 a pin, 2 a strip of tape, 3 a paper clip.
   final int deco;
 
   /// A photo's frame: 0 square, 1 rounded, 2 circle.
@@ -90,13 +119,17 @@ class BoardItem {
 
   bool get isPhoto => photo != null;
 
-  /// The notes' colours: butter, peach, sky, lilac, mint.
+  /// The notes' colours: butter, peach, sky, lilac, mint, then white,
+  /// rose and sand. Older app versions clamp an index they don't know.
   static const colors = [
     BnColors.noteButter,
     BnColors.notePeach,
     BnColors.noteSky,
     BnColors.noteLilac,
     BnColors.noteMint,
+    Color(0xFFFFFFFF),
+    Color(0xFFF8DDE6),
+    Color(0xFFF7ECCF),
   ];
 
   Color get paper => colors[color.clamp(0, colors.length - 1)];
@@ -115,6 +148,11 @@ class BoardItem {
     double? corners,
     Rect? crop,
     double? aspect,
+    List<String>? labels,
+    DateTime? Function()? due,
+    String? Function()? link,
+    int? Function()? decoColor,
+    int? noteShape,
   }) => BoardItem(
     id: id,
     photo: photo,
@@ -133,6 +171,11 @@ class BoardItem {
     corners: corners ?? this.corners,
     crop: crop ?? this.crop,
     aspect: aspect ?? this.aspect,
+    labels: labels ?? this.labels,
+    due: due == null ? this.due : due(),
+    link: link == null ? this.link : link(),
+    decoColor: decoColor == null ? this.decoColor : decoColor(),
+    noteShape: noteShape ?? this.noteShape,
   );
 
   Map<String, dynamic> toJson() => {
@@ -155,6 +198,11 @@ class BoardItem {
     if (crop != const Rect.fromLTRB(0, 0, 1, 1))
       'cp': [crop.left, crop.top, crop.right, crop.bottom],
     if (aspect != 0) 'ar': aspect,
+    if (labels.isNotEmpty) 'lb': labels,
+    if (due case final d?) 'due': d.millisecondsSinceEpoch,
+    'ln': ?link,
+    'dc': ?decoColor,
+    if (noteShape != 0) 'ns': noteShape,
   };
 
   static BoardItem? fromJson(Object? json) {
@@ -201,6 +249,16 @@ class BoardItem {
         _ => const Rect.fromLTRB(0, 0, 1, 1),
       },
       aspect: (json['ar'] as num?)?.toDouble() ?? 0,
+      labels: [
+        for (final l in (json['lb'] as List? ?? const []))
+          if (l is String) l,
+      ],
+      due: json['due'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(json['due'] as int)
+          : null,
+      link: json['ln'] as String?,
+      decoColor: json['dc'] as int?,
+      noteShape: json['ns'] as int? ?? 0,
     );
   }
 }
@@ -211,6 +269,10 @@ class BoardItem {
 abstract final class QuickBoard {
   static const dir = '/.board';
   static const _file = '$dir/board.json';
+
+  /// The board's look (pattern, colour, photo fade), synced like the
+  /// board; the prefs keep a copy for this device.
+  static const _settingsFile = '$dir/settings.json';
 
   static final items = ValueNotifier<List<BoardItem>>(const []);
   static var _loaded = false;
@@ -224,10 +286,67 @@ abstract final class QuickBoard {
     _changes ??= FileManager.fileWriteStream.stream.listen((event) {
       // written by a sync from another device: merge it in
       if (event.filePath == _file && _saveTimer == null) unawaited(_read());
+      if (event.filePath == _settingsFile && !_writingSettings) {
+        unawaited(_readSettings());
+      }
     });
     if (_loaded) return;
     _loaded = true;
+    await _readSettings();
+    for (final s in [
+      stows.boardPattern,
+      stows.boardColor,
+      stows.boardPhotoFade,
+    ]) {
+      s.addListener(_saveSettingsSoon);
+    }
     await _read();
+  }
+
+  static var _applyingSettings = false, _writingSettings = false;
+  static Timer? _settingsTimer;
+
+  static Future<void> _readSettings() async {
+    if (!FileManager.doesFileExist(_settingsFile)) return;
+    final bytes = await FileManager.readFile(_settingsFile, retries: 0);
+    if (bytes == null) return;
+    try {
+      final json = jsonDecode(utf8.decode(bytes));
+      if (json is! Map) return;
+      _applyingSettings = true;
+      if (json['pattern'] case final String p) stows.boardPattern.value = p;
+      if (json['color'] case final int c) stows.boardColor.value = c;
+      if (json['fade'] case final num f) {
+        stows.boardPhotoFade.value = f.toDouble();
+      }
+    } on FormatException {
+      return;
+    } finally {
+      _applyingSettings = false;
+    }
+  }
+
+  static void _saveSettingsSoon() {
+    if (_applyingSettings) return;
+    _settingsTimer?.cancel();
+    _settingsTimer = Timer(const Duration(milliseconds: 600), () async {
+      _writingSettings = true;
+      try {
+        await FileManager.writeFile(
+          _settingsFile,
+          utf8.encode(
+            jsonEncode({
+              'pattern': stows.boardPattern.value,
+              'color': stows.boardColor.value,
+              'fade': stows.boardPhotoFade.value,
+            }),
+          ),
+          awaitWrite: true,
+        );
+      } finally {
+        _writingSettings = false;
+      }
+    });
   }
 
   static Future<void> _read() async {
@@ -385,22 +504,56 @@ abstract final class QuickBoard {
     return true;
   }
 
-  /// Takes everything off the board.
-  static void removeAll() {
-    for (final item in List.of(items.value)) {
+  /// Takes everything off the board; gives what was on it, for [restore].
+  static List<BoardItem> removeAll() {
+    final all = List.of(items.value);
+    for (final item in all) {
       remove(item);
     }
+    return all;
   }
 
-  /// Takes [item] off the board (and deletes its photo).
+  /// Photos of unpinned items, deleted once undo is no longer offered.
+  static final _photoDeletes = <String, Timer>{};
+
+  /// How long an unpinned photo's file is kept, for undo.
+  static const undoWindow = Duration(seconds: 8);
+
+  /// Takes [item] off the board; its photo is deleted after [undoWindow]
+  /// unless [restore] puts it back.
+  // ponytail: a photo unpinned just before the app closes stays on disk;
+  // sweep /.board for files no item points to if that ever matters.
   static void remove(BoardItem item) {
     _deleted.add(item.id);
     items.value = [...items.value]..removeWhere((i) => i.id == item.id);
     if (item.photo case final photo?) {
-      unawaited(FileManager.deleteFile(photo));
+      _photoDeletes[item.id]?.cancel();
+      _photoDeletes[item.id] = Timer(undoWindow, () {
+        _photoDeletes.remove(item.id);
+        unawaited(FileManager.deleteFile(photo));
+      });
     }
     _saveSoon();
   }
+
+  /// Puts unpinned [removed] items back, as they were.
+  static void restore(List<BoardItem> removed) {
+    final back = [
+      for (final item in removed)
+        if (!items.value.any((i) => i.id == item.id)) item,
+    ];
+    for (final item in back) {
+      _deleted.remove(item.id);
+      _photoDeletes.remove(item.id)?.cancel();
+    }
+    items.value = [...items.value, ...back]
+      ..sort((a, b) => a.order.compareTo(b.order));
+    _saveSoon();
+  }
+
+  /// Every label used on the board, A to Z.
+  static List<String> get labels =>
+      {for (final i in items.value) ...i.labels}.toList()..sort();
 
   /// Moves the item at [from] to [to], for dragging.
   static void reorder(int from, int to) {

@@ -21,6 +21,8 @@ import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/components/home/notebook_cover.dart';
 import 'package:badnotes/components/home/note_tags.dart';
 import 'package:badnotes/components/home/sync_indicator.dart';
+import 'package:badnotes/components/lock/lock_ui.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/data/editor/thumbnail_marks.dart';
 import 'package:badnotes/data/favorites.dart';
@@ -188,11 +190,18 @@ class _PreviewCardState extends State<PreviewCard> {
 
   final _coverKey = GlobalKey();
 
+  /// A locked notebook, or one in a shut locked folder: no page shows.
+  bool get _hidePage =>
+      NoteLocks.isLocked(widget.filePath) ||
+      NoteLocks.needsUnlock(widget.filePath);
+
+  bool get _showsPage => thumbnail.doesImageExist && !_hidePage;
+
   /// The cover or the first page, in the notebook frame.
   Widget _cover(BuildContext context, {bool lifted = false}) {
     final theme = Theme.of(context);
     final art = ListenableBuilder(
-      listenable: thumbnail,
+      listenable: Listenable.merge([thumbnail, NoteLocks.changes]),
       builder: (context, _) => cover != null
           ? NotebookCover(
               design: cover!,
@@ -206,7 +215,7 @@ class _PreviewCardState extends State<PreviewCard> {
                   theme.brightness == .dark &&
                   stows.editorAutoInvert.value &&
                   !thumbnail.keepsColors,
-              child: thumbnail.doesImageExist
+              child: _showsPage
                   ? Image(
                       key: ValueKey(thumbnail.updateCount),
                       image: thumbnail.resized!,
@@ -219,19 +228,21 @@ class _PreviewCardState extends State<PreviewCard> {
                   : const ColoredBox(color: InnerCanvas.defaultBackgroundColor),
             ),
     );
-    return ValueListenableBuilder(
-      valueListenable: stows.favoriteNotes,
-      builder: (context, favorites, _) => BnCoverFrame(
+    return ListenableBuilder(
+      listenable: Listenable.merge([stows.favoriteNotes, NoteLocks.changes]),
+      builder: (context, _) => BnCoverFrame(
         key: lifted ? null : _coverKey,
         // a blank first page: its name, as on a plain cover
-        label: !widget.asRow && cover == null && !thumbnail.doesImageExist
+        label: !widget.asRow && cover == null && !_showsPage
             ? _name
             : null,
-        favorite: !widget.asRow && favorites.contains(widget.filePath),
+        favorite:
+            !widget.asRow &&
+            stows.favoriteNotes.value.contains(widget.filePath),
         // a blank page shows inverted (black) in dark mode
         dark: cover != null
             ? coverColor(cover).computeLuminance() < 0.3
-            : !thumbnail.doesImageExist &&
+            : !_showsPage &&
                   theme.brightness == .dark &&
                   stows.editorAutoInvert.value,
         outlined: cover == null,
@@ -241,6 +252,16 @@ class _PreviewCardState extends State<PreviewCard> {
           fit: StackFit.expand,
           children: [
             art,
+            Align(
+              alignment: .topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: LockBadge(
+                  path: widget.filePath,
+                  size: widget.asRow ? 14 : 22,
+                ),
+              ),
+            ),
             if (!lifted)
               Align(
                 alignment: .bottomRight,
@@ -505,15 +526,21 @@ class _NotebookMenu extends HookWidget {
             MenuQuickAction(
               icon: BnIcons.share,
               label: 'Share',
-              onTap: closeThen(
-                menu,
-                () => showNotesShareCard(page, [path]),
-              ),
+              onTap: closeThen(menu, () async {
+                if (await ensureUnlocked(page, path) && page.mounted) {
+                  await showNotesShareCard(page, [path]);
+                }
+              }),
             ),
             MenuQuickAction(
               icon: BnIcons.copy,
               label: 'Copy',
-              onTap: closeThen(menu, () => duplicateNotes([path])),
+              // a copy has no lock: only after the password
+              onTap: closeThen(menu, () async {
+                if (await ensureUnlocked(page, path) && page.mounted) {
+                  await duplicateNotes([path]);
+                }
+              }),
             ),
             MenuQuickAction(
               icon: BnIcons.selectCircle,
@@ -571,6 +598,12 @@ class _NotebookMenu extends HookWidget {
             ],
           ),
         ),
+        for (final action in LockAction.of(path, .note))
+          MenuRow(
+            icon: action.icon,
+            label: action.label,
+            onTap: closeThen(menu, () => action.run(page)),
+          ),
         MenuRow(
           icon: tagIcon,
           label: 'Tags',
@@ -591,7 +624,11 @@ class _NotebookMenu extends HookWidget {
         MenuRow(
           icon: BnIcons.file,
           label: 'Export as PDF',
-          onTap: closeThen(menu, () => exportNotes(page, [path])),
+          onTap: closeThen(menu, () async {
+            if (await ensureUnlocked(page, path) && page.mounted) {
+              await exportNotes(page, [path]);
+            }
+          }),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),

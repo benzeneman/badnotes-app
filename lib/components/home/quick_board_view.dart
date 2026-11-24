@@ -11,7 +11,10 @@ import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:badnotes/components/home/quick_composer.dart';
+
+export 'package:badnotes/components/home/quick_composer.dart'
+    show showQuickComposer;
 
 const _hand = 'Caveat';
 
@@ -49,13 +52,13 @@ class QuickNotesCard extends HookWidget {
             ],
           ),
         ),
+        _HeaderButton(
+          icon: Icons.open_in_full,
+          tooltip: 'Open the board full screen',
+          onTap: () => showPinBoardFull(context),
+        ),
+        const SizedBox(width: 6),
         if (!strip) ...[
-          _HeaderButton(
-            icon: Icons.open_in_full,
-            tooltip: 'Open the board full screen',
-            onTap: () => showPinBoardFull(context),
-          ),
-          const SizedBox(width: 6),
           Builder(
             builder: (context) => _HeaderButton(
               icon: BnIcons.more,
@@ -225,7 +228,11 @@ void _boardMenu(BuildContext context) => showAppleMenu(
   context,
   anchor: rectOf(context),
   entries: [
-    AppleMenuItem('Tidy up', icon: Icons.grid_view, onTap: QuickBoard.tidy),
+    AppleMenuItem(
+      'Tidy up',
+      icon: Icons.grid_view,
+      onTap: () => _tidy(context),
+    ),
     if (QuickBoard.untidy != null)
       AppleMenuItem(
         'Undo tidy up',
@@ -247,87 +254,271 @@ void _boardMenu(BuildContext context) => showAppleMenu(
   ],
 );
 
-Future<void> _confirmUnpinAll(BuildContext context) async {
-  final count = QuickBoard.items.value.length;
-  final sure = await showBnDialog<bool>(
-    context: context,
-    title: 'Unpin everything?',
-    message:
-        'All $count notes and photos come off the board. This can\'t be undone.',
-    actions: const [
-      BnDialogAction('Keep them', value: false),
-      BnDialogAction('Unpin all', value: true, destructive: true),
-    ],
+/// Takes everything off, with a moment to undo it.
+void _confirmUnpinAll(BuildContext context) {
+  final removed = QuickBoard.removeAll();
+  showBanner(
+    context,
+    'Unpinned ${removed.length} ${removed.length == 1 ? 'item' : 'items'}',
+    actionLabel: 'Undo',
+    onAction: () => QuickBoard.restore(removed),
+    duration: const Duration(seconds: 6),
   );
-  if (sure ?? false) QuickBoard.removeAll();
 }
 
-/// The board full screen, for more room.
+/// Tidies the board, with a moment to undo it.
+void _tidy(BuildContext context) {
+  QuickBoard.tidy();
+  showBanner(
+    context,
+    'Tidied up',
+    actionLabel: 'Undo',
+    onAction: QuickBoard.undoTidy,
+    duration: const Duration(seconds: 5),
+  );
+}
+
+/// The board full screen, for more room: search, label filters, its
+/// background, tidy up and a new note along the top.
 Future<void> showPinBoardFull(BuildContext context) =>
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) {
-          final colors = BadNotesColors.of(context);
-          return Scaffold(
-            backgroundColor: colors.surface,
-            appBar: AppBar(
-              backgroundColor: colors.surface,
-              surfaceTintColor: Colors.transparent,
-              titleSpacing: 4,
-              title: ValueListenableBuilder(
-                valueListenable: QuickBoard.items,
-                builder: (context, items, _) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick notes',
-                      style: BnType.title.copyWith(
-                        color: colors.text,
-                        fontWeight: FontWeight.w700,
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const _FullBoard()));
+
+class _FullBoard extends StatefulWidget {
+  const new();
+
+  @override
+  State<_FullBoard> createState() => _FullBoardState();
+}
+
+class _FullBoardState extends State<_FullBoard> {
+  final _search = TextEditingController();
+  var _query = '';
+
+  /// The label chip chosen: null for all, [_due] for the ones with a date.
+  String? _filter;
+  static const _due = '\u0000due';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(BoardItem item) {
+    final q = _query.trim().toLowerCase();
+    if (q.isNotEmpty &&
+        ![
+          item.text,
+          for (final c in item.checklist) c.text,
+          ...item.labels,
+        ].any((t) => t.toLowerCase().contains(q))) {
+      return false;
+    }
+    return switch (_filter) {
+      null => true,
+      _due => item.due != null,
+      final label => item.labels.contains(label),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = BadNotesColors.of(context);
+    final wide = MediaQuery.sizeOf(context).width >= 760;
+    return Scaffold(
+      backgroundColor: colors.surface,
+      body: ValueListenableBuilder(
+        valueListenable: QuickBoard.items,
+        builder: (context, items, _) {
+          final due = items.where((i) => i.dueNow).length;
+          final labels = QuickBoard.labels;
+          if (_filter != null && _filter != _due && !labels.contains(_filter)) {
+            _filter = null;
+          }
+          final filtering = _query.trim().isNotEmpty || _filter != null;
+          final search = SizedBox(
+            height: 38,
+            width: wide ? 260 : double.infinity,
+            child: TextField(
+              controller: _search,
+              onChanged: (q) => setState(() => _query = q),
+              style: BnType.body.copyWith(color: colors.text),
+              decoration: InputDecoration(
+                isDense: true,
+                filled: true,
+                fillColor: colors.sunkenSoft,
+                hintText: 'Search the board',
+                prefixIcon: Icon(BnIcons.search, size: 16, color: colors.muted),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: Icon(
+                          BnIcons.close,
+                          size: 14,
+                          color: colors.muted,
+                        ),
+                        onPressed: () => setState(() {
+                          _search.clear();
+                          _query = '';
+                        }),
                       ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(BnRadius.control),
+                  ),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          );
+          final chips = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              spacing: 6,
+              children: [
+                BnChip(
+                  label: 'All',
+                  selected: _filter == null,
+                  onTap: () => setState(() => _filter = null),
+                ),
+                for (final label in labels)
+                  BnChip(
+                    label: label,
+                    icon: Icons.label_outline,
+                    selected: _filter == label,
+                    onTap: () => setState(
+                      () => _filter = _filter == label ? null : label,
                     ),
-                    Text(
-                      '${items.length} pinned',
-                      style: BnType.caption.copyWith(color: colors.muted),
+                  ),
+                BnChip(
+                  label: 'Due',
+                  icon: Icons.alarm,
+                  selected: _filter == _due,
+                  onTap: () =>
+                      setState(() => _filter = _filter == _due ? null : _due),
+                ),
+              ],
+            ),
+          );
+          final actions = [
+            Builder(
+              builder: (context) => wide
+                  ? BnButton(
+                      label: 'Board',
+                      icon: Icons.wallpaper,
+                      height: 38,
+                      onPressed: () => showBoardBackground(context),
+                    )
+                  : BnIconButton(
+                      icon: Icons.wallpaper,
+                      tooltip: 'Board background',
+                      onPressed: () => showBoardBackground(context),
+                    ),
+            ),
+            if (wide)
+              BnButton(
+                label: 'Tidy up',
+                icon: Icons.grid_view,
+                height: 38,
+                onPressed: () => _tidy(context),
+              )
+            else
+              BnIconButton(
+                icon: Icons.grid_view,
+                tooltip: 'Tidy up',
+                onPressed: () => _tidy(context),
+              ),
+            Builder(
+              builder: (context) => BnIconButton(
+                icon: BnIcons.more,
+                tooltip: 'More',
+                onPressed: () => _boardMenu(context),
+              ),
+            ),
+            Builder(
+              builder: (context) => BnButton.primary(
+                label: 'Note',
+                icon: BnIcons.add,
+                height: 38,
+                onPressed: () => showQuickComposer(context),
+              ),
+            ),
+          ];
+          final bar = Material(
+            color: colors.surface,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(4, 6, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 8,
+                  children: [
+                    Row(
+                      spacing: 8,
+                      children: [
+                        const BackButton(),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Quick notes',
+                                style: BnType.title.copyWith(
+                                  color: colors.text,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                '${items.length} pinned · $due due today',
+                                style: BnType.caption.copyWith(
+                                  color: colors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (wide) search,
+                        ...actions,
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: wide
+                          ? chips
+                          : Column(spacing: 8, children: [search, chips]),
                     ),
                   ],
                 ),
               ),
-              actions: [
-                Builder(
-                  builder: (context) => BnButton(
-                    label: 'Tidy up',
-                    icon: Icons.grid_view,
-                    height: 38,
-                    onPressed: () => _boardMenu(context),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Builder(
-                  builder: (context) => BnButton.primary(
-                    label: 'Note',
-                    icon: BnIcons.add,
-                    height: 38,
-                    onPressed: () => showQuickComposer(context),
-                  ),
-                ),
-                const SizedBox(width: 16),
-              ],
             ),
-            body: ValueListenableBuilder(
-              valueListenable: QuickBoard.items,
-              builder: (context, items, _) => PinBoard(
-                items: items,
-                openNote: showQuickNote,
-                openPhoto: showQuickPhoto,
-                minHeight: MediaQuery.sizeOf(context).height,
-                zoomable: true,
+          );
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              bar,
+              Divider(height: 1, color: colors.hairline),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, c) => PinBoard(
+                    items: items,
+                    openNote: showQuickNote,
+                    openPhoto: showQuickPhoto,
+                    minHeight: c.maxHeight,
+                    zoomable: true,
+                    matches: filtering ? _matches : null,
+                  ),
+                ),
               ),
-            ),
+            ],
           );
         },
       ),
     );
+  }
+}
 
 /// A note or photo on the board; drag one onto another to reorder.
 class _BoardTile extends StatelessWidget {
@@ -430,401 +621,6 @@ class _PhotoTile extends StatelessWidget {
   }
 }
 
-/// Writes a new quick note, or changes [editing] (design N06).
-Future<void> showQuickComposer(BuildContext context, {BoardItem? editing}) =>
-    showBnPopover<void>(
-      anchor: context,
-      width: 380,
-      builder: (context) => _Composer(editing: editing),
-    );
-
-class _Composer extends StatefulWidget {
-  const _Composer({this.editing});
-
-  final BoardItem? editing;
-
-  @override
-  State<_Composer> createState() => _ComposerState();
-}
-
-class _ComposerState extends State<_Composer> {
-  late var _color = widget.editing?.color ?? 0;
-  late var _checklist = widget.editing?.checklist.isNotEmpty ?? false;
-
-  /// Written with a pen at first; a note that was only typed opens to type.
-  late var _tool =
-      widget.editing != null &&
-          widget.editing!.ink.isEmpty &&
-          (widget.editing!.text.isNotEmpty ||
-              widget.editing!.checklist.isNotEmpty)
-      ? QuickTool.text
-      : QuickTool.fountain;
-  late final _ink = [...?widget.editing?.ink];
-
-  /// The ink before each change, for undo: a line written or rubbed out.
-  final _undo = <List<BoardStroke>>[];
-
-  void _change(VoidCallback change) => setState(() {
-    _undo.add(List.of(_ink));
-    change();
-  });
-  var _penColor = _penColors.first;
-  var _highlighterColor = _highlighterColors.first;
-  final _focus = FocusNode();
-
-  static const _penColors = [
-    Color(0xFF1C1C1E),
-    Color(0xFF2A55B8),
-    Color(0xFFD13A3A),
-  ];
-  static const _highlighterColors = [
-    Color(0xFFFFD233),
-    Color(0xFF7ED957),
-    Color(0xFFFF8FC8),
-  ];
-
-  void _pick(QuickTool tool) {
-    setState(() => _tool = tool);
-    if (tool == QuickTool.text) {
-      _focus.requestFocus();
-    } else {
-      _focus.unfocus();
-    }
-  }
-
-  late final _text = TextEditingController(
-    text: widget.editing == null
-        ? ''
-        : [
-            if (widget.editing!.text.isNotEmpty) widget.editing!.text,
-            for (final c in widget.editing!.checklist) c.text,
-          ].join('\n'),
-  );
-
-  @override
-  void dispose() {
-    _text.dispose();
-    _focus.dispose();
-    super.dispose();
-  }
-
-  void _pin() {
-    final lines = _text.text
-        .split('\n')
-        .map((l) => l.trim())
-        .where((l) => l.isNotEmpty)
-        .toList();
-    Navigator.of(context).pop();
-    if (lines.isEmpty && _ink.isEmpty) return;
-    final old = widget.editing?.checklist ?? const <BoardCheck>[];
-    // with a checklist, the first line is the title and the rest are items
-    final text = lines.isEmpty
-        ? ''
-        : _checklist
-        ? lines.first
-        : lines.join('\n');
-    final checks = _checklist && lines.isNotEmpty
-        ? [
-            for (final line in lines.skip(1))
-              BoardCheck(line, done: old.any((c) => c.text == line && c.done)),
-          ]
-        : const <BoardCheck>[];
-    if (widget.editing case final item?) {
-      QuickBoard.update(
-        item.copyWith(
-          text: text,
-          checklist: checks,
-          ink: List.of(_ink),
-          color: _color,
-        ),
-      );
-    } else {
-      QuickBoard.addNote(
-        text: text,
-        checklist: checks,
-        ink: List.of(_ink),
-        color: _color,
-      );
-    }
-  }
-
-  Future<void> _photo() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked == null) return;
-    if (mounted) Navigator.of(context).pop();
-    await QuickBoard.addPhoto(await picked.readAsBytes());
-  }
-
-  /// Pens, highlighter and typing, their colours, and undo.
-  Widget _inkBar(BadNotesColors colors) {
-    final dots = switch (_tool) {
-      QuickTool.text || QuickTool.eraser => const <Color>[],
-      QuickTool.highlighter => _highlighterColors,
-      _ => _penColors,
-    };
-    final current = _tool == QuickTool.highlighter
-        ? _highlighterColor
-        : _penColor;
-    return Row(
-      children: [
-        for (final (tool, tip, icon) in const [
-          (QuickTool.fountain, 'Fountain pen', BnToolIcons.pen),
-          (QuickTool.ball, 'Ballpoint pen', BnToolIcons.pencil),
-          (QuickTool.highlighter, 'Highlighter', BnToolIcons.highlighter),
-          (QuickTool.eraser, 'Eraser', BnToolIcons.eraser),
-          (QuickTool.text, 'Type', null),
-        ])
-          Padding(
-            padding: const EdgeInsets.only(right: 4),
-            child: _InkTool(
-              tooltip: tip,
-              selected: _tool == tool,
-              onTap: () => _pick(tool),
-              child: icon == null
-                  ? Icon(BnIcons.text, size: 18, color: colors.text)
-                  : BnPathIcon(icon, size: 18, color: colors.text),
-            ),
-          ),
-        if (dots.isNotEmpty) ...[
-          const SizedBox(width: 6),
-          for (final dot in dots)
-            BnColorDot(
-              color: dot,
-              size: 20,
-              selected: dot == current,
-              onTap: () => setState(() {
-                if (_tool == QuickTool.highlighter) {
-                  _highlighterColor = dot;
-                } else {
-                  _penColor = dot;
-                }
-              }),
-            ),
-        ],
-        const Spacer(),
-        _InkTool(
-          tooltip: 'Undo',
-          onTap: _undo.isEmpty
-              ? null
-              : () => setState(() {
-                  _ink
-                    ..clear()
-                    ..addAll(_undo.removeLast());
-                }),
-          child: Icon(
-            BnIcons.undo,
-            size: 18,
-            color: _undo.isEmpty ? colors.faint : colors.text,
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = BadNotesColors.of(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.editing == null ? 'New quick note' : 'Quick note',
-                style: BnType.title.copyWith(color: colors.text),
-              ),
-            ),
-            for (final (i, paper) in BoardItem.colors.indexed)
-              BnColorDot(
-                color: paper,
-                size: 24,
-                selected: i == _color,
-                onTap: () => setState(() => _color = i),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 190,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: BoardItem.colors[_color],
-            borderRadius: const BorderRadius.all(Radius.circular(4)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 8,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-                // typed only with the text tool: a pen writes over it
-                child: IgnorePointer(
-                  ignoring: _tool != QuickTool.text,
-                  child: TextField(
-                    controller: _text,
-                    autofocus: _tool == QuickTool.text,
-                    focusNode: _focus,
-                    maxLines: null,
-                    expands: true,
-                    cursorColor: BnColors.text,
-                    style: const TextStyle(
-                      fontFamily: _hand,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      height: 1.1,
-                      color: BnColors.text,
-                    ),
-                    decoration: InputDecoration(
-                      filled: false,
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      hintText: _ink.isNotEmpty
-                          ? null
-                          : _checklist
-                          ? 'Title, then one item a line'
-                          : 'Write something…',
-                      hintStyle: const TextStyle(
-                        fontFamily: _hand,
-                        fontSize: 24,
-                        color: Color(0x661C1C1E),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: QuickInkPad(
-                  ink: _ink,
-                  tool: _tool,
-                  color: _tool == QuickTool.highlighter
-                      ? _highlighterColor
-                      : _penColor,
-                  onStroke: (stroke) => _change(() => _ink.add(stroke)),
-                  onErase: (hit) =>
-                      _change(() => _ink.removeWhere(hit.contains)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        _inkBar(colors),
-        const SizedBox(height: 14),
-        Row(
-          spacing: 8,
-          children: [
-            _ComposerTool(
-              icon: BnIcons.listChecks,
-              tooltip: 'Checklist',
-              selected: _checklist,
-              onTap: () => setState(() => _checklist = !_checklist),
-            ),
-            if (widget.editing == null)
-              _ComposerTool(
-                icon: BnIcons.camera,
-                tooltip: 'Pin a photo',
-                onTap: _photo,
-              ),
-            const Spacer(),
-            Material(
-              color: colors.accentTint,
-              shape: const StadiumBorder(),
-              child: InkWell(
-                customBorder: const StadiumBorder(),
-                onTap: _pin,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(BnIcons.pin, size: 16, color: colors.accentStrong),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.editing == null ? 'Pin to board' : 'Save',
-                        style: BnType.bodyLarge.copyWith(
-                          color: colors.accentStrong,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// One of the quick note's writing tools.
-class _InkTool extends StatelessWidget {
-  const _InkTool({
-    required this.tooltip,
-    required this.onTap,
-    required this.child,
-    this.selected = false,
-  });
-
-  final String tooltip;
-  final VoidCallback? onTap;
-  final Widget child;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = BadNotesColors.of(context);
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: selected ? colors.accentTint : Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-          onTap: onTap,
-          child: SizedBox.square(dimension: 36, child: Center(child: child)),
-        ),
-      ),
-    );
-  }
-}
-
-class _ComposerTool extends StatelessWidget {
-  const _ComposerTool({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    this.selected = false,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) => BnIconButton(
-    icon: icon,
-    tooltip: tooltip,
-    size: 40,
-    selected: selected,
-    onPressed: onTap,
-  );
-}
-
 /// A quick note, big (design N12): tick its list, change its colour, edit
 /// or unpin it.
 Future<void> showQuickNote(BuildContext context, BoardItem item) =>
@@ -865,18 +661,27 @@ class _BigNote extends HookWidget {
         Center(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 120),
-            child: Transform.rotate(
-              angle: -2 * math.pi / 180,
-              child: Stack(
-                children: [
-                  _bigPaper(item, side),
-                  if (item.ink.isNotEmpty)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(painter: BoardInkPainter(item.ink)),
+            child: InteractiveViewer(
+              // pinch to read it closer
+              maxScale: 4,
+              clipBehavior: Clip.none,
+              child: Transform.rotate(
+                angle: -2 * math.pi / 180,
+                child: Stack(
+                  children: [
+                    _bigPaper(item, side),
+                    if (item.ink.isNotEmpty)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: RepaintBoundary(
+                            child: CustomPaint(
+                              painter: BoardInkPainter(item.ink),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1030,6 +835,13 @@ class _BigNote extends HookWidget {
         icon: BnIcons.pin,
         label: 'Unpin',
         onTap: () {
+          showBanner(
+            context,
+            'Note unpinned',
+            actionLabel: 'Undo',
+            onAction: () => QuickBoard.restore([item]),
+            duration: const Duration(seconds: 5),
+          );
           Navigator.of(context).pop();
           QuickBoard.remove(item);
         },
@@ -1071,9 +883,17 @@ class _BigPhoto extends HookWidget {
         Positioned.fill(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(90, 80, 90, 140),
-            child: Image(
-              image: FileImage(FileManager.getFile(item.photo!)),
-              fit: BoxFit.contain,
+            child: InteractiveViewer(
+              key: ValueKey(item.id),
+              maxScale: 5,
+              child: Image(
+                image: ResizeImage(
+                  FileImage(FileManager.getFile(item.photo!)),
+                  width: 2400,
+                  allowUpscaling: false,
+                ),
+                fit: BoxFit.contain,
+              ),
             ),
           ),
         ),
@@ -1129,6 +949,13 @@ class _BigPhoto extends HookWidget {
                   label: 'Delete',
                   danger: true,
                   onTap: () {
+                    showBanner(
+                      context,
+                      'Photo unpinned',
+                      actionLabel: 'Undo',
+                      onAction: () => QuickBoard.restore([item]),
+                      duration: const Duration(seconds: 5),
+                    );
                     if (photos.length == 1) Navigator.of(context).pop();
                     if (photos.length > 1) go(1);
                     QuickBoard.remove(item);

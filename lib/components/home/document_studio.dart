@@ -302,13 +302,7 @@ class _DocumentStudioState extends State<_DocumentStudio> {
         decoration: BoxDecoration(
           border: hairline,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x2E000000),
-              blurRadius: 16,
-              offset: Offset(0, 8),
-            ),
-          ],
+          boxShadow: _previewShadow,
         ),
         child: Stack(
           fit: StackFit.expand,
@@ -337,6 +331,8 @@ class _DocumentStudioState extends State<_DocumentStudio> {
       final paper = switch (mine) {
         MyTemplate(thumbnail: final png?) => Image.memory(
           png,
+          // decoded at the size shown, not the thumbnail's full size
+          cacheWidth: (200 * MediaQuery.devicePixelRatioOf(context)).round(),
           fit: BoxFit.cover,
           alignment: Alignment.topCenter,
         ),
@@ -360,15 +356,28 @@ class _DocumentStudioState extends State<_DocumentStudio> {
               top: 10,
               width: 192,
               height: 262,
+              // the rounded clip drawn once, then only the still picture
+              // is turned (a turned clip is redrawn on every frame)
               child: Transform.rotate(
                 angle: 0.105,
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    border: hairline,
-                    borderRadius: BnRadius.cover,
+                child: FrozenPicture(
+                  cacheKey: (
+                    'paper behind',
+                    mine?.thumbnail ?? mine?.paper ?? _paper,
+                    _size,
+                    _color,
+                    colors.hairline,
+                    stows.lastLineHeight.value,
+                    stows.lastLineThickness.value,
                   ),
-                  child: paper,
+                  child: Container(
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      border: hairline,
+                      borderRadius: BnRadius.cover,
+                    ),
+                    child: paper,
+                  ),
                 ),
               ),
             ),
@@ -386,13 +395,7 @@ class _DocumentStudioState extends State<_DocumentStudio> {
                   key: ValueKey((_hasCover, _cover.id)),
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x2E000000),
-                        blurRadius: 16,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
+                    boxShadow: _previewShadow,
                   ),
                   child: Container(
                     clipBehavior: Clip.antiAlias,
@@ -434,30 +437,40 @@ class _DocumentStudioState extends State<_DocumentStudio> {
         ),
       );
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 26,
-      children: [
-        Text(
-          'LIVE PREVIEW',
-          style: BnType.micro.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.4,
-            color: colors.accent,
+    // its own layer: the options scrolling beside or above it don't
+    // repaint it
+    return RepaintBoundary(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 26,
+        children: [
+          Text(
+            'LIVE PREVIEW',
+            style: BnType.micro.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.4,
+              color: colors.accent,
+            ),
           ),
-        ),
-        art,
-        Text(
-          _summary,
-          textAlign: TextAlign.center,
-          style: BnType.body.copyWith(
-            color: colors.muted,
-            fontWeight: FontWeight.w400,
+          art,
+          Text(
+            _summary,
+            textAlign: TextAlign.center,
+            style: BnType.body.copyWith(
+              color: colors.muted,
+              fontWeight: FontWeight.w400,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+
+  /// One tight shadow: a wide blur is redrawn by the GPU on every frame
+  /// the dialog scrolls.
+  static const _previewShadow = [
+    BoxShadow(color: Color(0x24000000), blurRadius: 8, offset: Offset(0, 4)),
+  ];
 
   // --- the choices ----------------------------------------------------------
 
@@ -548,11 +561,12 @@ class _DocumentStudioState extends State<_DocumentStudio> {
       label: label,
       child: GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: BnMotion.fast,
+        // a hard-edged clip: the hairline hides its corners, and an
+        // antialiased one per tile was redrawn on every frame
+        child: Container(
           width: 52,
           height: 70,
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: Clip.hardEdge,
           decoration: _ring(selected, _coverRadius),
           child: child,
         ),
@@ -570,10 +584,8 @@ class _DocumentStudioState extends State<_DocumentStudio> {
               _cover = design;
               _hasCover = true;
             }),
-            child: FrozenPicture(
-              cacheKey: ('cover', design.id, ''),
-              child: NotebookCover(design: design, title: ''),
-            ),
+            // its art is a still picture already
+            child: NotebookCover(design: design, title: ''),
           ),
         tile(
           label: 'No cover',
@@ -623,11 +635,10 @@ class _DocumentStudioState extends State<_DocumentStudio> {
           child: Column(
             spacing: 6,
             children: [
-              AnimatedContainer(
-                duration: BnMotion.fast,
+              Container(
                 width: 72,
                 height: 94,
-                clipBehavior: Clip.antiAlias,
+                clipBehavior: Clip.hardEdge,
                 decoration: _ring(selected, BorderRadius.circular(6)),
                 child: sample,
               ),

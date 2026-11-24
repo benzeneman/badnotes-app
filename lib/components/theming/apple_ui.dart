@@ -5,6 +5,7 @@ import 'package:badnotes/components/ui/bn_overlays.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:stow/stow.dart';
 
 /// Where [context]'s widget is on the screen.
@@ -129,25 +130,63 @@ Future<T?> showAppleDialog<T>({
   );
 }
 
-/// A short message in a dark pill near the bottom, with an optional action
-/// (e.g. "Undo"). Goes by itself, or swiped away.
+/// What a [showBanner] message is about: picks its icon and colour.
+enum BannerKind { info, success, error, warning }
+
+/// A short message in a popup card at the top of the screen, with an optional
+/// action (e.g. "Undo"). Always goes by itself (3 s, 5 s with an action),
+/// or swiped up or sideways; holding a finger on it pauses the timer.
+/// A new one replaces the one showing.
 void showBanner(
   BuildContext context,
   String message, {
   String? actionLabel,
   VoidCallback? onAction,
-  Duration duration = const Duration(seconds: 3),
+  Duration? duration,
+  BannerKind kind = BannerKind.info,
+  String? subtitle,
+  IconData? icon,
 }) {
-  final overlay = Overlay.maybeOf(context, rootOverlay: true);
-  if (overlay == null) return;
+  showBannerOn(
+    Overlay.maybeOf(context, rootOverlay: true),
+    message,
+    actionLabel: actionLabel,
+    onAction: onAction,
+    duration: duration,
+    kind: kind,
+    subtitle: subtitle,
+    icon: icon,
+  );
+}
+
+/// [showBanner] on an [overlay] taken earlier, e.g. before a dialog closed
+/// and took its context with it.
+void showBannerOn(
+  OverlayState? overlay,
+  String message, {
+  String? actionLabel,
+  VoidCallback? onAction,
+  Duration? duration,
+  BannerKind kind = BannerKind.info,
+  String? subtitle,
+  IconData? icon,
+}) {
+  if (overlay == null || !overlay.mounted) return;
   _Banner.current?.remove();
   late final OverlayEntry entry;
   entry = OverlayEntry(
     builder: (context) => _Banner(
       message: message,
+      subtitle: subtitle,
+      kind: kind,
+      icon: icon,
       actionLabel: actionLabel,
       onAction: onAction,
-      duration: duration,
+      duration:
+          duration ??
+          (actionLabel != null
+              ? const Duration(seconds: 5)
+              : const Duration(seconds: 3)),
       onGone: () {
         if (_Banner.current == entry) _Banner.current = null;
         if (entry.mounted) entry.remove();
@@ -161,6 +200,9 @@ void showBanner(
 class _Banner extends StatefulWidget {
   const new({
     required this.message,
+    required this.subtitle,
+    required this.kind,
+    required this.icon,
     required this.actionLabel,
     required this.onAction,
     required this.duration,
@@ -170,6 +212,9 @@ class _Banner extends StatefulWidget {
   static OverlayEntry? current;
 
   final String message;
+  final String? subtitle;
+  final BannerKind kind;
+  final IconData? icon;
   final String? actionLabel;
   final VoidCallback? onAction;
   final Duration duration;
@@ -179,114 +224,208 @@ class _Banner extends StatefulWidget {
   State<_Banner> createState() => _BannerState();
 }
 
-class _BannerState extends State<_Banner> with SingleTickerProviderStateMixin {
+class _BannerState extends State<_Banner> with TickerProviderStateMixin {
   late final _controller = AnimationController(
     vsync: this,
     duration: BnMotion.normal,
     reverseDuration: BnMotion.fast,
   );
 
+  /// Runs down from 1 to 0 over the duration; the line shows it.
+  late final _timer = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+    value: 1,
+  );
+  var _leaving = false;
+
   @override
   void initState() {
     super.initState();
     _controller.forward();
-    Future<void>.delayed(widget.duration, _leave);
+    _timer
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.dismissed) _leave();
+      })
+      ..reverse();
   }
 
   Future<void> _leave() async {
-    if (!mounted) return;
+    if (!mounted || _leaving) return;
+    _leaving = true;
+    _timer.stop();
     await _controller.reverse();
     if (mounted) widget.onGone();
+  }
+
+  void _resume() {
+    if (!_leaving && _timer.value > 0) _timer.reverse();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _timer.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final (Color tone, Color tint, IconData icon) = switch (widget.kind) {
+      BannerKind.info => (colors.accent, colors.accentTint, LucideIcons.info),
+      BannerKind.success => (colors.success, colors.successTint, BnIcons.check),
+      BannerKind.error => (
+        colors.danger,
+        Color.alphaBlend(colors.danger.withValues(alpha: 0.14), colors.surface),
+        LucideIcons.circleAlert,
+      ),
+      BannerKind.warning => (
+        dark ? const Color(0xFFF2B861) : const Color(0xFFB7791F),
+        dark ? const Color(0xFF3A2E17) : const Color(0xFFFBF1DF),
+        LucideIcons.triangleAlert,
+      ),
+    };
+    final hasAction = widget.actionLabel != null;
+    final compact = !hasAction && widget.subtitle == null;
+    final radius = BorderRadius.circular(compact ? 999 : 18);
     final animation = CurvedAnimation(
       parent: _controller,
       curve: BnMotion.curve,
       reverseCurve: Curves.easeInCubic,
     );
-    final hasAction = widget.actionLabel != null;
-    return Positioned(
-      // above the home dock and the editor's tool dock
-      bottom: MediaQuery.paddingOf(context).bottom + 110,
-      left: 16,
-      right: 16,
-      child: Center(
-        child: FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween(
-              begin: const Offset(0, 0.4),
-              end: Offset.zero,
-            ).animate(animation),
-            child: GestureDetector(
-              onVerticalDragEnd: (_) => _leave(),
-              child: Semantics(
-                liveRegion: true,
-                child: Material(
-                  color: colors.text,
-                  shape: const StadiumBorder(),
-                  elevation: 0,
-                  child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(999)),
-                      boxShadow: BnShadows.floating,
+
+    final content = Padding(
+      padding: compact
+          ? const EdgeInsets.fromLTRB(8, 8, 18, 8)
+          : const EdgeInsets.fromLTRB(12, 12, 12, 13),
+      child: Row(
+        mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+        spacing: 12,
+        children: [
+          Container(
+            width: compact ? 30 : 36,
+            height: compact ? 30 : 36,
+            decoration: BoxDecoration(
+              color: tint,
+              borderRadius: BorderRadius.circular(compact ? 999 : 12),
+            ),
+            child: Icon(widget.icon ?? icon, size: compact ? 16 : 18, color: tone),
+          ),
+          Flexible(
+            fit: compact ? FlexFit.loose : FlexFit.tight,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.message,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: colors.text,
+                  ),
+                ),
+                if (widget.subtitle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      widget.subtitle!,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.5, color: colors.muted),
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        20,
-                        hasAction ? 10 : 12,
-                        hasAction ? 10 : 20,
-                        hasAction ? 10 : 12,
+                  ),
+              ],
+            ),
+          ),
+          if (hasAction)
+            Material(
+              color: colors.accentTint,
+              shape: const StadiumBorder(),
+              child: InkWell(
+                customBorder: const StadiumBorder(),
+                onTap: () {
+                  widget.onAction?.call();
+                  _leave();
+                },
+                child: Container(
+                  height: 34,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  alignment: Alignment.center,
+                  child: Text(
+                    widget.actionLabel!,
+                    style: BnType.body.copyWith(
+                      color: colors.accent,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + 8,
+      left: 14,
+      right: 14,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween(
+                begin: const Offset(0, -0.5),
+                end: Offset.zero,
+              ).animate(animation),
+              child: Listener(
+                onPointerDown: (_) => _timer.stop(),
+                onPointerUp: (_) => _resume(),
+                onPointerCancel: (_) => _resume(),
+                child: GestureDetector(
+                  onVerticalDragEnd: (details) {
+                    if ((details.primaryVelocity ?? 0) <= 0) _leave();
+                  },
+                  onHorizontalDragEnd: (_) => _leave(),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        border: Border.all(color: colors.hairline),
+                        borderRadius: radius,
+                        boxShadow: BnShadows.floating,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 16,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              widget.message,
-                              style: BnType.bodyLarge.copyWith(
-                                color: colors.surface,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          if (hasAction)
-                            Material(
-                              color: colors.accent,
-                              shape: const StadiumBorder(),
-                              child: InkWell(
-                                customBorder: const StadiumBorder(),
-                                onTap: () {
-                                  widget.onAction?.call();
-                                  _leave();
-                                },
-                                child: Container(
-                                  height: 36,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    widget.actionLabel!,
-                                    style: BnType.body.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
+                      child: ClipRRect(
+                        borderRadius: radius,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: Stack(
+                            children: [
+                              content,
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: AnimatedBuilder(
+                                  animation: _timer,
+                                  builder: (context, _) => FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: _timer.value,
+                                    child: Container(
+                                      height: 3,
+                                      color: tone.withValues(alpha: 0.55),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),

@@ -95,6 +95,8 @@ import 'package:badnotes/components/toolbar/editor_bottom_sheet.dart';
 import 'package:badnotes/components/toolbar/editor_page_manager.dart';
 import 'package:badnotes/components/toolbar/toolbar.dart';
 import 'package:badnotes/data/is_this_a_test.dart';
+import 'package:badnotes/data/locks.dart';
+import 'package:badnotes/components/lock/lock_ui.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/editor/editor_exporter.dart';
 import 'package:badnotes/data/editor/editor_history.dart';
@@ -330,6 +332,7 @@ class EditorState extends State<Editor> {
       final picture = FileManager.getFile('$path.open.png');
       if (mounted &&
           coreInfo.readOnlyReason == .placeholder &&
+          !NoteLocks.isProtected(path) &&
           picture.existsSync()) {
         setState(() => _openingPicture = picture);
       }
@@ -345,7 +348,7 @@ class EditorState extends State<Editor> {
     // button, and by itself when a stylus touches the page
     stows.editorFingerDrawing.addListener(_setState);
 
-    _initAsync();
+    unawaited(_openUnlessLocked());
     _assignKeybindings();
     // Android can close a backgrounded app without warning: edits still
     // waiting for the autosave delay were lost.
@@ -356,6 +359,40 @@ class EditorState extends State<Editor> {
   }
 
   late final AppLifecycleListener _lifecycle;
+
+  /// Set while the note's lock (or its folder's) is shut: the lock screen
+  /// shows instead, and the note isn't read until it opens.
+  String? _lockedPath;
+  var _started = false;
+  var _gatePath = '';
+
+  Future<void> _openUnlessLocked() async {
+    _gatePath = await widget.initialPath;
+    await NoteLocks.load();
+    if (!mounted) return;
+    NoteLocks.unlocked.addListener(_checkLock);
+    NoteLocks.book.addListener(_checkLock);
+    _checkLock();
+    if (_lockedPath == null) _startOnce();
+  }
+
+  void _startOnce() {
+    if (_started) return;
+    _started = true;
+    _initAsync();
+  }
+
+  /// Locks again when the app was away (or the lock was just set).
+  void _checkLock() {
+    final path = coreInfo.filePath.isNotEmpty ? coreInfo.filePath : _gatePath;
+    final shut = NoteLocks.needsUnlock(path) ? path : null;
+    if (shut != _lockedPath && mounted) setState(() => _lockedPath = shut);
+  }
+
+  void _onUnlocked() {
+    setState(() => _lockedPath = null);
+    _startOnce();
+  }
 
   void _saveIfWaiting() {
     if (_ocrDirty && !coreInfo.readOnly) {
@@ -947,13 +984,13 @@ class EditorState extends State<Editor> {
       ),
     );
     if (ok != true || !mounted) return;
-    final messenger = ScaffoldMessenger.maybeOf(context);
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (path == coreInfo.filePath) {
       await saveToFile();
       if (!mounted) return;
       await NoteTabActions.close(context, path, () async {});
     }
-    await moveToTrashWithUndo(messenger, [path]);
+    await moveToTrashWithUndo(overlay, [path]);
   }
 
   /// The whiteboard's PNG: everything on it, shown whole for a moment and
@@ -3829,7 +3866,6 @@ class EditorState extends State<Editor> {
   /// Saves the note. [quietly] for an autosave while writing: the home
   /// screen isn't told and nothing is uploaded until [_announceQuietWrites].
   Future<void> saveToFile({bool thumbnail = true, bool quietly = false}) async {
-    // a note that's locked still has to save being locked
     if (coreInfo.readOnlyReason != null) return;
 
     final state = savingState.value;
@@ -5748,10 +5784,6 @@ class EditorState extends State<Editor> {
       openTags: widget.customTitle != null
           ? null
           : () => showTagsSheet(context, coreInfo.filePath),
-      locked: coreInfo.locked,
-      toggleLock: coreInfo.readOnlyReason == null || coreInfo.locked
-          ? _toggleLock
-          : null,
       pageNumber: currentPageIndex + 1,
       pageCount: coreInfo.pages.length,
       // a whole board is far too big to put in one file
@@ -5963,20 +5995,6 @@ class EditorState extends State<Editor> {
     if (kit == null || !mounted) return;
     await _pickPhotos([_PhotoInfo(utf8.encode(kit.svg), '.svg')]);
     if (mounted) setState(() {});
-  }
-
-  /// Stops or allows changes to this note. Doesn't keep anyone out of it.
-  void _toggleLock() {
-    Select.currentSelect.unselect();
-    setState(() {
-      coreInfo.locked = !coreInfo.locked;
-      if (coreInfo.locked && currentTool == Tool.textEditing) {
-        currentTool = Pen.currentPen;
-      }
-    });
-    history.markUnsaved();
-    autosaveAfterDelay();
-    showBanner(context, coreInfo.locked ? 'Note locked' : 'Note unlocked');
   }
 
   /// Saves a change to the layers, which isn't in the undo history.
@@ -7251,6 +7269,13 @@ class EditorState extends State<Editor> {
 
   @override
   Widget build(BuildContext context) {
+    if (_lockedPath case final locked?) {
+      return LockScreen(
+        path: locked,
+        onUnlocked: _onUnlocked,
+        onClose: widget.onClosePane ?? () => Navigator.of(context).maybePop(),
+      );
+    }
     // the pages' layout follows this note's two-pages setting
     CanvasGestureDetector.twoPages = _twoPagesHere;
     final colorScheme = ColorScheme.of(context);
@@ -8452,6 +8477,7 @@ class EditorState extends State<Editor> {
     if (!justDrew &&
         coreInfo.readOnlyReason != .placeholder &&
         coreInfo.filePath.isNotEmpty &&
+        !NoteLocks.isProtected(coreInfo.filePath) &&
         !_isBoard) {
       try {
         final boundary =
@@ -8486,6 +8512,8 @@ class EditorState extends State<Editor> {
   void dispose() {
     LagRecorder.step('editor dispose');
     EditorSignals.covered.removeListener(_onCovered);
+    NoteLocks.unlocked.removeListener(_checkLock);
+    NoteLocks.book.removeListener(_checkLock);
     _frozenView?.dispose();
     _frozenView = null;
     stows.floatingToolbarEdge.removeListener(_toolbarMoved);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:badnotes/components/nextcloud/enc_login_step.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
@@ -25,8 +26,7 @@ class const DoneLoginStep({
   static Future<void> signInAgain(BuildContext context) async {
     void tell(String message) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      showBanner(context, message, kind: BannerKind.error);
     }
 
     final String email;

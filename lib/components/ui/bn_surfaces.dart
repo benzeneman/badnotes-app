@@ -42,11 +42,16 @@ class BnPopover extends StatelessWidget {
     required this.child,
     this.width,
     this.padding = const EdgeInsets.all(16),
+    this.shadow = BnShadows.popover,
   });
 
   final Widget child;
   final double? width;
   final EdgeInsetsGeometry padding;
+
+  /// [BnShadows.panel] for a popover with a list that scrolls: the GPU
+  /// blurs the shadow again on every frame of the scroll.
+  final List<BoxShadow> shadow;
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +66,12 @@ class BnPopover extends StatelessWidget {
           borderRadius: const BorderRadius.all(
             Radius.circular(BnRadius.popover),
           ),
-          boxShadow: BnShadows.popover,
+          boxShadow: shadow,
         ),
-        child: Material(type: MaterialType.transparency, child: child),
+        // its own layer: a scroll inside repaints only the content
+        child: RepaintBoundary(
+          child: Material(type: MaterialType.transparency, child: child),
+        ),
       ),
     );
   }

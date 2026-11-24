@@ -13,11 +13,13 @@ import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/home/photos_view.dart';
 import 'package:badnotes/components/home/quick_board_view.dart';
+import 'package:badnotes/components/lock/lock_ui.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/favorites.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/i18n/strings.g.dart';
@@ -263,6 +265,16 @@ class _BrowsePageState extends State<BrowsePage> {
     // a deleted or renamed tag shows everything again
     final tag = tags.colors.containsKey(_tag) ? _tag : null;
     useOnListenableChange(stows.browseSortMetric, findChildrenOfPath);
+    useListenable(NoteLocks.changes);
+    // a locked folder: its password first
+    if (path case final folder? when NoteLocks.needsUnlock(folder)) {
+      void leave() => onPathComponentTap(p.dirname(folder));
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) => didPop ? null : leave(),
+        child: LockScreen(path: folder, onUnlocked: () {}, onClose: leave),
+      );
+    }
     final colors = BadNotesColors.of(context);
     final isAtRoot = path == null || path!.isEmpty;
     final margin = HomeChrome.margin(context);
@@ -582,6 +594,7 @@ class _BrowsePageState extends State<BrowsePage> {
               );
             },
           ),
+          UnlockedFolderBanner(path: folderPath),
         ],
       ),
     );

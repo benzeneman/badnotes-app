@@ -45,10 +45,10 @@ class _ConfirmNoteDeletion extends StatelessWidget {
 
   Future<void> _toss(BuildContext context) async {
     // grabbed before closing, while this context still has one
-    final messenger = ScaffoldMessenger.maybeOf(context);
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
     Navigator.of(context).pop();
     unselectNotes();
-    await moveToTrashWithUndo(messenger, filesToDelete);
+    await moveToTrashWithUndo(overlay, filesToDelete);
   }
 
   String get _title {

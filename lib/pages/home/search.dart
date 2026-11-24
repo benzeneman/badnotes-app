@@ -11,6 +11,7 @@ import 'package:badnotes/components/home/quick_board.dart';
 import 'package:badnotes/components/home/quick_board_view.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/editor/editor_exporter.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
@@ -162,6 +163,8 @@ class _SearchPanel extends HookWidget {
     final notebooks = <SearchDoc>[];
     if (q.isNotEmpty) {
       for (final doc in docs.data ?? const <SearchDoc>[]) {
+        // locked notebooks, and those in locked folders, stay out of search
+        if (NoteLocks.isProtected(doc.path)) continue;
         if (doc.name.toLowerCase().contains(q)) notebooks.add(doc);
         for (final (i, text) in doc.pages.indexed) {
           // a misread letter in the handwriting still matches
@@ -180,6 +183,7 @@ class _SearchPanel extends HookWidget {
               if ([
                 item.text,
                 for (final c in item.checklist) c.text,
+                ...item.labels,
               ].any((t) => t.toLowerCase().contains(q)))
                 item,
           ];

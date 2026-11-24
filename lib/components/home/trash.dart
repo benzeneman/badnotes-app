@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:badnotes/components/home/home_actions.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
+import 'package:badnotes/components/ui/bn_icons.dart';
 import 'package:badnotes/data/favorites.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/pages/editor/editor.dart';
@@ -169,31 +171,27 @@ abstract final class Trash {
 }
 
 /// Moves [paths] to the trash and shows "Moved to Trash · Undo" for 5 s.
-/// Take [messenger] before closing a dialog: its context is gone after.
+/// Take [overlay] (`Overlay.maybeOf(context, rootOverlay: true)`) before
+/// closing a dialog: its context is gone after.
 Future<void> moveToTrashWithUndo(
-  ScaffoldMessengerState? messenger,
+  OverlayState? overlay,
   List<String> paths,
 ) async {
   final moved = await Trash.moveToTrash(paths);
-  if (messenger == null || moved.isEmpty) return;
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 5),
-        content: Text(
-          moved.length == 1
-              ? 'Moved to Trash'
-              : '${moved.length} notes moved to Trash',
-        ),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            for (final entry in moved) {
-              unawaited(Trash.restore(entry));
-            }
-          },
-        ),
-      ),
-    );
+  if (moved.isEmpty) return;
+  showBannerOn(
+    overlay,
+    moved.length == 1
+        ? 'Moved to Trash'
+        : '${moved.length} notes moved to Trash',
+    subtitle: 'Kept for 30 days',
+    kind: BannerKind.error,
+    icon: BnIcons.trash,
+    actionLabel: 'Undo',
+    onAction: () {
+      for (final entry in moved) {
+        unawaited(Trash.restore(entry));
+      }
+    },
+  );
 }

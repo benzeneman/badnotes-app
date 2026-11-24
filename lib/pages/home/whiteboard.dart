@@ -52,7 +52,7 @@ class const Whiteboard({super.key}) extends StatelessWidget {
 /// Asks before clearing the Quick whiteboard (design F7); on Clear it goes
 /// to the Trash with Undo. Whether it was cleared.
 Future<bool> confirmClearQuickBoard(BuildContext context) async {
-  final messenger = ScaffoldMessenger.maybeOf(context);
+  final overlay = Overlay.maybeOf(context, rootOverlay: true);
   final clear = await showBnDialog<bool>(
     context: context,
     title: 'Clear the Quick whiteboard?',
@@ -65,7 +65,7 @@ Future<bool> confirmClearQuickBoard(BuildContext context) async {
     ],
   );
   if (clear != true) return false;
-  await moveToTrashWithUndo(messenger, [Whiteboard.filePath]);
+  await moveToTrashWithUndo(overlay, [Whiteboard.filePath]);
   return true;
 }
 

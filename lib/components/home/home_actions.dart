@@ -9,6 +9,7 @@ import 'package:badnotes/components/editor/export_progress.dart';
 import 'package:badnotes/components/editor/share_export_card.dart';
 import 'package:badnotes/components/editor/note_tabs.dart';
 import 'package:badnotes/components/home/notebook_cover.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/editor/editor_exporter.dart';
@@ -161,12 +162,10 @@ Future<void> exportNotes(
       );
       if (only.name.endsWith('.png') && !share && context.mounted) {
         if (Platform.isAndroid || Platform.isIOS) {
-          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-            SnackBar(
-              content: Text(
-                ok ? 'Saved to Photos' : 'Allow photos access to save the PNG',
-              ),
-            ),
+          showBanner(
+            context,
+            ok ? 'Saved to Photos' : 'Allow photos access to save the PNG',
+            kind: ok ? BannerKind.success : BannerKind.warning,
           );
         }
       }
@@ -187,9 +186,7 @@ Future<void> exportNotes(
   } catch (e, st) {
     Logger('exportNotes').severe('Export failed', e, st);
     if (context.mounted) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Could not export')),
-      );
+      showBanner(context, 'Could not export', kind: BannerKind.error);
     }
   } finally {
     InnerCanvas.exportWithoutPaper = false;

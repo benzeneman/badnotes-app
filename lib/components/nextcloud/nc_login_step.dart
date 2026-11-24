@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:badnotes/components/settings/app_info.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/nextcloud/remote_store.dart';
@@ -232,10 +233,11 @@ class const _LoginWithCloud({required final VoidCallback recheckCurrentStep})
       result = await CloudLogin.signIn(provider);
     } catch (e) {
       if (!CloudLogin.isCancelled(e) && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${t.login.ncLoginStep.cloudLoginFailed}\n$e'),
-          ),
+        showBanner(
+          context,
+          t.login.ncLoginStep.cloudLoginFailed,
+          subtitle: '$e',
+          kind: BannerKind.error,
         );
       }
       return;

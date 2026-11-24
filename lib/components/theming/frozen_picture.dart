@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -17,7 +18,9 @@ class FrozenPicture extends StatefulWidget {
 
   /// The pictures kept, latest used last.
   static final _cache = LinkedHashMap<Object, ui.Image>();
-  static const _maxPictures = 96;
+  // A cover is kept per size it is shown at (tile, preview, home card), so
+  // the cover library alone holds dozens.
+  static const _maxPictures = 192;
 
   static ui.Image? _get(Object key) {
     final image = _cache.remove(key);
@@ -26,11 +29,12 @@ class FrozenPicture extends StatefulWidget {
   }
 
   static void _put(Object key, ui.Image image) {
-    _cache.remove(key);
+    _cache.remove(key)?.dispose();
     _cache[key] = image;
     while (_cache.length > _maxPictures) {
-      final oldest = _cache.keys.first;
-      _cache.remove(oldest);
+      // shown pictures hold their own clone (RawImage), so this frees only
+      // the cache's handle
+      _cache.remove(_cache.keys.first)?.dispose();
     }
   }
 
@@ -41,16 +45,24 @@ class FrozenPicture extends StatefulWidget {
 class _FrozenPictureState extends State<FrozenPicture> {
   final _boundary = GlobalKey();
 
+  /// The key a capture is already waiting for, so rebuilds don't queue more.
+  Object? _pending;
+
   Object _fullKey(Size size, double ratio) => (widget.cacheKey, size, ratio);
 
   void _capture(Object key) {
+    if (_pending == key) return;
+    _pending = key;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final box = _boundary.currentContext?.findRenderObject();
-      if (box is! RenderRepaintBoundary || !box.hasSize || box.debugNeedsPaint) {
-        return;
-      }
+      if (!mounted || _pending != key) return;
+      _pending = null;
       try {
+        final box = _boundary.currentContext?.findRenderObject();
+        if (box is! RenderRepaintBoundary || !box.hasSize) return;
+        // debugNeedsPaint only works in debug builds (it throws in release,
+        // which once meant nothing was ever kept); after the frame the
+        // boundary has painted anyway
+        if (kDebugMode && box.debugNeedsPaint) return;
         final ratio = MediaQuery.devicePixelRatioOf(context);
         FrozenPicture._put(key, box.toImageSync(pixelRatio: ratio));
         setState(() {});

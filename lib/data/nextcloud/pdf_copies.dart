@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:logging/logging.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/editor/editor_exporter.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
 import 'package:badnotes/data/nextcloud/remote_store.dart';
 import 'package:badnotes/data/prefs.dart';
@@ -22,6 +23,8 @@ abstract final class PdfCopies {
   /// Queues [notePath] (without its extension) for a fresh PDF copy.
   static void noteChanged(String notePath) {
     if (!stows.drivePdfCopies.value) return;
+    // a locked notebook stays out of Drive's readable copies
+    if (NoteLocks.isProtected(notePath)) return;
     if (BadNotesSyncInterface.store is! GoogleDriveStore) return;
     _queue
       ..remove(notePath)

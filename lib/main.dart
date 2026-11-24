@@ -20,6 +20,7 @@ import 'package:badnotes/data/lag_recorder.dart';
 import 'package:badnotes/components/theming/dynamic_material_app.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/flavor_config.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
 import 'package:badnotes/data/backup.dart';
 import 'package:badnotes/data/prefs.dart';
@@ -148,6 +149,7 @@ void _limitImageCache() {
 void _afterLaunch() {
   LagRecorder.location = App.location;
   LagRecorder.start();
+  NoteLocks.init();
   startSyncAfterLoaded();
   setupBackgroundSync();
 

@@ -137,8 +137,6 @@ class Toolbar extends StatefulWidget {
     this.toggleBookmark,
     this.duplicatePage,
     this.openNoteSettings,
-    this.locked = false,
-    this.toggleLock,
     this.pageNumber = 1,
     this.pageCount = 1,
     this.part = ToolbarPart.full,
@@ -193,10 +191,6 @@ class Toolbar extends StatefulWidget {
   final VoidCallback? toggleBookmark;
   final VoidCallback? duplicatePage;
   final VoidCallback? openNoteSettings;
-  final bool locked;
-
-  /// Null when the note can't be locked or unlocked.
-  final VoidCallback? toggleLock;
 
   /// The page in view, from 1, and how many there are.
   final int pageNumber, pageCount;
@@ -752,6 +746,7 @@ class _ToolbarState extends State<Toolbar> {
     showToolPanel(
       context,
       anchor: anchor,
+      freezeEditor: true,
       page: PanelPage(
         title: 'More',
         width: 340,
@@ -1033,13 +1028,6 @@ class _ToolbarState extends State<Toolbar> {
                     checked: DynamicMaterialApp.isFullscreen,
                     onTap: () => run(toggleFullscreen),
                   ),
-                  if (widget.toggleLock != null)
-                    PanelNavRow(
-                      icon: widget.locked ? Icons.lock_open : Icons.lock_outline,
-                      title: widget.locked ? 'Remove Lock' : 'Add Lock',
-                      chevron: false,
-                      onTap: () => run(widget.toggleLock),
-                    ),
                   PanelNavRow(
                     icon: Icons.swap_vert,
                     title: 'Scrolling Direction',

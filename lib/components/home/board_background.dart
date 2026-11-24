@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:ui' show PointMode;
+
 import 'package:badnotes/components/home/quick_board.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
@@ -42,6 +45,11 @@ class BoardBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // drawn once, not again for each frame of a zoom or a moved note
+    return RepaintBoundary(child: _build());
+  }
+
+  Widget _build() {
     return ListenableBuilder(
       listenable: Listenable.merge([
         stows.boardPattern,
@@ -102,11 +110,22 @@ class _PatternPainter extends CustomPainter {
           : Color.lerp(base, Colors.black, 0.12)!;
     switch (pattern) {
       case BoardPattern.dots:
+        // one draw call for every dot: thousands of circles were slow
+        final dots = <double>[];
         for (var y = 9.0; y < size.height; y += 18) {
           for (var x = 9.0; x < size.width; x += 18) {
-            canvas.drawCircle(Offset(x, y), 1.1, mark);
+            dots
+              ..add(x)
+              ..add(y);
           }
         }
+        canvas.drawRawPoints(
+          PointMode.points,
+          Float32List.fromList(dots),
+          mark
+            ..strokeWidth = 2.2
+            ..strokeCap = StrokeCap.round,
+        );
       case BoardPattern.grid:
         mark.strokeWidth = 1;
         for (var x = 0.0; x < size.width; x += 22) {
@@ -116,24 +135,34 @@ class _PatternPainter extends CustomPainter {
           canvas.drawLine(Offset(0, y), Offset(size.width, y), mark);
         }
       case BoardPattern.cork:
-        // a speckle that looks the same each time
-        final speck = Paint()..color = const Color(0xFFB48D60);
+        // a speckle that looks the same each time, in three sizes of
+        // speck, each drawn in one call
         var seed = 7;
         double next() {
           seed = (seed * 1103515245 + 12345) & 0x7fffffff;
           return seed / 0x7fffffff;
         }
 
+        final specks = [<double>[], <double>[], <double>[]];
         for (var y = 0.0; y < size.height; y += 6) {
           for (var x = 0.0; x < size.width; x += 6) {
             if (next() < 0.45) {
-              canvas.drawCircle(
-                Offset(x + next() * 5, y + next() * 5),
-                0.6 + next() * 0.9,
-                speck,
-              );
+              final px = x + next() * 5, py = y + next() * 5;
+              specks[(next() * 3).floor().clamp(0, 2)]
+                ..add(px)
+                ..add(py);
             }
           }
+        }
+        for (final (i, points) in specks.indexed) {
+          canvas.drawRawPoints(
+            PointMode.points,
+            Float32List.fromList(points),
+            Paint()
+              ..color = const Color(0xFFB48D60)
+              ..strokeWidth = 2 * (0.75 + i * 0.3)
+              ..strokeCap = StrokeCap.round,
+          );
         }
       case BoardPattern.none:
       case BoardPattern.photo:

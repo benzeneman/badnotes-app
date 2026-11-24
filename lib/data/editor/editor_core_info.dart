@@ -60,14 +60,11 @@ class EditorCoreInfo {
 
   /// Whether the note is read-only.
   /// See [readOnlyReason] for the reason.
-  bool get readOnly => readOnlyReason != null || locked;
+  bool get readOnly => readOnlyReason != null;
 
   /// Pages taken out of the note, which can be put back or removed for good.
   /// They stay in the note's file until then.
   var trash = <EditorPage>[];
-
-  /// Locked by the user against accidental changes. Saved with the note.
-  var locked = false;
 
   String filePath;
 
@@ -175,7 +172,6 @@ class EditorCoreInfo {
         initialPageIndex: json['c'] as int?,
         assetCache: assetCache,
       )
-      ..locked = json['lock'] == true
       ..trash = onlyFirstPage
           ? <EditorPage>[]
           : _parsePagesJson(
@@ -505,7 +501,6 @@ class EditorCoreInfo {
       'lt': lineThickness,
       'z': pages.map((EditorPage page) => page.toJson(assets)).toList(),
       'c': initialPageIndex,
-      if (locked) 'lock': true,
       if (trash.isNotEmpty)
         'tr': trash.map((EditorPage page) => page.toJson(assets)).toList(),
     };
@@ -596,7 +591,6 @@ class EditorCoreInfo {
         initialPageIndex: initialPageIndex,
         assetCache: assetCache,
       )
-      ..locked = locked
       ..trash = trash;
   }
 }

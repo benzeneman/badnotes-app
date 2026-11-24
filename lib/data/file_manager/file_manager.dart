@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:badnotes/components/home/note_tags.dart';
 import 'package:badnotes/components/home/sort_button.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/favorites.dart';
 import 'package:badnotes/data/file_manager/note_versions.dart';
 import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
@@ -791,6 +792,7 @@ class FileManager {
     );
     final newPath = parent + newName;
     await directory.rename(documentsDirectory + newPath);
+    NoteLocks.move(directoryPath, newPath);
 
     for (final child in children) {
       _renameReferences(directoryPath + child, newPath + child);
@@ -819,6 +821,7 @@ class FileManager {
       }
     }
     await directory.delete(recursive: recursive);
+    NoteLocks.forgetFolder(directoryPath);
   }
 
   // -----------------------------------------------------------------------
@@ -969,6 +972,7 @@ class FileManager {
   static Future _renameReferences(String fromPath, String toPath) async {
     Favorites.rename(fromPath, toPath);
     NoteTags.rename(fromPath, toPath);
+    NoteLocks.renameFile(fromPath, toPath);
 
     final recent = stows.recentFiles.value;
     var renamed = false;
@@ -988,6 +992,7 @@ class FileManager {
   static Future _removeReferences(String filePath) async {
     Favorites.remove(filePath);
     NoteTags.forget(filePath);
+    NoteLocks.forgetFile(filePath);
 
     final recent = stows.recentFiles.value;
     for (var i = 0; i < recent.length; i++) {

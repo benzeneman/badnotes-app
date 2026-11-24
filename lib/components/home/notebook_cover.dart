@@ -109,8 +109,7 @@ class NotebookCover extends StatelessWidget {
               final w = constraints.maxWidth;
               final dark = coverIsDark(design);
               // art not made for a name gets a pill behind it
-              final busy =
-                  !design.label || _busyCovers.contains(design.id);
+              final busy = !design.label || _busyCovers.contains(design.id);
               final text = Text(
                 title,
                 maxLines: 2,
@@ -188,8 +187,8 @@ Map<String, List<CoverDesign>> _orderedSections() {
   };
 }
 
-/// Every cover, by section, in rows that fill the width. The
-/// [selected] one has a ring.
+/// Every cover, by section, in rows that fill the width, as a scroll view
+/// that builds only the rows on screen. The [selected] one has a ring.
 class CoverPicker extends StatelessWidget {
   const new({
     super.key,
@@ -216,15 +215,13 @@ class CoverPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     final sections = _orderedSections();
-    return Padding(
-      padding: padding,
-      child: Column(
-        crossAxisAlignment: .start,
-        children: [
-          for (final MapEntry(key: section, value: designs) in sections.entries)
-            if (only == null || only == section) ...[
-              Padding(
-                padding: const EdgeInsets.only(top: 14, bottom: 8),
+    return CustomScrollView(
+      slivers: [
+        for (final MapEntry(key: section, value: designs) in sections.entries)
+          if (only == null || only == section) ...[
+            SliverPadding(
+              padding: padding.copyWith(top: 14, bottom: 8),
+              sliver: SliverToBoxAdapter(
                 child: Text(
                   section,
                   style: BnType.caption.copyWith(
@@ -233,40 +230,50 @@ class CoverPicker extends StatelessWidget {
                   ),
                 ),
               ),
-              LayoutBuilder(
+            ),
+            SliverPadding(
+              padding: padding,
+              sliver: SliverLayoutBuilder(
                 builder: (context, constraints) {
                   // rows that fill the width (design N26): small swatches
                   // for the solid colors, 88-wide covers for the rest
                   final solid = section == 'Solid colors';
                   final gap = solid ? 8.0 : 12.0;
                   final minWidth = solid ? 40.0 : 88.0;
-                  final width = constraints.maxWidth;
+                  final width = constraints.crossAxisExtent;
                   final columns = ((width + gap) / (minWidth + gap))
                       .floor()
                       .clamp(1, solid ? 6 : 8);
                   final tile = ((width - gap * (columns - 1)) / columns)
                       .floorToDouble();
-                  return Wrap(
-                    spacing: gap,
-                    runSpacing: gap,
-                    children: [
-                      for (final design in designs)
-                        CoverTile(
-                          design: design,
-                          title: solid ? '' : title,
-                          showTitle: showTitle,
-                          showName: !solid,
-                          width: tile,
-                          selected: design == selected,
-                          onTap: () => onSelected(design),
-                        ),
-                    ],
+                  return SliverGrid.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: gap,
+                      mainAxisSpacing: gap,
+                      // the cover, and the name under it
+                      mainAxisExtent: tile * 118 / 88 + (solid ? 0 : 22),
+                    ),
+                    itemCount: designs.length,
+                    itemBuilder: (context, i) => Align(
+                      alignment: Alignment.topLeft,
+                      child: CoverTile(
+                        design: designs[i],
+                        title: solid ? '' : title,
+                        showTitle: showTitle,
+                        showName: !solid,
+                        width: tile,
+                        selected: designs[i] == selected,
+                        onTap: () => onSelected(designs[i]),
+                      ),
+                    ),
                   );
                 },
               ),
-            ],
-        ],
-      ),
+            ),
+          ],
+        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+      ],
     );
   }
 }
@@ -308,39 +315,35 @@ class CoverTile extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedContainer(
-                duration: BnMotion.fast,
-                curve: BnMotion.curve,
-                width: width,
-                height: width * 118 / 88,
-                decoration: BoxDecoration(
-                  // The soft shadows use even corners: the GPU draws those
-                  // directly, but blurred the tile's uneven corners afresh
-                  // for every tile on every frame (raster ~25 ms while the
-                  // cover library was open). The ring keeps the tile's shape.
-                  borderRadius: selected ? _tileRadius : _shadowRadius,
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(color: colors.surface, spreadRadius: 2),
-                          BoxShadow(color: colors.accent, spreadRadius: 4),
-                        ]
-                      : const [
-                          BoxShadow(
-                            color: Color(0x0F000000),
-                            blurRadius: 2,
-                            offset: Offset(0, 1),
-                          ),
-                          BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 14,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                ),
-                child: ClipRRect(
-                  borderRadius: _tileRadius,
-                  child: FrozenPicture(
-                    cacheKey: ('cover', design, title, showTitle),
+              // No blurred shadow and no clip: blurred again for every tile
+              // on every frame, they made the cover library lag. A hairline
+              // and a hard 1 px drop look much the same. The cover's art
+              // is a still picture (NotebookCover freezes it).
+              RepaintBoundary(
+                child: Container(
+                  width: width,
+                  height: width * 118 / 88,
+                  foregroundDecoration: BoxDecoration(
+                    borderRadius: _tileRadius,
+                    border: Border.all(color: const Color(0x14000000)),
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: _tileRadius,
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(color: colors.surface, spreadRadius: 2),
+                            BoxShadow(color: colors.accent, spreadRadius: 4),
+                          ]
+                        : const [
+                            BoxShadow(
+                              color: Color(0x14000000),
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: _tileRadius,
+                    clipBehavior: Clip.hardEdge,
                     child: NotebookCover(
                       design: design,
                       title: title,
@@ -368,8 +371,6 @@ class CoverTile extends StatelessWidget {
     );
   }
 
-  static const _shadowRadius = BorderRadius.all(Radius.circular(6));
-
   static const _tileRadius = BorderRadius.only(
     topLeft: Radius.circular(3),
     bottomLeft: Radius.circular(3),
@@ -394,13 +395,12 @@ Future<CoverChoice?> showCoverLibrary(
   final narrow = compact ?? MediaQuery.sizeOf(context).width < 1000;
   return showAppleDialog<CoverChoice>(
     context: context,
-    builder: (context) =>
-        _CoverLibrary(
-          current: current,
-          title: title,
-          showName: showName,
-          compact: narrow,
-        ),
+    builder: (context) => _CoverLibrary(
+      current: current,
+      title: title,
+      showName: showName,
+      compact: narrow,
+    ),
   );
 }
 
@@ -452,16 +452,13 @@ class _CoverLibraryState extends State<_CoverLibrary> {
         // even corners for the shadow: the GPU draws those directly
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(8)),
+          // one tight shadow: it is blurred again on every frame of the
+          // library's scroll
           boxShadow: [
             BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-            BoxShadow(
-              color: Color(0x24000000),
-              blurRadius: 16,
-              offset: Offset(0, 8),
+              color: Color(0x1F000000),
+              blurRadius: 6,
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -504,16 +501,13 @@ class _CoverLibraryState extends State<_CoverLibrary> {
     );
   }
 
-  Widget _picker(EdgeInsets padding) => SingleChildScrollView(
-    padding: const EdgeInsets.only(bottom: 20),
-    child: CoverPicker(
-      selected: _chosen,
-      title: widget.title,
-      only: _only,
-      showTitle: _showName,
-      padding: padding,
-      onSelected: (design) => setState(() => _chosen = design),
-    ),
+  Widget _picker(EdgeInsets padding) => CoverPicker(
+    selected: _chosen,
+    title: widget.title,
+    only: _only,
+    showTitle: _showName,
+    padding: padding,
+    onSelected: (design) => setState(() => _chosen = design),
   );
 
   @override
@@ -528,6 +522,7 @@ class _CoverLibraryState extends State<_CoverLibrary> {
       padding: const EdgeInsets.fromLTRB(40, 36, 40, 30),
       child: BnPopover(
         padding: EdgeInsets.zero,
+        shadow: BnShadows.panel,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(BnRadius.popover - 1),
           child: Row(
@@ -623,6 +618,7 @@ class _CoverLibraryState extends State<_CoverLibrary> {
         child: BnPopover(
           width: width,
           padding: EdgeInsets.zero,
+          shadow: BnShadows.panel,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

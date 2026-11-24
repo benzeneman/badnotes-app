@@ -1,8 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:badnotes/components/home/board_background.dart';
+import 'package:badnotes/components/home/home_actions.dart';
+import 'package:badnotes/components/home/pinch_zoom.dart';
 import 'package:badnotes/components/home/quick_board.dart';
 import 'package:badnotes/components/home/quick_ink.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
@@ -16,13 +19,14 @@ import 'package:flutter/services.dart';
 /// Laid out on a board 1000 units wide, so it looks the same in the desk's
 /// panel and full screen.
 class PinBoard extends StatefulWidget {
-  const PinBoard({
+  const new({
     super.key,
     required this.items,
     required this.openNote,
     required this.openPhoto,
     this.minHeight = 400,
     this.zoomable = false,
+    this.matches,
   });
 
   final List<BoardItem> items;
@@ -32,9 +36,12 @@ class PinBoard extends StatefulWidget {
   /// The board is at least this tall on screen.
   final double minHeight;
 
-  /// Pinch to zoom, pan every way, and a zoom pill (the full-screen board).
-  /// Off on the desk, where the board scrolls up and down.
+  /// Pinch to zoom, pan every way, a zoom pill and a map (the full-screen
+  /// board). Off on the desk, where the board scrolls up and down.
   final bool zoomable;
+
+  /// What a search or filter shows; the rest is dimmed. Null shows all.
+  final bool Function(BoardItem item)? matches;
 
   static const width = 1000.0;
 
@@ -78,9 +85,17 @@ class _PinBoardState extends State<PinBoard> {
   final _view = TransformationController();
   static const _minZoom = 0.5, _maxZoom = 3.0;
 
+  /// Whether the gesture going on has panned or zoomed the board.
+  final _moved = ValueNotifier(false);
+
+  /// Pointers that went down on the picked-up item or its handles: those
+  /// move the item, not the board.
+  final _claimed = <int>{};
+
   @override
   void dispose() {
     _view.dispose();
+    _moved.dispose();
     super.dispose();
   }
 
@@ -96,10 +111,12 @@ class _PinBoardState extends State<PinBoard> {
   }
 
   /// The whole board on the screen, or full width if it's short.
-  void _fit(Size viewport, double boardHeight) {
-    final s = math.min(1.0, viewport.height / boardHeight);
+  void _fit(Size viewport, Size board) {
+    final s = math
+        .min(viewport.width / board.width, viewport.height / board.height)
+        .clamp(_minZoom, 1.0);
     _view.value = Matrix4.identity()
-      ..translateByDouble((viewport.width - viewport.width * s) / 2, 0, 0, 1)
+      ..translateByDouble((viewport.width - board.width * s) / 2, 0, 0, 1)
       ..scaleByDouble(s, s, 1, 1);
   }
 
@@ -144,6 +161,7 @@ class _PinBoardState extends State<PinBoard> {
   }
 
   void _select(BoardItem item) {
+    if (_moved.value) return;
     HapticFeedback.mediumImpact();
     setState(() => _selected = item.id);
     // picked up: to the front
@@ -151,6 +169,11 @@ class _PinBoardState extends State<PinBoard> {
       QuickBoard.update(item.copyWith(z: QuickBoard.topZ + 1));
     }
   }
+
+  /// [child]'s pointers move the picked-up item, not the board.
+  Widget _claim(Widget child) => !widget.zoomable
+      ? child
+      : Listener(onPointerDown: (e) => _claimed.add(e.pointer), child: child);
 
   @override
   Widget build(BuildContext context) {
@@ -164,39 +187,42 @@ class _PinBoardState extends State<PinBoard> {
         );
         final height = math.max(widget.minHeight, bottom * scale);
         final selected = _selected == null ? null : _item(_selected!);
-        final board = GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => setState(() => _selected = null),
-          // zoomable: double-tap empty board for 200%, again for 100%
-          onDoubleTapDown: widget.zoomable
-              ? (d) => _doubleTapAt = MatrixUtils.transformPoint(
-                  _view.value,
-                  d.localPosition,
-                )
-              : null,
-          onDoubleTap: widget.zoomable
-              ? () => _zoomTo(
-                  _view.value.getMaxScaleOnAxis() > 1.5 ? 1 : 2,
-                  _doubleTapAt ?? Offset.zero,
-                )
-              : null,
-          child: SizedBox(
-            height: height,
-            child: Stack(
-              key: _stackKey,
-              clipBehavior: Clip.none,
-              children: [
-                // the board's own background (design 7)
-                const Positioned.fill(child: BoardBackground()),
-                for (final item in items) _item_(context, item, scale),
-                if (selected?.box != null)
-                  ..._handles(
-                    context,
-                    items.firstWhere((i) => i.id == selected!.id),
-                    scale,
-                  ),
-              ],
-            ),
+        final board = SizedBox(
+          width: constraints.maxWidth,
+          height: height,
+          child: Stack(
+            key: _stackKey,
+            clipBehavior: Clip.none,
+            children: [
+              // the board's own background (design 7); a tap on it puts the
+              // picked-up item down, a double tap zooms
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _selected = null),
+                  onDoubleTapDown: widget.zoomable
+                      ? (d) => _doubleTapAt = MatrixUtils.transformPoint(
+                          _view.value,
+                          d.localPosition,
+                        )
+                      : null,
+                  onDoubleTap: widget.zoomable
+                      ? () => _zoomTo(
+                          _view.value.getMaxScaleOnAxis() > 1.5 ? 1 : 2,
+                          _doubleTapAt ?? Offset.zero,
+                        )
+                      : null,
+                  child: const BoardBackground(),
+                ),
+              ),
+              for (final item in items) _item_(context, item, scale),
+              if (selected?.box != null)
+                ..._handles(
+                  context,
+                  items.firstWhere((i) => i.id == selected!.id),
+                  scale,
+                ),
+            ],
           ),
         );
         if (!widget.zoomable) {
@@ -209,21 +235,36 @@ class _PinBoardState extends State<PinBoard> {
           );
         }
         final viewport = Size(constraints.maxWidth, constraints.maxHeight);
+        final boardSize = Size(constraints.maxWidth, height);
+        final pad = MediaQuery.paddingOf(context).bottom;
         return Stack(
           children: [
-            InteractiveViewer(
-              transformationController: _view,
-              constrained: false,
-              minScale: _minZoom,
-              maxScale: _maxZoom,
-              // a picked-up item moves and pinches, not the board
-              panEnabled: selected == null,
-              scaleEnabled: selected == null,
-              child: SizedBox(width: constraints.maxWidth, child: board),
+            Positioned.fill(
+              child: PinchZoom(
+                view: _view,
+                minScale: _minZoom,
+                maxScale: _maxZoom,
+                panWithOneFinger: true,
+                content: boardSize,
+                moved: _moved,
+                ignore: _claimed.remove,
+                child: board,
+              ),
+            ),
+            Positioned(
+              left: 16,
+              bottom: 16 + pad,
+              child: _MiniMap(
+                items: items,
+                view: _view,
+                viewport: viewport,
+                board: boardSize,
+                scale: scale,
+              ),
             ),
             Positioned(
               right: 16,
-              bottom: 16 + MediaQuery.paddingOf(context).bottom,
+              bottom: 16 + pad,
               child: _ZoomPill(
                 view: _view,
                 zoomOut: () => _zoomTo(
@@ -235,7 +276,7 @@ class _PinBoardState extends State<PinBoard> {
                   viewport.center(Offset.zero),
                 ),
                 actualSize: () => _view.value = Matrix4.identity(),
-                fit: () => _fit(viewport, height),
+                fit: () => _fit(viewport, boardSize),
               ),
             ),
           ],
@@ -247,7 +288,14 @@ class _PinBoardState extends State<PinBoard> {
   Widget _item_(BuildContext context, BoardItem item, double scale) {
     final box = item.box!;
     final picked = item.id == _selected;
-    final card = _PinnedCard(item: item, scale: scale);
+    final shown = widget.matches?.call(item) ?? true;
+    // its own layer: zooming or moving another note doesn't draw it again
+    Widget card = RepaintBoundary(
+      child: _PinnedCard(item: item, scale: scale),
+    );
+    if (!shown) {
+      card = IgnorePointer(child: Opacity(opacity: 0.2, child: card));
+    }
     return Positioned(
       key: ValueKey(item.id),
       left: box.left * scale,
@@ -257,37 +305,39 @@ class _PinBoardState extends State<PinBoard> {
       child: Transform.rotate(
         angle: item.angle,
         child: picked
-            ? GestureDetector(
-                // one finger drags, two pinch and twist
-                onScaleStart: (_) {
-                  _startBox = item.box;
-                  _startAngle = item.angle;
-                },
-                onScaleUpdate: (d) {
-                  final start = _startBox;
-                  if (start == null) return;
-                  final current = _item(item.id)?.box ?? start;
-                  final moved = current.center + d.focalPointDelta / scale;
-                  var size = start.size;
-                  if (d.pointerCount > 1) {
-                    size = start.size * d.scale.clamp(0.3, 4.0);
-                  }
-                  _change(
-                    item.id,
-                    (i) => i.copyWith(
-                      box: () => Rect.fromCenter(
-                        center: moved,
-                        width: size.width,
-                        height: size.height,
+            ? _claim(
+                GestureDetector(
+                  // one finger drags, two pinch and twist
+                  onScaleStart: (_) {
+                    _startBox = item.box;
+                    _startAngle = item.angle;
+                  },
+                  onScaleUpdate: (d) {
+                    final start = _startBox;
+                    if (start == null) return;
+                    final current = _item(item.id)?.box ?? start;
+                    final moved = current.center + d.focalPointDelta / scale;
+                    var size = start.size;
+                    if (d.pointerCount > 1) {
+                      size = start.size * d.scale.clamp(0.3, 4.0);
+                    }
+                    _change(
+                      item.id,
+                      (i) => i.copyWith(
+                        box: () => Rect.fromCenter(
+                          center: moved,
+                          width: size.width,
+                          height: size.height,
+                        ),
+                        angle: d.pointerCount > 1
+                            ? _snap(_startAngle + d.rotation)
+                            : i.angle,
                       ),
-                      angle: d.pointerCount > 1
-                          ? _snap(_startAngle + d.rotation)
-                          : i.angle,
-                    ),
-                  );
-                },
-                onTap: () => _open(context, item),
-                child: card,
+                    );
+                  },
+                  onTap: () => _open(context, item),
+                  child: card,
+                ),
               )
             : GestureDetector(
                 onTap: () => _open(context, item),
@@ -298,9 +348,13 @@ class _PinBoardState extends State<PinBoard> {
     );
   }
 
-  void _open(BuildContext context, BoardItem item) => item.isPhoto
-      ? widget.openPhoto(context, item)
-      : widget.openNote(context, item);
+  void _open(BuildContext context, BoardItem item) {
+    // the end of a pinch that began on it
+    if (_moved.value) return;
+    item.isPhoto
+        ? widget.openPhoto(context, item)
+        : widget.openNote(context, item);
+  }
 
   /// Upright when close to it.
   static double _snap(double angle) {
@@ -327,13 +381,15 @@ class _PinBoardState extends State<PinBoard> {
         Positioned(
           left: at.dx - dot / 2,
           top: at.dy - dot / 2,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanStart: (_) => _startBox = item.box,
-            onPanUpdate: onDrag,
-            child: SizedBox.square(
-              dimension: dot,
-              child: Center(child: child),
+          child: _claim(
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: (_) => _startBox = item.box,
+              onPanUpdate: onDrag,
+              child: SizedBox.square(
+                dimension: dot,
+                child: Center(child: child),
+              ),
             ),
           ),
         );
@@ -404,9 +460,11 @@ class _PinBoardState extends State<PinBoard> {
         right: 0,
         top: aabbBottom + 14,
         child: Center(
-          child: _ItemBar(
-            item: item,
-            onDone: () => setState(() => _selected = null),
+          child: _claim(
+            _ItemBar(
+              item: item,
+              onDone: () => setState(() => _selected = null),
+            ),
           ),
         ),
       ),
@@ -414,9 +472,10 @@ class _PinBoardState extends State<PinBoard> {
   }
 }
 
-/// A note or photo as pinned: its frame and look, and a pin or tape.
+/// A note or photo as pinned: its frame and look, a pin, tape or clip, and
+/// its due date, labels and linked notebook.
 class _PinnedCard extends StatelessWidget {
-  const _PinnedCard({required this.item, required this.scale});
+  const new({required this.item, required this.scale});
 
   final BoardItem item;
   final double scale;
@@ -424,28 +483,44 @@ class _PinnedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final body = item.isPhoto ? _photo() : _note();
+    final round = item.isPhoto && item.shape == 2;
+    final torn = !item.isPhoto && item.noteShape == 2;
+    final shadow = BoxShadow(
+      color: const Color(0x33000000),
+      blurRadius: 10 * _deco,
+      offset: Offset(0, 4 * _deco),
+    );
+    final dc = item.decoColor == null ? null : Color(item.decoColor!);
     return Stack(
       clipBehavior: Clip.none,
       fit: StackFit.expand,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            shape: item.isPhoto && item.shape == 2
-                ? BoxShape.circle
-                : BoxShape.rectangle,
-            borderRadius: item.isPhoto && item.shape == 2
-                ? null
-                : BorderRadius.circular(_radius()),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
+        if (torn)
+          // a shadow that follows the torn edge
+          PhysicalShape(
+            clipper: const _TornEdge(),
+            clipBehavior: Clip.antiAlias,
+            color: item.paper,
+            elevation: 3,
+            shadowColor: Colors.black54,
+            child: body,
+          )
+        else
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: round ? BoxShape.circle : BoxShape.rectangle,
+              borderRadius: round ? null : BorderRadius.circular(_radius()),
+              boxShadow: [shadow],
+            ),
+            child: body,
           ),
-          child: body,
-        ),
+        if (_chips(context) case final chips?)
+          Positioned(
+            left: 10 * _deco,
+            right: 10 * _deco,
+            bottom: (torn ? 18 : 10) * _deco,
+            child: chips,
+          ),
         if (item.deco == 1)
           Positioned(
             top: -7 * _deco,
@@ -455,13 +530,15 @@ class _PinnedCard extends StatelessWidget {
               child: Container(
                 width: 16 * _deco,
                 height: 16 * _deco,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    center: Alignment(-0.35, -0.35),
-                    colors: [Color(0xFFFF8A80), Color(0xFFD93A2B)],
+                    center: const Alignment(-0.35, -0.35),
+                    colors: dc == null
+                        ? const [Color(0xFFFF8A80), Color(0xFFD93A2B)]
+                        : [Color.lerp(dc, Colors.white, 0.45)!, dc],
                   ),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Color(0x55000000),
                       blurRadius: 3,
@@ -484,13 +561,25 @@ class _PinnedCard extends StatelessWidget {
                   width: 78 * _deco,
                   height: 22 * _deco,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFD678).withValues(alpha: 0.72),
+                    color: (dc ?? const Color(0xFFFFD678)).withValues(
+                      alpha: 0.72,
+                    ),
                     boxShadow: const [
                       BoxShadow(color: Color(0x22000000), blurRadius: 2),
                     ],
                   ),
                 ),
               ),
+            ),
+          ),
+        if (item.deco == 3)
+          Positioned(
+            top: -16 * _deco,
+            left: 22 * _deco,
+            width: 18 * _deco,
+            height: 48 * _deco,
+            child: CustomPaint(
+              painter: PaperClipPainter(dc ?? const Color(0xFF8E959E)),
             ),
           ),
       ],
@@ -503,11 +592,58 @@ class _PinnedCard extends StatelessWidget {
 
   double _radius() {
     final side = math.min(item.box!.width, item.box!.height) * scale;
-    if (!item.isPhoto) return 4;
+    if (!item.isPhoto) return item.noteShape == 1 ? 18 * scale : 4;
     return switch (item.shape) {
       0 => 0,
       _ => item.corners * side / 2,
     };
+  }
+
+  /// Due date, labels and linked notebook, small along the bottom.
+  Widget? _chips(BuildContext context) {
+    final due = item.due;
+    if (due == null && item.link == null && item.labels.isEmpty) return null;
+    final font = (20 * scale).clamp(8.0, 14.0);
+    Widget chip(String text, {Color? bg, Color? fg, VoidCallback? onTap}) {
+      final c = Container(
+        padding: EdgeInsets.symmetric(horizontal: font * 0.6, vertical: 2),
+        decoration: BoxDecoration(
+          color: bg ?? const Color(0x14000000),
+          borderRadius: const BorderRadius.all(Radius.circular(99)),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: font,
+            fontWeight: FontWeight.w600,
+            color: fg ?? BnColors.text2,
+          ),
+        ),
+      );
+      return onTap == null ? c : GestureDetector(onTap: onTap, child: c);
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 3,
+      children: [
+        if (due != null)
+          chip(
+            '⏰ ${dueLabel(due)}',
+            bg: item.dueNow ? BnColors.danger : null,
+            fg: item.dueNow ? Colors.white : null,
+          ),
+        for (final l in item.labels) chip('#$l'),
+        if (item.link case final link?)
+          chip(
+            '🔗 ${link.split('/').last}',
+            bg: const Color(0x1F2D3260),
+            onTap: () => openNote(context, link),
+          ),
+      ],
+    );
   }
 
   Widget _note() {
@@ -519,11 +655,14 @@ class _PinnedCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: item.paper,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: item.noteShape == 2
+            ? null
+            : BorderRadius.circular(_radius()),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
+          if (item.noteShape == 3) const CustomPaint(painter: _IndexLines()),
           Padding(
             padding: EdgeInsets.all(28 * scale),
             child: Text(
@@ -546,14 +685,18 @@ class _PinnedCard extends StatelessWidget {
   }
 
   Widget _photo() {
+    // decoded no bigger than it's shown (at 2x for zooming in), not at the
+    // photo's full size
+    final decode = (item.box!.width * scale * 2).clamp(200.0, 900.0).round();
     final image = Image(
       image: ResizeImage(
         FileImage(FileManager.getFile(item.photo!)),
-        width: 900,
+        width: decode,
         allowUpscaling: false,
       ),
       fit: BoxFit.fill,
       gaplessPlayback: true,
+      filterQuality: FilterQuality.medium,
       errorBuilder: (context, _, _) =>
           const ColoredBox(color: Color(0xFFDDDDDD)),
     );
@@ -564,11 +707,12 @@ class _PinnedCard extends StatelessWidget {
             child: Image(
               image: ResizeImage(
                 FileImage(FileManager.getFile(item.photo!)),
-                width: 900,
+                width: decode,
                 allowUpscaling: false,
               ),
               fit: BoxFit.cover,
               gaplessPlayback: true,
+              filterQuality: FilterQuality.medium,
               errorBuilder: (context, _, _) =>
                   const ColoredBox(color: Color(0xFFDDDDDD)),
             ),
@@ -600,182 +744,512 @@ class _PinnedCard extends StatelessWidget {
   }
 }
 
-/// The picked-up item's bar (design 2): crop and frame for a photo, what's
-/// on top of it, front and back, and unpin. One row of fixed buttons:
-/// before, each button stretched to the full width and the bar became a
-/// long list down the board.
+/// "Today 18:00", "Tomorrow 9:00" or "12 Mar 9:00".
+String dueLabel(DateTime due) {
+  final now = DateTime.now();
+  final day = DateTime(due.year, due.month, due.day);
+  final today = DateTime(now.year, now.month, now.day);
+  final time = '${due.hour}:${due.minute.toString().padLeft(2, '0')}';
+  final days = day.difference(today).inDays;
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return switch (days) {
+    0 => 'Today $time',
+    1 => 'Tomorrow $time',
+    -1 => 'Yesterday $time',
+    _ => '${due.day} ${months[due.month - 1]} $time',
+  };
+}
+
+/// A note's bottom edge torn off a pad.
+class _TornEdge extends CustomClipper<Path> {
+  const new();
+
+  @override
+  Path getClip(Size size) {
+    final tooth = size.width / 18;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height - tooth);
+    var down = true;
+    for (var x = size.width; x > 0; x -= tooth / 2) {
+      path.lineTo(
+        math.max(0, x - tooth / 2),
+        size.height - (down ? 0 : tooth * 0.7),
+      );
+      down = !down;
+    }
+    return path..close();
+  }
+
+  @override
+  bool shouldReclip(_TornEdge old) => false;
+}
+
+/// An index card's lines: a red one at the top, blue ones under it.
+class _IndexLines extends CustomPainter {
+  const new();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gap = size.height / 9;
+    final blue = Paint()
+      ..color = const Color(0x553B7DD8)
+      ..strokeWidth = math.max(0.6, size.width / 500);
+    for (var y = gap * 2; y < size.height - 2; y += gap) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), blue);
+    }
+    canvas.drawLine(
+      Offset(0, gap * 1.4),
+      Offset(size.width, gap * 1.4),
+      blue..color = const Color(0x99E05050),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_IndexLines old) => false;
+}
+
+/// A paper clip, upright, filling its box.
+class PaperClipPainter extends CustomPainter {
+  const new(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width, h = size.height;
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.13
+      ..strokeCap = StrokeCap.round;
+    final r = w / 2 - stroke.strokeWidth / 2;
+    // the wire: down the right, round the bottom, up the left, round the
+    // top, and down the middle
+    final path = Path()
+      ..moveTo(w / 2 + r, h * 0.3)
+      ..lineTo(w / 2 + r, h - r)
+      ..arcToPoint(Offset(w / 2 - r, h - r), radius: Radius.circular(r))
+      ..lineTo(w / 2 - r, r)
+      ..arcToPoint(
+        Offset(w / 2 + r * 0.55, r),
+        radius: Radius.circular(r * 0.78),
+      )
+      ..lineTo(w / 2 + r * 0.55, h * 0.72)
+      ..arcToPoint(
+        Offset(w / 2 - r * 0.25, h * 0.72),
+        radius: Radius.circular(r * 0.4),
+      )
+      ..lineTo(w / 2 - r * 0.25, h * 0.25);
+    canvas.drawPath(
+      path.shift(const Offset(0, 1.5)),
+      Paint()
+        ..color = const Color(0x33000000)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = stroke.strokeWidth,
+    );
+    canvas.drawPath(path, stroke);
+  }
+
+  @override
+  bool shouldRepaint(PaperClipPainter old) => old.color != color;
+}
+
+/// The colours a pin, tape or clip can be.
+const decoColors = <Color>[
+  Color(0xFFD93A2B),
+  Color(0xFFFFD678),
+  Color(0xFF2B4ACB),
+  Color(0xFF2F9E77),
+  Color(0xFF8E959E),
+  Color(0xFF1C1C1E),
+];
+
+/// The picked-up item's bar (dark pill): colour, pin style, shape, remind,
+/// label, link, front and back, unpin. A photo has crop and frame in
+/// place of colour and shape.
 class _ItemBar extends StatelessWidget {
-  const _ItemBar({required this.item, required this.onDone});
+  const new({required this.item, required this.onDone});
 
   final BoardItem item;
   final VoidCallback onDone;
 
+  static void _set(String id, BoardItem Function(BoardItem) change) {
+    final now = QuickBoard.items.value.where((i) => i.id == id).firstOrNull;
+    if (now != null) QuickBoard.update(change(now));
+  }
+
+  /// A popover under [anchor] that shows the item as it changes.
+  void _panel(
+    BuildContext anchor,
+    Widget Function(BuildContext context, BoardItem item) builder,
+  ) => showBnPopover<void>(
+    anchor: anchor,
+    width: 300,
+    builder: (context) => ValueListenableBuilder(
+      valueListenable: QuickBoard.items,
+      builder: (context, items, _) {
+        final now = items.where((i) => i.id == item.id).firstOrNull;
+        return now == null ? const SizedBox() : builder(context, now);
+      },
+    ),
+  );
+
+  Widget _title(BuildContext context, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8, top: 4),
+    child: Text(
+      text,
+      style: BnType.caption.copyWith(
+        color: BadNotesColors.of(context).muted,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
+
+  void _colour(BuildContext anchor) => _panel(
+    anchor,
+    (context, now) => Wrap(
+      children: [
+        for (final (i, paper) in BoardItem.colors.indexed)
+          BnColorDot(
+            color: paper,
+            size: 26,
+            selected: i == now.color,
+            onTap: () => _set(now.id, (n) => n.copyWith(color: i)),
+          ),
+      ],
+    ),
+  );
+
+  void _pinStyle(BuildContext anchor) => _panel(
+    anchor,
+    (context, now) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _title(context, 'On top'),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final (d, label) in const [
+              (0, 'None'),
+              (1, 'Pin'),
+              (2, 'Tape'),
+              (3, 'Clip'),
+            ])
+              BnChip(
+                label: label,
+                selected: now.deco == d,
+                onTap: () => _set(now.id, (n) => n.copyWith(deco: d)),
+              ),
+          ],
+        ),
+        if (now.deco != 0) ...[
+          _title(context, 'Colour'),
+          Wrap(
+            children: [
+              for (final c in decoColors)
+                BnColorDot(
+                  color: c,
+                  size: 24,
+                  selected: now.decoColor == c.toARGB32(),
+                  onTap: () => _set(
+                    now.id,
+                    (n) => n.copyWith(decoColor: () => c.toARGB32()),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+
+  void _shape(BuildContext anchor) => _panel(
+    anchor,
+    (context, now) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _title(context, 'Shape'),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: now.isPhoto
+              ? [
+                  for (final (s, label) in const [
+                    (0, 'Square'),
+                    (1, 'Rounded'),
+                    (2, 'Circle'),
+                  ])
+                    BnChip(
+                      label: label,
+                      selected: now.shape == s,
+                      onTap: () => _set(
+                        now.id,
+                        (n) => s == 2 ? _toCircle(n) : n.copyWith(shape: s),
+                      ),
+                    ),
+                ]
+              : [
+                  for (final (s, label) in const [
+                    (0, 'Square'),
+                    (1, 'Rounded'),
+                    (2, 'Torn edge'),
+                    (3, 'Index card'),
+                  ])
+                    BnChip(
+                      label: label,
+                      selected: now.noteShape == s,
+                      onTap: () =>
+                          _set(now.id, (n) => n.copyWith(noteShape: s)),
+                    ),
+                ],
+        ),
+        if (now.isPhoto && now.shape == 1)
+          Slider(
+            value: now.corners,
+            onChanged: (v) => _set(now.id, (n) => n.copyWith(corners: v)),
+          ),
+      ],
+    ),
+  );
+
+  void _remind(BuildContext anchor) {
+    final now = DateTime.now();
+    void due(DateTime? at) => _set(item.id, (n) => n.copyWith(due: () => at));
+    showAppleMenu(
+      anchor,
+      anchor: rectOf(anchor),
+      entries: [
+        AppleMenuItem(
+          'Today evening',
+          icon: Icons.wb_twilight,
+          onTap: () => due(DateTime(now.year, now.month, now.day, 18)),
+        ),
+        AppleMenuItem(
+          'Tomorrow 9 AM',
+          icon: Icons.wb_sunny_outlined,
+          onTap: () => due(DateTime(now.year, now.month, now.day + 1, 9)),
+        ),
+        AppleMenuItem(
+          'Pick a date…',
+          icon: Icons.event,
+          onTap: () async {
+            final day = await showDatePicker(
+              context: anchor,
+              initialDate: item.due ?? now,
+              firstDate: DateTime(now.year - 1),
+              lastDate: DateTime(now.year + 10),
+            );
+            if (day == null || !anchor.mounted) return;
+            final time = await showTimePicker(
+              context: anchor,
+              initialTime: const TimeOfDay(hour: 9, minute: 0),
+            );
+            if (time == null) return;
+            due(DateTime(day.year, day.month, day.day, time.hour, time.minute));
+          },
+        ),
+        if (item.due != null)
+          AppleMenuItem(
+            'No reminder',
+            icon: Icons.alarm_off,
+            onTap: () => due(null),
+          ),
+      ],
+    );
+  }
+
+  void _label(BuildContext anchor) {
+    void toggle(String label) => _set(
+      item.id,
+      (n) => n.copyWith(
+        labels: n.labels.contains(label)
+            ? [...n.labels.where((l) => l != label)]
+            : [...n.labels, label],
+      ),
+    );
+    showAppleMenu(
+      anchor,
+      anchor: rectOf(anchor),
+      entries: [
+        for (final label in QuickBoard.labels)
+          AppleMenuItem(
+            label,
+            checked: item.labels.contains(label),
+            onTap: () => toggle(label),
+          ),
+        AppleMenuItem(
+          'New label…',
+          icon: BnIcons.add,
+          onTap: () async {
+            final field = TextEditingController();
+            final ok = await showBnDialog<bool>(
+              context: anchor,
+              title: 'New label',
+              content: TextField(
+                controller: field,
+                autofocus: true,
+                decoration: const InputDecoration(hintText: 'e.g. Work'),
+              ),
+              actions: const [
+                BnDialogAction('Cancel', value: false),
+                BnDialogAction('Add', value: true),
+              ],
+            );
+            final label = field.text.trim();
+            field.dispose();
+            if ((ok ?? false) && label.isNotEmpty) {
+              _set(
+                item.id,
+                (n) => n.labels.contains(label)
+                    ? n
+                    : n.copyWith(labels: [...n.labels, label]),
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _link(BuildContext anchor) async {
+    final recent = (await FileManager.getRecentlyAccessed()).take(8).toList();
+    if (!anchor.mounted) return;
+    void link(String? path) =>
+        _set(item.id, (n) => n.copyWith(link: () => path));
+    await showAppleMenu(
+      anchor,
+      anchor: rectOf(anchor),
+      entries: [
+        if (recent.isEmpty)
+          const AppleMenuItem('No recent notebooks', enabled: false),
+        for (final path in recent)
+          AppleMenuItem(
+            path.split('/').last,
+            icon: Icons.menu_book_outlined,
+            checked: item.link == path,
+            onTap: () => link(path),
+          ),
+        if (item.link != null)
+          AppleMenuItem(
+            'Remove link',
+            icon: Icons.link_off,
+            onTap: () => link(null),
+          ),
+      ],
+    );
+  }
+
+  void _unpin(BuildContext context) {
+    onDone();
+    QuickBoard.remove(item);
+    showBanner(
+      context,
+      item.isPhoto ? 'Photo unpinned' : 'Note unpinned',
+      actionLabel: 'Undo',
+      onAction: () => QuickBoard.restore([item]),
+      duration: const Duration(seconds: 5),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = BadNotesColors.of(context);
-    void set(BoardItem Function(BoardItem) change) =>
-        QuickBoard.update(change(item));
-
-    Widget button(
-      String tip,
-      Widget icon,
-      VoidCallback onTap, {
-      bool on = false,
-      String? label,
-    }) => Tooltip(
-      message: tip,
-      child: Material(
-        color: on ? colors.accentTint : Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-          onTap: onTap,
-          child: SizedBox(
-            height: 40,
+    Widget action(
+      IconData icon,
+      String label,
+      void Function(BuildContext anchor) onTap, {
+      bool danger = false,
+      Widget? leading,
+    }) {
+      final color = danger ? const Color(0xFFFF7A6E) : Colors.white;
+      return Builder(
+        builder: (anchor) => Tooltip(
+          message: label,
+          child: InkWell(
+            onTap: () => onTap(anchor),
+            borderRadius: const BorderRadius.all(
+              Radius.circular(BnRadius.pill),
+            ),
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: label == null ? 11 : 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  icon,
-                  if (label != null) ...[
-                    const SizedBox(width: 7),
-                    Text(
-                      label,
-                      style: BnType.body.copyWith(color: colors.text),
+                  leading ?? Icon(icon, size: 16, color: color),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: BnType.body.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
-    Widget divider() => Container(
-      width: 1,
-      height: 26,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      color: colors.hairline,
-    );
-    Widget caption(String text) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(text, style: BnType.micro.copyWith(color: colors.muted)),
-    );
-    Widget frame({double radius = 0, bool circle = false, bool on = false}) =>
-        Container(
-          width: 17,
-          height: 17,
-          decoration: BoxDecoration(
-            shape: circle ? BoxShape.circle : BoxShape.rectangle,
-            borderRadius: circle ? null : BorderRadius.circular(radius),
-            border: Border.all(
-              color: on ? colors.accentStrong : colors.text2,
-              width: 1.8,
-            ),
-          ),
-        );
-    Icon icon(IconData data, {bool on = false, Color? color}) => Icon(
-      data,
-      size: 18,
-      color: color ?? (on ? colors.accentStrong : colors.text2),
-    );
+      );
+    }
 
-    return Material(
-      color: colors.surface,
-      elevation: 8,
-      shadowColor: Colors.black38,
-      shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        side: BorderSide(color: colors.hairline),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      constraints: const BoxConstraints(maxWidth: 760),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1F1F22),
+        borderRadius: const BorderRadius.all(Radius.circular(BnRadius.pill)),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: BnShadows.floating,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(6),
+      child: Material(
+        type: MaterialType.transparency,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (item.isPhoto) ...[
-                button(
-                  'Crop',
-                  icon(Icons.crop),
-                  () => showPhotoCrop(context, item),
-                  label: 'Crop',
-                ),
-                divider(),
-                caption('Frame'),
-                button(
-                  'Square frame',
-                  frame(on: item.shape == 0),
-                  () => set((i) => i.copyWith(shape: 0)),
-                  on: item.shape == 0,
-                ),
-                button(
-                  'Rounded frame',
-                  frame(radius: 5, on: item.shape == 1),
-                  () => set((i) => i.copyWith(shape: 1)),
-                  on: item.shape == 1,
-                ),
-                button(
-                  'Circle frame',
-                  frame(circle: true, on: item.shape == 2),
-                  () => set(_toCircle),
-                  on: item.shape == 2,
-                ),
-                if (item.shape == 1)
-                  SizedBox(
-                    width: 100,
-                    child: Slider(
-                      value: item.corners,
-                      onChanged: (v) => set((i) => i.copyWith(corners: v)),
+              if (item.isPhoto)
+                action(Icons.crop, 'Crop', (a) => showPhotoCrop(a, item))
+              else
+                action(
+                  Icons.circle,
+                  'Colour',
+                  _colour,
+                  leading: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: item.paper,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
                     ),
                   ),
-                divider(),
-              ],
-              caption('On top'),
-              button(
-                'Nothing on top',
-                icon(Icons.block, on: item.deco == 0),
-                () => set((i) => i.copyWith(deco: 0)),
-                on: item.deco == 0,
+                ),
+              action(Icons.push_pin_outlined, 'Pin style', _pinStyle),
+              action(Icons.crop_square, 'Shape', _shape),
+              action(Icons.alarm, 'Remind', _remind),
+              action(Icons.label_outline, 'Label', _label),
+              action(Icons.link, 'Link', _link),
+              action(
+                Icons.flip_to_front,
+                'Front',
+                (_) => _set(item.id, (i) => i.copyWith(z: QuickBoard.topZ + 1)),
               ),
-              button(
-                'A pin',
-                icon(Icons.push_pin_outlined, on: item.deco == 1),
-                () => set((i) => i.copyWith(deco: 1)),
-                on: item.deco == 1,
-              ),
-              button(
-                'A strip of tape',
-                icon(Icons.horizontal_rule_rounded, on: item.deco == 2),
-                () => set((i) => i.copyWith(deco: 2)),
-                on: item.deco == 2,
-              ),
-              divider(),
-              button(
-                'Bring to front',
-                icon(Icons.flip_to_front),
-                () => set((i) => i.copyWith(z: QuickBoard.topZ + 1)),
-              ),
-              button('Send to back', icon(Icons.flip_to_back), () {
+              action(Icons.flip_to_back, 'Back', (_) {
                 final bottom = QuickBoard.items.value.fold(
                   0,
                   (m, i) => math.min(m, i.z),
                 );
-                set((i) => i.copyWith(z: bottom - 1));
+                _set(item.id, (i) => i.copyWith(z: bottom - 1));
               }),
-              divider(),
-              button(
-                item.isPhoto ? 'Unpin the photo' : 'Unpin the note',
-                icon(Icons.delete_outline, color: colors.danger),
-                () {
-                  onDone();
-                  QuickBoard.remove(item);
-                },
-              ),
+              action(BnIcons.trash, 'Unpin', _unpin, danger: true),
             ],
           ),
         ),
@@ -806,6 +1280,135 @@ class _ItemBar extends StatelessWidget {
   }
 }
 
+/// A small map of the whole board in a corner: the notes as coloured
+/// boxes and what's on the screen as a frame. Tap or drag on it to go there.
+class _MiniMap extends StatelessWidget {
+  const new({
+    required this.items,
+    required this.view,
+    required this.viewport,
+    required this.board,
+    required this.scale,
+  });
+
+  final List<BoardItem> items;
+  final TransformationController view;
+  final Size viewport, board;
+
+  /// Board units to the board's pixels.
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = BadNotesColors.of(context);
+    final k = math.min(150 / board.width, 110 / board.height);
+    final size = board * k;
+    void jump(Offset at) {
+      final s = view.value.getMaxScaleOnAxis();
+      final point = at / k;
+      final c = viewport.center(Offset.zero);
+      view.value = Matrix4.identity()
+        ..translateByDouble(c.dx - point.dx * s, c.dy - point.dy * s, 0, 1)
+        ..scaleByDouble(s, s, 1, 1);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.92),
+        borderRadius: const BorderRadius.all(Radius.circular(BnRadius.tool)),
+        border: Border.all(color: colors.hairline),
+        boxShadow: BnShadows.floating,
+      ),
+      child: GestureDetector(
+        onTapDown: (d) => jump(d.localPosition),
+        onPanUpdate: (d) => jump(d.localPosition),
+        child: CustomPaint(
+          size: size,
+          painter: _MapPainter(
+            items: items,
+            view: view,
+            viewport: viewport,
+            k: k,
+            scale: scale,
+            frame: colors.accent,
+            ground: colors.sunkenSoft,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapPainter extends CustomPainter {
+  new({
+    required this.items,
+    required this.view,
+    required this.viewport,
+    required this.k,
+    required this.scale,
+    required this.frame,
+    required this.ground,
+  }) : super(repaint: view);
+
+  final List<BoardItem> items;
+  final TransformationController view;
+  final Size viewport;
+  final double k, scale;
+  final Color frame, ground;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(4)),
+      Paint()..color = ground,
+    );
+    for (final item in items) {
+      final b = item.box;
+      if (b == null) continue;
+      final r = Rect.fromLTWH(
+        b.left * scale * k,
+        b.top * scale * k,
+        b.width * scale * k,
+        b.height * scale * k,
+      );
+      canvas.drawRect(
+        r,
+        Paint()
+          ..color = item.isPhoto ? const Color(0xFFB9BCC4) : item.paper
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawRect(
+        r,
+        Paint()
+          ..color = const Color(0x33000000)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.6,
+      );
+    }
+    // what's on the screen, in the board's pixels
+    final inverse = Matrix4.tryInvert(view.value);
+    if (inverse == null) return;
+    final shown = MatrixUtils.transformRect(inverse, Offset.zero & viewport);
+    canvas.drawRect(
+      Rect.fromLTRB(
+        shown.left * k,
+        shown.top * k,
+        shown.right * k,
+        shown.bottom * k,
+      ).intersect(Offset.zero & size),
+      Paint()
+        ..color = frame
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_MapPainter old) =>
+      old.items != items || old.viewport != viewport || old.k != k;
+}
+
 /// The photo with a frame to crop it by its corners; Done keeps it. The
 /// whole photo stays, so it can be cropped again.
 Future<void> showPhotoCrop(BuildContext context, BoardItem item) async {
@@ -822,7 +1425,7 @@ Future<void> showPhotoCrop(BuildContext context, BoardItem item) async {
 }
 
 class _CropPage extends StatefulWidget {
-  const _CropPage({required this.item, required this.aspect});
+  const new({required this.item, required this.aspect});
 
   final BoardItem item;
   final double aspect;
@@ -991,7 +1594,7 @@ class _CropPageState extends State<_CropPage> {
 }
 
 class _CropShade extends CustomPainter {
-  const _CropShade(this.keep);
+  const new(this.keep);
 
   final Rect keep;
 
@@ -1014,7 +1617,7 @@ class _CropShade extends CustomPainter {
 /// − 100% + Fit, in a corner of the zoomable board. The percentage resets
 /// to 100% (the board as wide as the screen).
 class _ZoomPill extends StatelessWidget {
-  const _ZoomPill({
+  const new({
     required this.view,
     required this.zoomOut,
     required this.zoomIn,
@@ -1030,10 +1633,10 @@ class _ZoomPill extends StatelessWidget {
     final colors = BadNotesColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.all(Radius.circular(99)),
+        color: colors.surface.withValues(alpha: 0.95),
+        borderRadius: const BorderRadius.all(Radius.circular(BnRadius.pill)),
         border: Border.all(color: colors.hairline),
-        boxShadow: BnShadows.card,
+        boxShadow: BnShadows.floating,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -1048,6 +1651,7 @@ class _ZoomPill extends StatelessWidget {
                   icon: Icons.remove,
                   size: 34,
                   iconSize: 18,
+                  radius: BnRadius.pill,
                   tooltip: 'Zoom out',
                   onPressed: zoom > _PinBoardState._minZoom + 0.01
                       ? zoomOut
@@ -1056,7 +1660,7 @@ class _ZoomPill extends StatelessWidget {
                 GestureDetector(
                   onTap: actualSize,
                   child: SizedBox(
-                    width: 52,
+                    width: 50,
                     child: Text(
                       '${(zoom * 100).round()}%',
                       textAlign: TextAlign.center,
@@ -1072,17 +1676,29 @@ class _ZoomPill extends StatelessWidget {
                   icon: Icons.add,
                   size: 34,
                   iconSize: 18,
+                  radius: BnRadius.pill,
                   tooltip: 'Zoom in',
                   onPressed: zoom < _PinBoardState._maxZoom - 0.01
                       ? zoomIn
                       : null,
                 ),
-                BnIconButton(
-                  icon: Icons.fit_screen,
-                  size: 34,
-                  iconSize: 18,
-                  tooltip: 'Fit the board',
+                Container(
+                  width: 1,
+                  height: 20,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  color: colors.hairline,
+                ),
+                TextButton(
                   onPressed: fit,
+                  style: TextButton.styleFrom(
+                    foregroundColor: colors.text,
+                    minimumSize: const Size(44, 34),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: Text(
+                    'Fit',
+                    style: BnType.caption.copyWith(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             );

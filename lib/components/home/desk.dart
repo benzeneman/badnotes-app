@@ -12,6 +12,7 @@ import 'package:badnotes/components/home/home_menus.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/favorites.dart';
+import 'package:badnotes/components/lock/lock_ui.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/i18n/strings.g.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +57,9 @@ class DeskFolderTile extends HookWidget {
     final info = useValueListenable(FolderInfos.of(path));
     final style = useValueListenable(FolderStyles.of(path));
     return Builder(
-      builder: (context) => AnimatedSwitcher(
+      builder: (context) => Stack(
+        children: [
+          AnimatedSwitcher(
         duration: BnMotion.fast,
         child: BnFolderTile(
           key: ValueKey(style),
@@ -71,6 +74,9 @@ class DeskFolderTile extends HookWidget {
             showFolderMenu(context, name: name, path: path, actions: actions);
           },
         ),
+          ),
+          Positioned(top: 6, right: 6, child: LockBadge(path: path, size: 20)),
+        ],
       ),
     );
   }
@@ -294,6 +300,12 @@ class _FolderMenu extends HookWidget {
           label: starred ? 'Remove from Favorites' : 'Add to Favorites',
           onTap: closeThen(menu, () => Favorites.toggle(path)),
         ),
+        for (final action in LockAction.of(path, .folder))
+          MenuRow(
+            icon: action.icon,
+            label: action.label,
+            onTap: closeThen(menu, () => action.run(page)),
+          ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
           child: SizedBox(height: 1, child: ColoredBox(color: colors.divider)),
@@ -700,6 +712,7 @@ class NotebookSelectionBar extends StatelessWidget {
             () => showTagsSheet(context, selected.single),
           ),
         SelectionAction('Duplicate', BnIcons.copy, () async {
+          if (!await unlockEach(context, [...selected])) return;
           await duplicateNotes([...selected]);
           unselect();
         }),
@@ -714,7 +727,12 @@ class NotebookSelectionBar extends StatelessWidget {
         SelectionAction(
           'Export',
           BnIcons.export,
-          () => showNotesShareCard(context, [...selected]),
+          () async {
+            final files = [...selected];
+            if (await unlockEach(context, files) && context.mounted) {
+              await showNotesShareCard(context, files);
+            }
+          },
         ),
         SelectionAction(
           'Delete',

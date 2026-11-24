@@ -4,6 +4,7 @@ import 'package:badnotes/components/editor/sticky_note_dialog.dart';
 import 'package:badnotes/components/editor_ui/editor_ui_colors.dart';
 import 'package:badnotes/components/editor_ui/text_format_bar.dart';
 import 'package:badnotes/components/editor_ui/tool_chips.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 
 /// Font families a text box can use, with the name shown for each.
 const textBoxFonts = <String, String>{
@@ -152,10 +153,10 @@ class _TextBoxOverlayState extends State<TextBoxOverlay>
     );
     if (!mounted) return;
     if (!ready) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Voice typing needs the microphone and Google speech'),
-        ),
+      showBanner(
+        context,
+        'Voice typing needs the microphone and Google speech',
+        kind: BannerKind.warning,
       );
       return;
     }
