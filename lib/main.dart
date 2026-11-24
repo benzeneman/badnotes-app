@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:badnotes/components/ui/editor_signals.dart';
 import 'package:badnotes/components/editor/handwriting_ocr.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -206,7 +207,20 @@ void startSyncAfterLoaded() async {
       if (stows.loggedIn) _syncBothWays();
     },
   );
+
+  // While the app is open, look for other devices' changes every minute
+  // (and a full look for local ones every fifth), never mid-stroke.
+  _syncTick ??= Timer.periodic(const Duration(minutes: 1), (timer) {
+    if (!stows.loggedIn) return;
+    final open =
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    if (!open || EditorSignals.drawing.value) return;
+    syncer.downloader.refresh();
+    if (timer.tick % 5 == 0) syncer.uploader.refresh();
+  });
 }
+
+Timer? _syncTick;
 
 void _syncBothWays() {
   syncer.downloader.refresh();

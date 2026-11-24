@@ -95,20 +95,44 @@ class const BadNotesSyncInterface()
     remoteFiles = await findRemoteFiles();
     if (remoteFiles.isEmpty) return const [];
 
-    _undecryptable = 0;
+    undecryptable.clear();
     final candidates = await Future.wait(remoteFiles.map(_remoteChangeOf));
     // files that can't be opened with this device's key would otherwise
     // just never appear, so say so
-    if (_undecryptable > 0) {
-      SyncStatus.error.value = CloudCannotDecrypt(_undecryptable);
+    if (undecryptable.isNotEmpty) {
+      SyncStatus.error.value = CloudCannotDecrypt(undecryptable.length);
     }
     final toDownload = candidates.nonNulls.toList();
     _putPreviewsBeforeTheirNotes(toDownload);
     return toDownload;
   }
 
-  /// How many cloud files the last look could not decrypt the name of.
-  static var _undecryptable = 0;
+  /// The cloud files whose names the last look could not decrypt (locked
+  /// with another key). Emptied files (deletions) aren't counted.
+  static final undecryptable = <String>[];
+
+  /// Empties every file in [undecryptable], which no device here can open,
+  /// so they stop being reported. Returns how many were cleared.
+  static Future<int> clearUndecryptable() async {
+    final store = BadNotesSyncInterface.store;
+    if (store == null) return 0;
+    final paths = [...undecryptable];
+    var cleared = 0;
+    for (final path in paths) {
+      try {
+        await store.put(Uint8List(0), path);
+        cleared++;
+      } catch (e, st) {
+        log.warning('Could not clear $path: $e', e, st);
+      }
+    }
+    undecryptable.clear();
+    if (SyncStatus.error.value is CloudCannotDecrypt) {
+      SyncStatus.error.value = null;
+    }
+    syncer.downloader.refresh();
+    return cleared;
+  }
 
   /// The file to download for [remoteFile], or null when the local copy is
   /// as new, or when both sides have already deleted it.
@@ -118,8 +142,9 @@ class const BadNotesSyncInterface()
       syncFile = await getSyncFileFromRemoteFile(remoteFile);
     } catch (e, st) {
       log.warning('Failed to get sync file from remote file: $e', e, st);
-      if (!remoteFile.path.endsWith(RemoteStore.configFileName)) {
-        _undecryptable++;
+      if (!remoteFile.path.endsWith(RemoteStore.configFileName) &&
+          (remoteFile.size ?? 1) > 0) {
+        undecryptable.add(remoteFile.path);
       }
       return null;
     }
@@ -249,6 +274,7 @@ class const BadNotesSyncInterface()
       await FileManager.deleteFile(path, alsoUpload: false);
       stows.fileSyncAlreadyDeleted.value.add(path);
       stows.fileSyncAlreadyDeleted.notifyListeners();
+      _announceCover(path);
       return;
     }
 
@@ -274,6 +300,21 @@ class const BadNotesSyncInterface()
       lastModified: cloudTime,
     );
     _recordSynced(path, cloudTime);
+    _announceCover(path);
+  }
+
+  /// A notebook's cover (`note.cover`, `note.covername`) came from the
+  /// cloud: tell its card, which listens for the note's own path.
+  static void _announceCover(String path) {
+    for (final suffix in const ['.cover', '.covername']) {
+      if (path.endsWith(suffix)) {
+        // ignore: invalid_use_of_visible_for_testing_member
+        FileManager.broadcastFileWrite(
+          .write,
+          path.substring(0, path.length - suffix.length),
+        );
+      }
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -415,6 +456,9 @@ class const BadNotesSyncInterface()
   /// When a cloud change is about to overwrite or delete a note that was
   /// also edited on this device, first saves this device's version next to
   /// it as "Name (conflict)", so neither side's work is lost.
+  /// The last part of a note path, as shown on its card.
+  static String _nameOf(String path) => path.substring(path.lastIndexOf('/') + 1);
+
   static Future<void> _keepConflictCopy(BadNotesSyncFile file) async {
     final path = file.relativeLocalPath;
     final extension = [
@@ -425,9 +469,16 @@ class const BadNotesSyncInterface()
 
     final stem = path.substring(0, path.length - extension.length);
     final copyPath = await FileManager.suffixFilePathToMakeItUnique(
-      '$stem (conflict)$extension',
+      '$stem (this device)$extension',
     );
     log.info('Both devices edited $path, keeping ours as $copyPath');
+    SyncStatus.conflicts.value = [
+      ...SyncStatus.conflicts.value,
+      (
+        note: _nameOf(stem),
+        copy: _nameOf(copyPath.substring(0, copyPath.length - extension.length)),
+      ),
+    ];
 
     // ponytail: the thumbnail and pictures are copied as they are at this
     // moment, so ones that already came down from the cloud are what the
@@ -770,6 +821,11 @@ abstract final class SyncStatus {
 
   /// The most recent error, cleared once syncing works again.
   static final error = ValueNotifier<Object?>(null);
+
+  /// Notes changed on this device and in the cloud at once this session:
+  /// the cloud version took the name, this device's was kept as [copy].
+  static final conflicts =
+      ValueNotifier<List<({String note, String copy})>>(const []);
 
   static void _uploadFailed(String path, Object error) {
     failedUploads.value = {...failedUploads.value, path};

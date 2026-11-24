@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -84,6 +85,7 @@ void _useSyncStatus() {
   useListenable(stows.username);
   useListenable(SyncStatus.error);
   useListenable(SyncStatus.failedUploads);
+  useListenable(SyncStatus.conflicts);
   useStream(syncer.uploader.queueStream);
   useStream(syncer.downloader.queueStream);
 }
@@ -173,6 +175,9 @@ class _CloudStatusPanel extends HookWidget {
     final colors = BadNotesColors.of(context);
     final problem = SyncProblem.of(SyncStatus.error.value);
     final unsynced = _unsyncedNotes();
+    final pendingFiles =
+        syncer.uploader.numPending + syncer.downloader.numPending;
+    final conflicts = SyncStatus.conflicts.value;
 
     void close(void Function() then) {
       Navigator.pop(context);
@@ -194,10 +199,12 @@ class _CloudStatusPanel extends HookWidget {
       message = problem.message;
       icon = LucideIcons.triangleAlert;
       bad = true;
-    } else if (unsynced > 0) {
+    } else if (unsynced > 0 || pendingFiles > 0) {
       title = 'Syncing';
-      message = '$unsynced ${unsynced == 1 ? 'note is' : 'notes are'} going '
-          'up to ${_provider()}.';
+      message = unsynced > 0
+          ? '$unsynced ${unsynced == 1 ? 'note is' : 'notes are'} going '
+                'up to ${_provider()}.'
+          : 'Bringing the latest changes from ${_provider()}.';
       icon = LucideIcons.cloudUpload;
       bad = false;
     } else {
@@ -290,6 +297,41 @@ class _CloudStatusPanel extends HookWidget {
               ],
             ),
           ),
+          if (conflicts.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.accentSoft,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                [
+                  for (final c in conflicts)
+                    '“${c.note}” was changed on this device and on another '
+                        'one at the same time. Both are kept: the other '
+                        "device's version is “${c.note}”, this device's is "
+                        '“${c.copy}”.',
+                ].join('\n\n'),
+                style: BnType.body.copyWith(
+                  fontWeight: FontWeight.w400,
+                  height: 1.45,
+                  color: colors.highlightText,
+                ),
+              ),
+            ),
+          ],
+          if (problem == SyncProblem.wrongKey) ...[
+            const SizedBox(height: 12),
+            BnPillButton(
+              label: 'Remove unreadable files',
+              icon: BnIcons.trash,
+              kind: BnPillKind.danger,
+              height: 46,
+              expand: true,
+              onPressed: () => close(() => _confirmClearUnreadable(home)),
+            ),
+          ],
           if (stows.loggedIn) ...[
             const SizedBox(height: 12),
             BnToggleRow(
@@ -481,3 +523,73 @@ class AccountButton extends HookWidget {
     );
   }
 }
+
+/// Asks before emptying the cloud files that this device's key can't open
+/// (left from an earlier password), then does it.
+Future<void> _confirmClearUnreadable(BuildContext context) =>
+    showAppleDialog<void>(
+      context: context,
+      builder: (dialog) {
+        final colors = BadNotesColors.of(dialog);
+        final count = BadNotesSyncInterface.undecryptable.length;
+        return BnDialogCard(
+          width: 440,
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Remove $count unreadable ${count == 1 ? 'file' : 'files'}?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.4,
+                  color: colors.text,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'They are in ${_provider()} but were locked with a different '
+                'password, so this device cannot open them. If another device '
+                'still uses that old password, its notes in ${_provider()} '
+                'will be removed too. Notes on this device are not touched.',
+                textAlign: TextAlign.center,
+                style: BnType.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                  color: colors.muted,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                spacing: 10,
+                children: [
+                  Expanded(
+                    child: BnPillButton(
+                      label: 'Keep them',
+                      expand: true,
+                      height: 46,
+                      onPressed: () => Navigator.of(dialog).pop(),
+                    ),
+                  ),
+                  Expanded(
+                    child: BnPillButton(
+                      label: 'Remove',
+                      kind: BnPillKind.danger,
+                      expand: true,
+                      height: 46,
+                      onPressed: () {
+                        Navigator.of(dialog).pop();
+                        unawaited(BadNotesSyncInterface.clearUndecryptable());
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );

@@ -150,7 +150,7 @@ class Stows {
   final syncOnlyOnWifi = _plain('syncOnlyOnWifi', false);
 
   /// Send note thumbnails over mobile data as well (normally left for Wi-Fi).
-  final syncPreviewsOnMobileData = _plain('syncPreviewsOnMobileData', false);
+  final syncPreviewsOnMobileData = _plain('syncPreviewsOnMobileData', true);
 
   final syncInBackground = _plain('syncInBackground', true);
 

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:badnotes/components/home/cover_designs.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/theming/frozen_picture.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
 import 'package:flutter/material.dart';
 
 /// Notebook covers. A note's cover is stored next to it in `<note>.cover`:
@@ -31,6 +34,7 @@ abstract class NotebookCovers {
   }) async {
     final f = FileManager.getFile('$notePath.cover');
     final name = FileManager.getFile('$notePath.covername');
+    final hadCover = f.existsSync(), hadName = name.existsSync();
     if (design == null) {
       if (f.existsSync()) await f.delete();
     } else {
@@ -43,6 +47,14 @@ abstract class NotebookCovers {
     }
     // ignore: invalid_use_of_visible_for_testing_member
     FileManager.broadcastFileWrite(.write, notePath);
+    // so the other devices get the cover too (a deleted file uploads as
+    // a deletion)
+    if (hadCover || f.existsSync()) {
+      unawaited(syncer.uploader.enqueueRel('$notePath.cover'));
+    }
+    if (hadName || name.existsSync()) {
+      unawaited(syncer.uploader.enqueueRel('$notePath.covername'));
+    }
   }
 }
 
