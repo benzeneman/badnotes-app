@@ -67,9 +67,14 @@ class const AppInfo({super.key}) extends StatelessWidget {
             'reach your other devices. They stay in your account, under that '
             'provider\'s own terms and privacy policy. With Google Drive and '
             'OneDrive, BadNotes can only open the files it created itself, '
-            'and reads your account\'s email address to show who is signed '
-            'in. You can sign out at any time; files already in your cloud '
-            'stay there until you delete them.',
+            'and reads your account\'s email address and profile picture to '
+            'show who is signed in. You can sign out at any time; files '
+            'already in your cloud stay there until you delete them. '
+            'BadNotes\'s use and transfer of information received from '
+            'Google APIs follows the Google API Services User Data Policy, '
+            'including its Limited Use requirements: the data is used only '
+            'to sync your notes, is never sold or used for advertising, and '
+            'is never shared with anyone.',
       ),
       (
         'Microphone',

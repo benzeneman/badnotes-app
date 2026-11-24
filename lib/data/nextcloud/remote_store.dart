@@ -410,13 +410,13 @@ class GoogleDriveStore extends _CloudStore {
       throw CloudHttpException(response.statusCode, response.body);
     }
     final user = jsonDecode(response.body)['user'] as Map;
-    lastPhoto = await _download(user['photoLink'] as String?);
+    lastPhoto = await _fetchPhoto(user['photoLink'] as String?);
     return user['emailAddress'] as String;
   }
 
   /// The profile picture at [link], or null if there is none or it can't be
   /// fetched (the avatar then shows the account's letter).
-  static Future<Uint8List?> _download(String? link) async {
+  static Future<Uint8List?> _fetchPhoto(String? link) async {
     if (link == null || link.isEmpty) return null;
     try {
       final sized = link.replaceFirst(RegExp(r'=s\d+(-c)?$'), '=s128-c');
