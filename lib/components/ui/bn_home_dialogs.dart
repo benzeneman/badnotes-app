@@ -37,16 +37,19 @@ class BnDialogCard extends StatelessWidget {
             maxWidth: width == null ? double.infinity : width!,
             maxHeight: screen.height - 32,
           ),
-          // not clipped: the padding keeps the contents clear of the
-          // corners, and a rounded clip over the whole card cost the GPU two
-          // extra passes over it on every frame the dialog moved
           child: Material(
             color: colors.surface,
+            clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(radius),
               side: BorderSide(color: colors.hairline),
             ),
-            child: Padding(padding: padding, child: child),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(radius),
+              ),
+              child: Padding(padding: padding, child: child),
+            ),
           ),
         ),
       ),

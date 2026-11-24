@@ -629,18 +629,11 @@ abstract class BadNotesTheme {
 
 /// A short fade with a small rise. Only opacity and position change, so nothing
 /// has to be redrawn while it runs.
-///
-/// The fade takes only the first 40% of the rise (the last 40% when going
-/// back): while a page is partly see-through the GPU draws the whole screen
-/// into a layer of its own, an extra full-screen render pass a frame on a
-/// tile-based GPU. Opaque, the page only moves.
 class QuietPageTransitionsBuilder extends PageTransitionsBuilder {
   const QuietPageTransitionsBuilder();
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 200);
-
-  static const _fade = Interval(0, 0.4, curve: Curves.easeOut);
+  Duration get transitionDuration => const Duration(milliseconds: 220);
 
   @override
   Widget buildTransitions<T>(
@@ -656,7 +649,7 @@ class QuietPageTransitionsBuilder extends PageTransitionsBuilder {
       reverseCurve: Curves.easeInCubic,
     );
     return FadeTransition(
-      opacity: CurvedAnimation(parent: animation, curve: _fade),
+      opacity: curved,
       child: SlideTransition(
         position: Tween(
           begin: const Offset(0, 0.015),

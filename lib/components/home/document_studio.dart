@@ -1009,12 +1009,9 @@ class _DocumentStudioState extends State<_DocumentStudio> {
     // a card over the home screen, not the whole screen, where there's room
     final wide = screen.width >= 760 && screen.height >= 560;
 
-    // Not clipped: a rounded clip over the whole card cost the GPU two extra
-    // passes over it (the clip and its undoing) on every frame the dialog
-    // moved or scrolled. The contents keep clear of the corners, and the
-    // grey preview side is rounded itself.
     Widget card = Material(
       color: colors.surface,
+      clipBehavior: Clip.antiAlias,
       shape: wide
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(28),
@@ -1029,12 +1026,7 @@ class _DocumentStudioState extends State<_DocumentStudio> {
               children: [
                 Container(
                   width: 330,
-                  decoration: BoxDecoration(
-                    color: colors.sunkenSoft,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(28),
-                    ),
-                  ),
+                  color: colors.sunkenSoft,
                   alignment: Alignment.center,
                   padding: const EdgeInsets.all(16),
                   child: FittedBox(

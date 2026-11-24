@@ -83,7 +83,6 @@ class NotebookCover extends StatelessWidget {
     required this.design,
     required this.title,
     this.showTitle,
-    this.radius,
   });
 
   final CoverDesign design;
@@ -91,10 +90,6 @@ class NotebookCover extends StatelessWidget {
 
   /// Whether [title] is written on the cover; null for the design's default.
   final bool? showTitle;
-
-  /// Rounds the art's corners inside its still picture, so the caller needs
-  /// no clip: a clip around each cover was drawn again on every frame.
-  final BorderRadius? radius;
 
   @override
   Widget build(BuildContext context) {
@@ -105,13 +100,8 @@ class NotebookCover extends StatelessWidget {
         // drawn afresh on every frame, the covers on the home screen made
         // opening the New menu and the new notebook dialog stutter.
         FrozenPicture(
-          cacheKey: ('cover', design.id, radius),
-          child: radius == null
-              ? CustomPaint(painter: _CoverPainter(design))
-              : ClipRRect(
-                  borderRadius: radius!,
-                  child: CustomPaint(painter: _CoverPainter(design)),
-                ),
+          cacheKey: ('cover', design.id),
+          child: CustomPaint(painter: _CoverPainter(design)),
         ),
         if ((showTitle ?? design.label) && title.isNotEmpty)
           LayoutBuilder(
@@ -325,11 +315,10 @@ class CoverTile extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // No blurred shadow and no clip: drawn again for every tile
+              // No blurred shadow and no clip: blurred again for every tile
               // on every frame, they made the cover library lag. A hairline
               // and a hard 1 px drop look much the same. The cover's art
-              // is a still picture with its corners rounded in it
-              // (NotebookCover freezes it).
+              // is a still picture (NotebookCover freezes it).
               RepaintBoundary(
                 child: Container(
                   width: width,
@@ -352,11 +341,14 @@ class CoverTile extends StatelessWidget {
                             ),
                           ],
                   ),
-                  child: NotebookCover(
-                    design: design,
-                    title: title,
-                    showTitle: showTitle,
-                    radius: _tileRadius,
+                  child: ClipRRect(
+                    borderRadius: _tileRadius,
+                    clipBehavior: Clip.hardEdge,
+                    child: NotebookCover(
+                      design: design,
+                      title: title,
+                      showTitle: showTitle,
+                    ),
                   ),
                 ),
               ),
@@ -531,92 +523,86 @@ class _CoverLibraryState extends State<_CoverLibrary> {
       child: BnPopover(
         padding: EdgeInsets.zero,
         shadow: BnShadows.panel,
-        // Not clipped: a rounded clip over this near full-screen panel cost
-        // the GPU two extra passes over it on every frame of the covers'
-        // scroll. The covers keep clear of the corners, and the preview side
-        // is rounded itself.
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(26, 22, 26, 0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(BnRadius.popover - 1),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 22, 26, 0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              'Notebook cover',
+                              style: titleStyle.copyWith(fontSize: 18),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.topRight,
+                              child: _filters(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: _picker(
+                        const EdgeInsets.symmetric(horizontal: 26),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 290,
+                color: colors.previewBg,
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            'Notebook cover',
-                            style: titleStyle.copyWith(fontSize: 18),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.topRight,
-                            child: _filters(),
-                          ),
+                        Expanded(child: Text('Preview', style: titleStyle)),
+                        BnIconButton(
+                          icon: BnIcons.close,
+                          size: 30,
+                          iconSize: 16,
+                          tooltip: 'Close',
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                  ),
-                  Expanded(
-                    child: _picker(
-                      const EdgeInsets.symmetric(horizontal: 26),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 26),
+                      child: Center(child: _preview(160)),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 290,
-              decoration: BoxDecoration(
-                color: colors.previewBg,
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(BnRadius.popover - 1),
+                    _nameToggle(),
+                    const SizedBox(height: 8),
+                    BnButton(
+                      label: 'No cover (show first page)',
+                      expand: true,
+                      onPressed: _none,
+                    ),
+                    const Spacer(),
+                    BnButton.primary(
+                      label: 'Apply cover',
+                      expand: true,
+                      onPressed: _chosen == null ? null : _apply,
+                    ),
+                  ],
                 ),
               ),
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text('Preview', style: titleStyle)),
-                      BnIconButton(
-                        icon: BnIcons.close,
-                        size: 30,
-                        iconSize: 16,
-                        tooltip: 'Close',
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 26),
-                    child: Center(child: _preview(160)),
-                  ),
-                  _nameToggle(),
-                  const SizedBox(height: 8),
-                  BnButton(
-                    label: 'No cover (show first page)',
-                    expand: true,
-                    onPressed: _none,
-                  ),
-                  const Spacer(),
-                  BnButton.primary(
-                    label: 'Apply cover',
-                    expand: true,
-                    onPressed: _chosen == null ? null : _apply,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
