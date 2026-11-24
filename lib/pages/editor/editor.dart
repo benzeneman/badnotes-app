@@ -348,6 +348,8 @@ class EditorState extends State<Editor> {
     // button, and by itself when a stylus touches the page
     stows.editorFingerDrawing.addListener(_setState);
 
+    // no locks at all: open at once, as before locks existed
+    if (NoteLocks.surelyNone) _startOnce();
     unawaited(_openUnlessLocked());
     _assignKeybindings();
     // Android can close a backgrounded app without warning: edits still

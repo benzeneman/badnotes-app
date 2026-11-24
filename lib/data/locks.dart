@@ -349,6 +349,11 @@ abstract final class NoteLocks {
 
   static int get _now => DateTime.now().millisecondsSinceEpoch;
 
+  /// True when no lock can exist yet: nothing read, nothing on disk. A note
+  /// can then open at once, without waiting for the locks to be read.
+  static bool get surelyNone =>
+      book.value.entries.isEmpty && !FileManager.doesFileExist(_file);
+
   static bool isLocked(String path) => book.value.isLocked(path);
   static String? lockingAncestor(String path) =>
       book.value.lockingAncestor(path);
