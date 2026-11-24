@@ -15,6 +15,7 @@ import 'package:badnotes/data/editor/note_start.dart';
 import 'package:badnotes/data/my_templates.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:badnotes/components/ui/covered_snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sbn/canvas_background_pattern.dart';
@@ -1008,7 +1009,7 @@ class _DocumentStudioState extends State<_DocumentStudio> {
     // a card over the home screen, not the whole screen, where there's room
     final wide = screen.width >= 760 && screen.height >= 560;
 
-    final card = Material(
+    Widget card = Material(
       color: colors.surface,
       clipBehavior: Clip.antiAlias,
       shape: wide
@@ -1038,6 +1039,8 @@ class _DocumentStudioState extends State<_DocumentStudio> {
             )
           : _options(false),
     );
+    // a still picture while the cover library is open over it
+    card = CoveredSnapshot(child: card);
 
     if (!wide) {
       return Padding(padding: const EdgeInsets.only(top: 10), child: card);

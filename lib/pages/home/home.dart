@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:badnotes/components/home/trash.dart';
+import 'package:badnotes/components/ui/covered_snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:badnotes/components/navbar/responsive_navbar.dart';
 import 'package:badnotes/components/settings/update_manager.dart';
@@ -110,9 +111,11 @@ class _HomePageState extends State<HomePage> {
         DynamicMaterialApp.isFullscreen;
     // a fullscreen whiteboard gets the whole screen, without tabs
     if (whiteboardFullscreen) return content;
-    return ResponsiveNavbar(
-      selectedIndex: HomePage.subpages.indexOf(widget.subpage),
-      body: content,
+    return CoveredSnapshot(
+      child: ResponsiveNavbar(
+        selectedIndex: HomePage.subpages.indexOf(widget.subpage),
+        body: content,
+      ),
     );
   }
 }

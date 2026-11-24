@@ -9,6 +9,7 @@ import 'package:badnotes/components/home/quick_ink.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/components/ui/covered_snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:badnotes/components/home/quick_composer.dart';
@@ -326,195 +327,204 @@ class _FullBoardState extends State<_FullBoard> {
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     final wide = MediaQuery.sizeOf(context).width >= 760;
-    return Scaffold(
-      backgroundColor: colors.surface,
-      body: ValueListenableBuilder(
-        valueListenable: QuickBoard.items,
-        builder: (context, items, _) {
-          final due = items.where((i) => i.dueNow).length;
-          final labels = QuickBoard.labels;
-          if (_filter != null && _filter != _due && !labels.contains(_filter)) {
-            _filter = null;
-          }
-          final filtering = _query.trim().isNotEmpty || _filter != null;
-          final search = SizedBox(
-            height: 38,
-            width: wide ? 260 : double.infinity,
-            child: TextField(
-              controller: _search,
-              onChanged: (q) => setState(() => _query = q),
-              style: BnType.body.copyWith(color: colors.text),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: colors.sunkenSoft,
-                hintText: 'Search the board',
-                prefixIcon: Icon(BnIcons.search, size: 16, color: colors.muted),
-                suffixIcon: _query.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: Icon(
-                          BnIcons.close,
-                          size: 14,
-                          color: colors.muted,
-                        ),
-                        onPressed: () => setState(() {
-                          _search.clear();
-                          _query = '';
-                        }),
-                      ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(BnRadius.control),
+    // a still picture under the composer and other dialogs
+    return CoveredSnapshot(
+      child: Scaffold(
+        backgroundColor: colors.surface,
+        body: ValueListenableBuilder(
+          valueListenable: QuickBoard.items,
+          builder: (context, items, _) {
+            final due = items.where((i) => i.dueNow).length;
+            final labels = QuickBoard.labels;
+            if (_filter != null &&
+                _filter != _due &&
+                !labels.contains(_filter)) {
+              _filter = null;
+            }
+            final filtering = _query.trim().isNotEmpty || _filter != null;
+            final search = SizedBox(
+              height: 38,
+              width: wide ? 260 : double.infinity,
+              child: TextField(
+                controller: _search,
+                onChanged: (q) => setState(() => _query = q),
+                style: BnType.body.copyWith(color: colors.text),
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: true,
+                  fillColor: colors.sunkenSoft,
+                  hintText: 'Search the board',
+                  prefixIcon: Icon(
+                    BnIcons.search,
+                    size: 16,
+                    color: colors.muted,
                   ),
-                  borderSide: BorderSide.none,
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: Icon(
+                            BnIcons.close,
+                            size: 14,
+                            color: colors.muted,
+                          ),
+                          onPressed: () => setState(() {
+                            _search.clear();
+                            _query = '';
+                          }),
+                        ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  border: const OutlineInputBorder(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(BnRadius.control),
+                    ),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
-            ),
-          );
-          final chips = SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              spacing: 6,
-              children: [
-                BnChip(
-                  label: 'All',
-                  selected: _filter == null,
-                  onTap: () => setState(() => _filter = null),
-                ),
-                for (final label in labels)
+            );
+            final chips = SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: 6,
+                children: [
                   BnChip(
-                    label: label,
-                    icon: Icons.label_outline,
-                    selected: _filter == label,
-                    onTap: () => setState(
-                      () => _filter = _filter == label ? null : label,
+                    label: 'All',
+                    selected: _filter == null,
+                    onTap: () => setState(() => _filter = null),
+                  ),
+                  for (final label in labels)
+                    BnChip(
+                      label: label,
+                      icon: Icons.label_outline,
+                      selected: _filter == label,
+                      onTap: () => setState(
+                        () => _filter = _filter == label ? null : label,
+                      ),
+                    ),
+                  BnChip(
+                    label: 'Due',
+                    icon: Icons.alarm,
+                    selected: _filter == _due,
+                    onTap: () =>
+                        setState(() => _filter = _filter == _due ? null : _due),
+                  ),
+                ],
+              ),
+            );
+            final actions = [
+              Builder(
+                builder: (context) => wide
+                    ? BnButton(
+                        label: 'Board',
+                        icon: Icons.wallpaper,
+                        height: 38,
+                        onPressed: () => showBoardBackground(context),
+                      )
+                    : BnIconButton(
+                        icon: Icons.wallpaper,
+                        tooltip: 'Board background',
+                        onPressed: () => showBoardBackground(context),
+                      ),
+              ),
+              if (wide)
+                BnButton(
+                  label: 'Tidy up',
+                  icon: Icons.grid_view,
+                  height: 38,
+                  onPressed: () => _tidy(context),
+                )
+              else
+                BnIconButton(
+                  icon: Icons.grid_view,
+                  tooltip: 'Tidy up',
+                  onPressed: () => _tidy(context),
+                ),
+              Builder(
+                builder: (context) => BnIconButton(
+                  icon: BnIcons.more,
+                  tooltip: 'More',
+                  onPressed: () => _boardMenu(context),
+                ),
+              ),
+              Builder(
+                builder: (context) => BnButton.primary(
+                  label: 'Note',
+                  icon: BnIcons.add,
+                  height: 38,
+                  onPressed: () => showQuickComposer(context),
+                ),
+              ),
+            ];
+            final bar = Material(
+              color: colors.surface,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 6, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 8,
+                    children: [
+                      Row(
+                        spacing: 8,
+                        children: [
+                          const BackButton(),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Quick notes',
+                                  style: BnType.title.copyWith(
+                                    color: colors.text,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  '${items.length} pinned · $due due today',
+                                  style: BnType.caption.copyWith(
+                                    color: colors.muted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (wide) search,
+                          ...actions,
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: wide
+                            ? chips
+                            : Column(spacing: 8, children: [search, chips]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                bar,
+                Divider(height: 1, color: colors.hairline),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, c) => PinBoard(
+                      items: items,
+                      openNote: showQuickNote,
+                      openPhoto: showQuickPhoto,
+                      minHeight: c.maxHeight,
+                      zoomable: true,
+                      matches: filtering ? _matches : null,
                     ),
                   ),
-                BnChip(
-                  label: 'Due',
-                  icon: Icons.alarm,
-                  selected: _filter == _due,
-                  onTap: () =>
-                      setState(() => _filter = _filter == _due ? null : _due),
                 ),
               ],
-            ),
-          );
-          final actions = [
-            Builder(
-              builder: (context) => wide
-                  ? BnButton(
-                      label: 'Board',
-                      icon: Icons.wallpaper,
-                      height: 38,
-                      onPressed: () => showBoardBackground(context),
-                    )
-                  : BnIconButton(
-                      icon: Icons.wallpaper,
-                      tooltip: 'Board background',
-                      onPressed: () => showBoardBackground(context),
-                    ),
-            ),
-            if (wide)
-              BnButton(
-                label: 'Tidy up',
-                icon: Icons.grid_view,
-                height: 38,
-                onPressed: () => _tidy(context),
-              )
-            else
-              BnIconButton(
-                icon: Icons.grid_view,
-                tooltip: 'Tidy up',
-                onPressed: () => _tidy(context),
-              ),
-            Builder(
-              builder: (context) => BnIconButton(
-                icon: BnIcons.more,
-                tooltip: 'More',
-                onPressed: () => _boardMenu(context),
-              ),
-            ),
-            Builder(
-              builder: (context) => BnButton.primary(
-                label: 'Note',
-                icon: BnIcons.add,
-                height: 38,
-                onPressed: () => showQuickComposer(context),
-              ),
-            ),
-          ];
-          final bar = Material(
-            color: colors.surface,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 6, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 8,
-                  children: [
-                    Row(
-                      spacing: 8,
-                      children: [
-                        const BackButton(),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Quick notes',
-                                style: BnType.title.copyWith(
-                                  color: colors.text,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                '${items.length} pinned · $due due today',
-                                style: BnType.caption.copyWith(
-                                  color: colors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (wide) search,
-                        ...actions,
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: wide
-                          ? chips
-                          : Column(spacing: 8, children: [search, chips]),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              bar,
-              Divider(height: 1, color: colors.hairline),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, c) => PinBoard(
-                    items: items,
-                    openNote: showQuickNote,
-                    openPhoto: showQuickPhoto,
-                    minHeight: c.maxHeight,
-                    zoomable: true,
-                    matches: filtering ? _matches : null,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
