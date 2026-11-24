@@ -2,6 +2,7 @@ import 'package:badnotes/components/home/home_actions.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/pages/editor/editor.dart';
 import 'package:flutter/material.dart';
 
@@ -29,7 +30,9 @@ class PageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     final thumbnail = FileManager.getFile('$path${Editor.extension}.p');
-    final first = page == 0 && thumbnail.existsSync();
+    // no picture of a locked note's page
+    final locked = NoteLocks.isProtected(path);
+    final first = !locked && page == 0 && thumbnail.existsSync();
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -63,12 +66,17 @@ class PageTile extends StatelessWidget {
                   else ...[
                     const CustomPaint(painter: _Lines()),
                     Center(
-                      child: Text(
-                        '${page + 1}',
-                        style: BnType.display.copyWith(
-                          color: const Color(0x331C1C1E),
-                        ),
-                      ),
+                      child: locked
+                          ? const Icon(
+                              Icons.lock_outline,
+                              color: Color(0x661C1C1E),
+                            )
+                          : Text(
+                              '${page + 1}',
+                              style: BnType.display.copyWith(
+                                color: const Color(0x331C1C1E),
+                              ),
+                            ),
                     ),
                   ],
                   if (bookmark)
@@ -100,7 +108,8 @@ class PageTile extends StatelessWidget {
   }
 
   /// "Physics · p.12".
-  static String short(String path, int page) => '${noteName(path)} · p.${page + 1}';
+  static String short(String path, int page) =>
+      '${noteName(path)} · p.${page + 1}';
 }
 
 class _Lines extends CustomPainter {

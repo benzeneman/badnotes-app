@@ -5,7 +5,10 @@ import 'package:badnotes/components/home/quick_board.dart';
 import 'package:badnotes/components/home/quick_ink.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
-import 'package:flex_color_picker/flex_color_picker.dart';
+import 'package:badnotes/components/editor_ui/bar_color_row.dart';
+import 'package:badnotes/components/editor_ui/color_panel.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
+import 'package:badnotes/components/ui/bn_tool_panels.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -209,27 +212,42 @@ class _QuickComposerState extends State<QuickComposer> {
     }
   });
 
-  void _customColour(BuildContext anchor) => showBnPopover<void>(
-    anchor: anchor,
-    width: 300,
-    preferAbove: true,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setLocal) => ColorPicker(
-        color: _current,
-        pickersEnabled: const {
-          ColorPickerType.wheel: true,
-          ColorPickerType.primary: false,
-          ColorPickerType.accent: false,
-        },
-        enableShadesSelection: false,
-        padding: EdgeInsets.zero,
-        onColorChanged: (c) {
-          _current = c;
-          setLocal(() {});
-        },
-      ),
-    ),
+  /// The quick pad's own rows in the editor's bar colors.
+  String get _rowKey =>
+      _tool == QuickTool.highlighter ? 'quickhighlighter' : 'quickpen';
+
+  List<Color> get _row => BarColors.of(
+    _rowKey,
+    seed: _tool == QuickTool.highlighter ? _highlighterColors : _penColors,
   );
+
+  /// The editor's color panel (presets, grid, wheel): [replacing] the
+  /// ringed dot of the row, or adding a color at its end.
+  void _openColors(BuildContext anchor, {Color? replacing}) {
+    var slot = replacing;
+    ColorPanel.show(
+      anchor,
+      anchor: rectOf(anchor),
+      title: replacing != null ? 'Change color' : 'Color',
+      color: _current,
+      presets: _tool == QuickTool.highlighter
+          ? BarColors.highlighterDefaults
+          : ColorPanel.defaultPresets,
+      replacing: replacing != null,
+      onChanged: (color) {
+        final from = slot;
+        if (from == null) {
+          BarColors.add(_rowKey, color);
+        } else {
+          BarColors.replace(_rowKey, from, color);
+          slot = color;
+        }
+        _current = color;
+      },
+    ).whenComplete(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   void _fit() => _view.value = Matrix4.identity();
 
@@ -429,9 +447,6 @@ class _QuickComposerState extends State<QuickComposer> {
       margin: const EdgeInsets.symmetric(horizontal: 6),
       color: colors.hairline,
     );
-    final dots = _tool == QuickTool.highlighter
-        ? _highlighterColors
-        : _penColors;
     final sizeRange = _isPen
         ? (
             BoardStroke.defaultSize(_tool) * 0.4,
@@ -492,21 +507,18 @@ class _QuickComposerState extends State<QuickComposer> {
           ],
           if (_isPen) ...[
             divider(),
-            for (final dot in dots)
-              BnColorDot(
-                color: dot,
-                size: 22,
-                selected: dot == _current,
-                onTap: () => _current = dot,
-              ),
+            BarColorRow(
+              colors: _row,
+              current: _current,
+              axis: Axis.horizontal,
+              invert: false,
+              pick: (color) => _current = color,
+              onReorder: (next) =>
+                  setState(() => BarColors.set(_rowKey, next)),
+              openPanel: (dot, color) => _openColors(dot, replacing: color),
+            ),
             Builder(
-              builder: (anchor) => Tooltip(
-                message: 'Any colour',
-                child: BnMoreColorsDot(
-                  size: 22,
-                  onTap: () => _customColour(anchor),
-                ),
-              ),
+              builder: (dot) => BnAddColorDot(onTap: () => _openColors(dot)),
             ),
           ],
           if (sizeRange case (final lo, final hi)) ...[

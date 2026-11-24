@@ -12,6 +12,7 @@ import 'package:badnotes/components/home/revision_plan.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/pages/editor/editor.dart';
@@ -323,10 +324,14 @@ class _PagesYouWereOn extends HookWidget {
       return null;
     }, const []);
     final facts = useValueListenable(NoteFactsCache.facts);
+    // a locked note's pages (or one in a locked folder) aren't shown
+    useValueListenable(NoteLocks.book);
     final colors = BadNotesColors.of(context);
     final pages = [
       for (final path in notes)
-        if (facts[path] case final f? when !f.board) (path, f.lastPage),
+        if (facts[path] case final f?
+            when !f.board && !NoteLocks.isProtected(path))
+          (path, f.lastPage),
     ].take(4).toList();
     if (pages.isEmpty) return const SizedBox();
     return BnCard(

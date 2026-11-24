@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:badnotes/components/home/board_background.dart';
-import 'package:badnotes/components/home/home_actions.dart';
 import 'package:badnotes/components/home/pinch_zoom.dart';
 import 'package:badnotes/components/home/quick_board.dart';
 import 'package:badnotes/components/home/quick_ink.dart';
@@ -599,10 +598,10 @@ class _PinnedCard extends StatelessWidget {
     };
   }
 
-  /// Due date, labels and linked notebook, small along the bottom.
+  /// Due date and labels, small along the bottom.
   Widget? _chips(BuildContext context) {
     final due = item.due;
-    if (due == null && item.link == null && item.labels.isEmpty) return null;
+    if (due == null && item.labels.isEmpty) return null;
     final font = (20 * scale).clamp(8.0, 14.0);
     Widget chip(String text, {Color? bg, Color? fg, VoidCallback? onTap}) {
       final c = Container(
@@ -636,12 +635,6 @@ class _PinnedCard extends StatelessWidget {
             fg: item.dueNow ? Colors.white : null,
           ),
         for (final l in item.labels) chip('#$l'),
-        if (item.link case final link?)
-          chip(
-            '🔗 ${link.split('/').last}',
-            bg: const Color(0x1F2D3260),
-            onTap: () => openNote(context, link),
-          ),
       ],
     );
   }
@@ -1119,34 +1112,6 @@ class _ItemBar extends StatelessWidget {
     );
   }
 
-  Future<void> _link(BuildContext anchor) async {
-    final recent = (await FileManager.getRecentlyAccessed()).take(8).toList();
-    if (!anchor.mounted) return;
-    void link(String? path) =>
-        _set(item.id, (n) => n.copyWith(link: () => path));
-    await showAppleMenu(
-      anchor,
-      anchor: rectOf(anchor),
-      entries: [
-        if (recent.isEmpty)
-          const AppleMenuItem('No recent notebooks', enabled: false),
-        for (final path in recent)
-          AppleMenuItem(
-            path.split('/').last,
-            icon: Icons.menu_book_outlined,
-            checked: item.link == path,
-            onTap: () => link(path),
-          ),
-        if (item.link != null)
-          AppleMenuItem(
-            'Remove link',
-            icon: Icons.link_off,
-            onTap: () => link(null),
-          ),
-      ],
-    );
-  }
-
   void _unpin(BuildContext context) {
     onDone();
     QuickBoard.remove(item);
@@ -1236,7 +1201,6 @@ class _ItemBar extends StatelessWidget {
               action(Icons.crop_square, 'Shape', _shape),
               action(Icons.alarm, 'Remind', _remind),
               action(Icons.label_outline, 'Label', _label),
-              action(Icons.link, 'Link', _link),
               action(
                 Icons.flip_to_front,
                 'Front',
