@@ -72,8 +72,7 @@ class NewDocumentMenu {
             color: BnColors.noteButter,
             onTap: pick(() => showQuickComposer(context)),
           ),
-          if (createFolder != null)
-            _NewTile(
+          _NewTile(
               icon: BnIcons.folder,
               label: 'Folder',
               caption: 'Group your notebooks',
@@ -161,9 +160,17 @@ class NewDocumentMenu {
       builder: (context) => NewFolderDialog(
         createFolder: (name) {
           created = name;
-          createFolder!(name);
+          // from a page that isn't a folder (Recent, Favorites...): at the top
+          final make = createFolder;
+          if (make != null) {
+            make(name);
+          } else {
+            unawaited(FileManager.createFolder('/$name'));
+          }
         },
-        doesFolderExist: doesFolderExist!,
+        doesFolderExist:
+            doesFolderExist ??
+            (name) => FileManager.isDirectory('/$name'),
         onColor: (color) {
           if (created == null || color == BnFolderColor.lavender) return;
           FolderStyles.save(
