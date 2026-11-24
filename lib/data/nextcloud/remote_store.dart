@@ -108,7 +108,14 @@ abstract class RemoteStore {
 
   static RemoteStore? fromSavedDetails() {
     if (!stows.loggedIn) return null;
+    return forLinkedAccount();
+  }
+
+  /// The store of the linked cloud account, before the notes password is
+  /// known (enough to look for the encryption config). Null with no account.
+  static RemoteStore? forLinkedAccount() {
     final account = stows.username.value;
+    if (account.isEmpty || stows.ncPassword.value.isEmpty) return null;
     return switch (stows.syncProvider.value) {
       .googleDrive => GoogleDriveStore(account),
       .oneDrive => OneDriveStore(account),

@@ -40,7 +40,7 @@ class const EncLoginStep({
 
     // does the cloud already hold a key? (asked again on "Try again")
     final lookup = useMemoized(() async {
-      final store = RemoteStore.fromSavedDetails();
+      final store = RemoteStore.forLinkedAccount();
       if (store == null) throw StateError('Not signed in');
       final config = await store.getConfig();
       return config.containsKey(stows.key.key) &&
