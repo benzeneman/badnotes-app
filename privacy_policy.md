@@ -36,4 +36,4 @@ BadNotes does not knowingly collect anything from anyone, children included.
 
 ## Changes and questions
 
-If this policy changes, the new version is shown here with its date. Questions: write to Shivam Saini through the BadNotes page on GitHub (github.com/benzeneman/badnotes).
+If this policy changes, the new version is shown here with its date. Questions: write to Shivam Saini at badnotes.co@gmail.com or see badnotes.space.

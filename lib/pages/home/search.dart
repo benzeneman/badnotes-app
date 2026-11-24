@@ -684,10 +684,10 @@ class _ShotPainter extends CustomPainter {
     );
     final unit = size.width / shot.pageWidth;
     final ring = Paint()
-      ..color = const Color(0x996E56CF)
+      ..color = const Color(0x992D3260)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
-    final fill = Paint()..color = const Color(0x2E6E56CF);
+    final fill = Paint()..color = const Color(0x2E2D3260);
     for (final r in rects) {
       final box = Rect.fromLTRB(
         r.left * unit,

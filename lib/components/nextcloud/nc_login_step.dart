@@ -79,21 +79,7 @@ class _BrandPanel extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: colors.accent,
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: const Center(
-                    child: BnPathIcon(
-                      BnToolIcons.logo,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                const BnLogo(size: 34),
                 const SizedBox(width: 10),
                 Text(
                   'BadNotes',
@@ -258,7 +244,8 @@ class const _LoginWithCloud({required final VoidCallback recheckCurrentStep})
 
     stows.syncProvider.value = provider;
     stows.cloudSyncState.value = '';
-    stows.pfp.value = null;
+    stows.pfp.value =
+        provider == SyncProvider.googleDrive ? GoogleDriveStore.lastPhoto : null;
     stows.encPassword.value = '';
     stows.ncPassword.value = credential;
     stows.username.value = email;

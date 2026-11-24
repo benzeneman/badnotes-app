@@ -13,7 +13,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class const AppInfo({super.key}) extends StatelessWidget {
   /// Where new versions are put up, when an update can't be downloaded here.
   static final Uri releasesUrl = Uri.parse(
-    'https://github.com/benzeneman/badnotes/releases',
+    'https://badnotes.space',
   );
 
   /// Who makes BadNotes, as shown in the app.
@@ -101,8 +101,8 @@ class const AppInfo({super.key}) extends StatelessWidget {
       (
         'Changes and questions',
         'If this policy changes, the new version is shown here with its '
-            'date. Questions: write to $author through the BadNotes page on '
-            'GitHub (github.com/benzeneman/badnotes).',
+            'date. Questions: write to $author at badnotes.co@gmail.com '
+            'or see badnotes.space.',
       ),
     ],
   );

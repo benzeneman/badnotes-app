@@ -90,24 +90,7 @@ class HomeHeader extends StatelessWidget {
 
 class const _Logo() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    final colors = BadNotesColors.of(context);
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        color: colors.accent,
-        borderRadius: const BorderRadius.all(Radius.circular(9)),
-      ),
-      alignment: Alignment.center,
-      child: const BnPathIcon(
-        BnToolIcons.logo,
-        size: 18,
-        color: Colors.white,
-        strokeWidth: 2.2,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const BnLogo(size: 30);
 }
 
 /// The search box on wide screens; it opens the search page.
@@ -164,23 +147,14 @@ class HomeAvatar extends HookWidget {
       message: signedIn ? username : 'Settings',
       child: GestureDetector(
         onTap: () => openProfileMenu(context),
-        child: Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: colors.accentSoft,
-            shape: BoxShape.circle,
+        child: BnAvatar(
+          size: 34,
+          username: username,
+          signedIn: signedIn,
+          textStyle: BnType.body.copyWith(
+            color: colors.accentStrong,
+            fontWeight: FontWeight.w600,
           ),
-          child: signedIn
-              ? Text(
-                  username.characters.first.toUpperCase(),
-                  style: BnType.body.copyWith(
-                    color: colors.accentStrong,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              : Icon(BnIcons.user, size: 17, color: colors.accentStrong),
         ),
       ),
     );
@@ -223,20 +197,12 @@ class _ProfileMenu extends HookWidget {
       children: [
         Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colors.accentSoft,
-                shape: BoxShape.circle,
-              ),
-              child: signedIn
-                  ? Text(
-                      username.characters.first.toUpperCase(),
-                      style: BnType.title.copyWith(color: colors.accentStrong),
-                    )
-                  : Icon(BnIcons.user, size: 22, color: colors.accentStrong),
+            BnAvatar(
+              size: 50,
+              iconSize: 22,
+              username: username,
+              signedIn: signedIn,
+              textStyle: BnType.title.copyWith(color: colors.accentStrong),
             ),
             const SizedBox(width: 12),
             Expanded(

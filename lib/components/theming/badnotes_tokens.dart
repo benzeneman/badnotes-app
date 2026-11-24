@@ -22,12 +22,12 @@ abstract final class BnColors {
   static const disabled = Color(0xFFB4B4B8);
   static const toggleOff = Color(0xFFE2E1DC);
 
-  static const accent = Color(0xFF6E56CF);
-  static const accentStrong = Color(0xFF5A43B8);
-  static const accentTint = Color(0xFFF0EDFC);
-  static const accentTintBorder = Color(0xFFE0D9FA);
-  static const accentSoft = Color(0xFFE9E4FB);
-  static const highlightText = Color(0xFF4B3A9E);
+  static const accent = Color(0xFF2D3260);
+  static const accentStrong = Color(0xFF1E2247);
+  static const accentTint = Color(0xFFEEF0F8);
+  static const accentTintBorder = Color(0xFFDCE0F0);
+  static const accentSoft = Color(0xFFFBE9B0);
+  static const highlightText = Color(0xFF5C4100);
 
   static const danger = Color(0xFFD93A2B);
   static const success = Color(0xFF2A7660);
@@ -43,9 +43,9 @@ abstract final class BnColors {
   static const textDark = Color(0xFFEDEDEF);
   static const text2Dark = Color(0xFFC7C7CC);
   static const mutedDark = Color(0xFF8E8E93);
-  static const accentDark = Color(0xFF8B7CF0);
-  static const accentStrongDark = Color(0xFFB9ADF7);
-  static const accentTintDark = Color(0xFF2A2440);
+  static const accentDark = Color(0xFF6572BD);
+  static const accentStrongDark = Color(0xFFB8C0F0);
+  static const accentTintDark = Color(0xFF23263A);
   static const dangerDark = Color(0xFFFF6B5E);
   static const scrimDark = Color(0x80000000);
   static const sunkenSoftDark = Color(0xFF232327);
@@ -55,9 +55,9 @@ abstract final class BnColors {
   static const handleDark = Color(0xFF5E5E64);
   static const disabledDark = Color(0xFF4A4A50);
   static const toggleOffDark = Color(0xFF3A3A3F);
-  static const accentTintBorderDark = Color(0xFF3A3160);
-  static const accentSoftDark = Color(0xFF332A55);
-  static const highlightTextDark = Color(0xFFD4CCFA);
+  static const accentTintBorderDark = Color(0xFF343958);
+  static const accentSoftDark = Color(0xFF4A3E17);
+  static const highlightTextDark = Color(0xFFFFE08A);
   static const successDark = Color(0xFF6FCFAE);
   static const successTintDark = Color(0xFF1B3A30);
 

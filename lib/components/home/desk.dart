@@ -492,7 +492,6 @@ class EmptyDesk extends StatelessWidget {
 class const _EmptyIllustration() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final colors = BadNotesColors.of(context);
     return SizedBox(
       width: 200,
       height: 160,
@@ -523,12 +522,7 @@ class const _EmptyIllustration() extends StatelessWidget {
                   color: Colors.white,
                   child: Align(
                     alignment: const Alignment(0.6, 0.55),
-                    child: BnPathIcon(
-                      BnToolIcons.logo,
-                      size: 50,
-                      color: colors.accent,
-                      strokeWidth: 2,
-                    ),
+                    child: const BnLogo(size: 50),
                   ),
                 ),
               ),

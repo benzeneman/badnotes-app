@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draws the BadNotes mark (a loose line of handwriting ending in a yellow
+"""Draws the BadNotes mark (a loose line of handwriting ending in an amber
 ink dot) into every launcher and splash size Android needs.
 
 Run from the repository root: python3 assets/icon/generate_icons.py
@@ -7,11 +7,12 @@ Run from the repository root: python3 assets/icon/generate_icons.py
 """
 from PIL import Image, ImageDraw
 
-PAPER = (255, 252, 238, 255)
-YELLOW = (255, 224, 102, 255)
-PURPLE_TOP = (122, 98, 219)
-PURPLE_BOTTOM = (74, 54, 153)
-BACKGROUND = (94, 70, 196, 255)  # the flat colour the adaptive icon sits on
+# Flat colours, no gradient: warm paper, dark ink line, amber ink dot.
+# BACKGROUND must match ic_launcher_background in res/values/colors.xml,
+# which the adaptive icon and the splash screen sit on.
+BACKGROUND = (246, 241, 228, 255)
+INK = (30, 27, 46, 255)
+DOT_COLOR = (242, 169, 0, 255)
 RES = "android/app/src/main/res"
 DENSITIES = {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}
 SUPERSAMPLE = 4
@@ -54,23 +55,11 @@ def draw_mark(draw, size, inset, line, dot):
     )
 
 
-def gradient(px):
-    image = Image.new("RGBA", (px, px))
-    pixels = image.load()
-    for y in range(px):
-        for x in range(px):
-            t = (x + y) / (2 * px - 2)
-            pixels[x, y] = tuple(
-                round(a + (b - a) * t) for a, b in zip(PURPLE_TOP, PURPLE_BOTTOM)
-            ) + (255,)
-    return image
-
-
 def legacy(px):
     """A full-square launcher picture for phones without adaptive icons."""
     big = px * SUPERSAMPLE
-    image = gradient(big)
-    draw_mark(ImageDraw.Draw(image), big, big * 0.12, PAPER, YELLOW)
+    image = Image.new("RGBA", (big, big), BACKGROUND)
+    draw_mark(ImageDraw.Draw(image), big, big * 0.2, INK, DOT_COLOR)
     return image.resize((px, px), Image.LANCZOS)
 
 
@@ -87,13 +76,13 @@ def main():
         folder = f"{RES}/mipmap-{name}"
         # 108dp canvas: the system crops it, so the mark stays in the middle
         fg = int(108 * scale)
-        foreground(fg, PAPER, YELLOW, 0.2).save(f"{folder}/ic_launcher_foreground.png")
+        foreground(fg, INK, DOT_COLOR, 0.2).save(f"{folder}/ic_launcher_foreground.png")
         foreground(fg, (255, 255, 255, 255), (255, 255, 255, 255), 0.2).save(
             f"{folder}/ic_launcher_monochrome.png"
         )
         legacy(int(48 * scale)).save(f"{folder}/ic_launcher.png")
 
-    foreground(288, PAPER, YELLOW, 0.1).save(f"{RES}/drawable-xxxhdpi/splash_logo.png")
+    foreground(288, INK, DOT_COLOR, 0.1).save(f"{RES}/drawable-xxxhdpi/splash_logo.png")
     legacy(1024).save("assets/icon/icon.png")
 
 

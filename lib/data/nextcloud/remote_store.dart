@@ -394,18 +394,40 @@ class GoogleDriveStore extends _CloudStore {
     return tokens?.accessToken;
   }
 
+  /// The picture of the account [login] last signed in, if it has one.
+  static Uint8List? lastPhoto;
+
   /// Shows Google's account picker and returns the chosen email.
   static Future<String> login() async {
+    lastPhoto = null;
     final token = await _authorize(null, prompt: true);
     if (token == null) throw CloudAuthRequired();
     final response = await http.get(
-      Uri.parse('$_api/about?fields=user(emailAddress)'),
+      Uri.parse('$_api/about?fields=user(emailAddress,photoLink)'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (response.statusCode != HttpStatus.ok) {
       throw CloudHttpException(response.statusCode, response.body);
     }
-    return jsonDecode(response.body)['user']['emailAddress'] as String;
+    final user = jsonDecode(response.body)['user'] as Map;
+    lastPhoto = await _download(user['photoLink'] as String?);
+    return user['emailAddress'] as String;
+  }
+
+  /// The profile picture at [link], or null if there is none or it can't be
+  /// fetched (the avatar then shows the account's letter).
+  static Future<Uint8List?> _download(String? link) async {
+    if (link == null || link.isEmpty) return null;
+    try {
+      final sized = link.replaceFirst(RegExp(r'=s\d+(-c)?$'), '=s128-c');
+      final response = await http
+          .get(Uri.parse(sized))
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != HttpStatus.ok) return null;
+      return response.bodyBytes;
+    } catch (_) {
+      return null;
+    }
   }
 
   String? _token;

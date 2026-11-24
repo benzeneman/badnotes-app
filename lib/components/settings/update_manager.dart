@@ -42,6 +42,9 @@ abstract class UpdateManager {
     BuildContext context, {
     bool userTriggered = false,
   }) async {
+    // Play Store builds are updated by Play, so nothing is looked up by
+    // itself; the old GitHub release feed no longer exists.
+    if (!userTriggered) return;
     if (!userTriggered) {
       if (status.value == .upToDate) {
         await stows.shouldCheckForUpdates.waitUntilRead();
