@@ -153,13 +153,6 @@
            android:grantUriPermissions="true" >
        </provider>
 
-        <!-- Test (2026-11-25): Skia in place of Impeller. On the 2560x1600
-             tablet every frame took 20-40 ms of raster under Impeller, even
-             the home screen alone; the lag reports of this build compare. -->
-        <meta-data
-            android:name="io.flutter.embedding.android.EnableImpeller"
-            android:value="false" />
-
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

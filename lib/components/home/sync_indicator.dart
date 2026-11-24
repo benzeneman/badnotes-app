@@ -6,8 +6,12 @@ import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
 import 'package:badnotes/data/prefs.dart';
 
 /// A dark corner over a note or folder that hasn't reached the cloud yet,
-/// with an upload arrow that turns while it's going up. Nothing once synced,
-/// or when not signed in to a cloud.
+/// with an upload arrow. Nothing once synced, or when not signed in to a
+/// cloud.
+///
+/// It used to turn while waiting in the upload queue: a note held back (on
+/// mobile data, say) kept it turning, and the whole home screen was drawn
+/// again 90 times a second, so everything else on it lagged.
 class SyncBadge extends HookWidget {
   const SyncBadge({
     super.key,
@@ -26,22 +30,8 @@ class SyncBadge extends HookWidget {
     useListenable(stows.username);
     useListenable(SyncStatus.failedUploads);
     useStream(syncer.uploader.queueStream);
-    final spin = useAnimationController(duration: const Duration(seconds: 3));
-
     final unsynced = SyncStatus.isUnsynced(path, folder: folder);
     // turns while waiting in the queue, still while waiting to retry
-    final failed = SyncStatus.failedUploads.value.any(
-      (p) => folder ? p.startsWith('$path/') : p.startsWith('$path.'),
-    );
-    final moving = unsynced && !failed;
-    useEffect(() {
-      if (moving) {
-        spin.repeat();
-      } else {
-        spin.stop();
-      }
-      return null;
-    }, [moving]);
 
     return IgnorePointer(
       child: AnimatedSwitcher(
@@ -52,7 +42,7 @@ class SyncBadge extends HookWidget {
                 label: 'Not synced',
                 child: CustomPaint(
                   size: Size.square(size),
-                  painter: _CornerPainter(spin),
+                  painter: const _CornerPainter(),
                 ),
               )
             : SizedBox.square(key: const ValueKey(false), dimension: size),
@@ -62,9 +52,7 @@ class SyncBadge extends HookWidget {
 }
 
 class _CornerPainter extends CustomPainter {
-  _CornerPainter(this.spin) : super(repaint: spin);
-
-  final Animation<double> spin;
+  const _CornerPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -90,7 +78,7 @@ class _CornerPainter extends CustomPainter {
     const dashes = 8;
     const step = math.pi * 2 / dashes;
     final rect = Rect.fromCircle(center: center, radius: r);
-    final turn = spin.value * math.pi * 2;
+    const turn = 0.0;
     for (var i = 0; i < dashes; i++) {
       canvas.drawArc(rect, turn + i * step, step * 0.55, false, white);
     }
@@ -103,5 +91,5 @@ class _CornerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CornerPainter old) => old.spin != spin;
+  bool shouldRepaint(_CornerPainter old) => false;
 }
