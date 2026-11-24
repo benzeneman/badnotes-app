@@ -29,8 +29,10 @@ class BnAboveKeyboard extends StatelessWidget {
 /// Whether [context] is wide enough for tablet layouts (side sheets).
 bool bnIsWide(BuildContext context) => MediaQuery.sizeOf(context).width >= 700;
 
-/// Fades in and grows from 0.96, from [alignment]. Nothing bouncy, and
-/// nothing at all with "reduce motion".
+/// Grows from 0.96, from [alignment]. Nothing bouncy, and nothing at all
+/// with "reduce motion". Not faded: under a fade the GPU drew the whole popup
+/// into a layer of its own on every frame (an extra render pass on a
+/// tile-based GPU); the scrim fading in under it softens the start.
 Widget bnPopIn(
   BuildContext context,
   Animation<double> animation,
@@ -43,13 +45,10 @@ Widget bnPopIn(
     curve: BnMotion.curve,
     reverseCurve: Curves.easeInCubic,
   );
-  return FadeTransition(
-    opacity: curved,
-    child: ScaleTransition(
-      alignment: alignment,
-      scale: Tween(begin: BnMotion.popoverStartScale, end: 1.0).animate(curved),
-      child: child,
-    ),
+  return ScaleTransition(
+    alignment: alignment,
+    scale: Tween(begin: BnMotion.popoverStartScale, end: 1.0).animate(curved),
+    child: child,
   );
 }
 
@@ -293,15 +292,15 @@ Future<T?> showBnSheet<T>({
         curve: BnMotion.curve,
         reverseCurve: Curves.easeInCubic,
       );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween(
-            begin: const Offset(0.06, 0),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
+      // slid in from beyond the right edge, not faded: a fade drew the
+      // whole sheet into a layer of its own on every frame
+      final screen = MediaQuery.sizeOf(context).width;
+      return SlideTransition(
+        position: Tween(
+          begin: Offset(screen > 0 ? (width + 24) / screen : 1, 0),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
       );
     },
   );

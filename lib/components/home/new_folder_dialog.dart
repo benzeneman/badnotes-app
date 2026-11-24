@@ -153,7 +153,15 @@ class _FolderPreview extends StatelessWidget {
       ),
     );
 
-    final body = Container(
+    // The shadow on even corners of its own: the GPU draws that directly,
+    // but blurred the folder's uneven corners afresh, through a layer of its
+    // own, on every frame the dialog moved.
+    final body = DecoratedBox(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        boxShadow: BnShadows.floating,
+      ),
+      child: Container(
       height: 100,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
@@ -164,7 +172,6 @@ class _FolderPreview extends StatelessWidget {
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
         ),
-        boxShadow: BnShadows.floating,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,6 +195,7 @@ class _FolderPreview extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
 

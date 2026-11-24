@@ -119,15 +119,46 @@ Future<T?> showAppleDialog<T>({
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: barrierColor ?? BadNotesColors.of(context).scrim,
     transitionDuration: BnMotion.normal,
-    pageBuilder: (context, animation, _) => _Grow(
+    pageBuilder: (context, animation, _) => _Rise(
       animation: animation,
-      alignment: Alignment.center,
       child: themes.wrap(
         BnAboveKeyboard(child: SafeArea(child: Builder(builder: builder))),
       ),
     ),
     transitionBuilder: (_, _, _, child) => child,
   );
+}
+
+/// Slides [child] (a whole dialog page) up 16 px into place, over the scrim
+/// fading in. Only moved, never faded or scaled: a fade drew the whole dialog
+/// into a layer of its own on every frame (an extra render pass the size of
+/// the dialog on a tile-based GPU), and a scale made the GPU draw every
+/// letter afresh at each new size.
+class _Rise extends StatelessWidget {
+  const new({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // drawn once, then only moved
+    final boundary = RepaintBoundary(child: child);
+    if (MediaQuery.disableAnimationsOf(context)) return boundary;
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: BnMotion.curve,
+      reverseCurve: Curves.easeInCubic,
+    );
+    return AnimatedBuilder(
+      animation: curved,
+      builder: (_, child) => Transform.translate(
+        offset: Offset(0, 16 * (1 - curved.value)),
+        child: child,
+      ),
+      child: boundary,
+    );
+  }
 }
 
 /// What a [showBanner] message is about: picks its icon and colour.
@@ -536,8 +567,10 @@ Future<T?> showAnchoredPanel<T>(
   );
 }
 
-/// Fades in and grows from 0.96, 150–200 ms, no overshoot; nothing with
-/// "reduce motion".
+/// Grows from 0.96, 150–200 ms, no overshoot; nothing with "reduce motion".
+/// Not faded: under a fade the GPU drew the whole panel into a layer of its
+/// own on every frame, an extra render pass on a tile-based GPU; the scrim
+/// fading in under it softens the start.
 class _Grow extends StatelessWidget {
   const new({
     required this.animation,
@@ -553,7 +586,7 @@ class _Grow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // drawn once, then only moved and faded while it grows
+    // drawn once, then only scaled while it grows
     final boundary = RepaintBoundary(child: child);
     if (MediaQuery.disableAnimationsOf(context)) return boundary;
     final curved = CurvedAnimation(
@@ -561,13 +594,10 @@ class _Grow extends StatelessWidget {
       curve: BnMotion.curve,
       reverseCurve: Curves.easeInCubic,
     );
-    return FadeTransition(
-      opacity: curved,
-      child: ScaleTransition(
-        scale: _scale.animate(curved),
-        alignment: alignment,
-        child: boundary,
-      ),
+    return ScaleTransition(
+      scale: _scale.animate(curved),
+      alignment: alignment,
+      child: boundary,
     );
   }
 }

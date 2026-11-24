@@ -27,10 +27,15 @@ class BnCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         boxShadow: BnShadows.card,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius - 1),
-        child: Padding(padding: padding, child: child),
-      ),
+      // Clipped only when the contents reach the edges: padded, they keep
+      // clear of the corners, and a rounded clip cost the GPU two extra
+      // passes over the card on every frame it scrolled.
+      child: padding == EdgeInsets.zero
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(radius - 1),
+              child: child,
+            )
+          : Padding(padding: padding, child: child),
     );
   }
 }

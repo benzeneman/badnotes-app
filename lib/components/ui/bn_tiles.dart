@@ -107,22 +107,31 @@ class BnFolderTile extends StatelessWidget {
                           (peeks.length == 1 ? -4 : _peekAngles[i]) *
                           math.pi /
                           180,
+                      // The shadow on even corners of its own: the GPU
+                      // draws that directly, but blurred the cover's uneven
+                      // corners through a layer of its own, for every peek
+                      // on every frame the desk scrolled.
                       child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: peeks[i],
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(2),
-                            bottomLeft: Radius.circular(2),
-                            topRight: Radius.circular(5),
-                            bottomRight: Radius.circular(5),
-                          ),
-                          boxShadow: const [
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(3)),
+                          boxShadow: [
                             BoxShadow(
                               color: Color(0x1F000000),
                               blurRadius: 3,
                               offset: Offset(0, 1),
                             ),
                           ],
+                        ),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: peeks[i],
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(2),
+                              bottomLeft: Radius.circular(2),
+                              topRight: Radius.circular(5),
+                              bottomRight: Radius.circular(5),
+                            ),
+                          ),
                         ),
                       ),
                     ),
