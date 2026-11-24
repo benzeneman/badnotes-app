@@ -31,6 +31,15 @@ class MainActivity: FlutterFragmentActivity() {
                     result.success(false)
                 }
             }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "badnotes/display")
+            .setMethodCallHandler { call, result ->
+                if (call.method != "setRate") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                setRefreshRate(call.argument<Double>("hz") ?: 0.0)
+                result.success(null)
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "badnotes/record")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -65,6 +74,22 @@ class MainActivity: FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    /// Asks for the display mode nearest [hz] at the current resolution,
+    /// or the system's own choice for 0. A GPU too slow for the panel's
+    /// 90 Hz shows an even 60 instead of jumping between 45 and 90.
+    private fun setRefreshRate(hz: Double) {
+        val display = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display else null)
+            ?: @Suppress("DEPRECATION") windowManager.defaultDisplay
+        val current = display.mode
+        val modeId = if (hz <= 0) 0 else display.supportedModes
+            .filter { it.physicalWidth == current.physicalWidth && it.physicalHeight == current.physicalHeight }
+            .minByOrNull { Math.abs(it.refreshRate - hz) }?.modeId ?: 0
+        val attrs = window.attributes
+        if (attrs.preferredDisplayModeId == modeId) return
+        attrs.preferredDisplayModeId = modeId
+        window.attributes = attrs
     }
 
     private var audioResult: MethodChannel.Result? = null

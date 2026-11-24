@@ -95,6 +95,7 @@ import 'package:badnotes/components/toolbar/editor_bottom_sheet.dart';
 import 'package:badnotes/components/toolbar/editor_page_manager.dart';
 import 'package:badnotes/components/toolbar/toolbar.dart';
 import 'package:badnotes/data/is_this_a_test.dart';
+import 'package:badnotes/data/display_rate.dart';
 import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/components/lock/lock_ui.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
@@ -324,6 +325,7 @@ class EditorState extends State<Editor> {
 
   @override
   void initState() {
+    DisplayRate.editorOpened();
     EditorSignals.covered.addListener(_onCovered);
     // the tools move between the header and a floating bar with its edge
     stows.floatingToolbarEdge.addListener(_toolbarMoved);
@@ -8514,6 +8516,7 @@ class EditorState extends State<Editor> {
   void dispose() {
     LagRecorder.step('editor dispose');
     EditorSignals.covered.removeListener(_onCovered);
+    DisplayRate.editorClosed();
     NoteLocks.unlocked.removeListener(_checkLock);
     NoteLocks.book.removeListener(_checkLock);
     _frozenView?.dispose();
