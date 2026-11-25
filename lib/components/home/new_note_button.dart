@@ -15,6 +15,7 @@ import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/editor/note_start.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/prefs.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/i18n/strings.g.dart';
 import 'package:badnotes/pages/editor/editor.dart';
@@ -209,6 +210,10 @@ class NewDocumentMenu {
     // the studio is up (the keyboard hides the dock), and then nothing
     // opened (design check, 22 Nov)
     final router = GoRouter.of(context);
+    final allowed = whiteboard
+        ? await Pro.mayAddWhiteboard(context)
+        : await Pro.mayAddNotebook(context);
+    if (!allowed || !context.mounted) return;
     final document = await showDocumentStudio(
       context,
       whiteboard: whiteboard,
@@ -227,6 +232,10 @@ class NewDocumentMenu {
       await NotebookCovers.write(filePath, document.cover);
     }
     final pdf = document.pdfPath;
+    if (pdf != null) {
+      final here = router.routerDelegate.navigatorKey.currentContext;
+      if (here == null || !await Pro.mayAddPdf(here, pdf)) return;
+    }
     // a PDF brings its own pages
     if (pdf == null) NoteStart.set(filePath, document.start);
     unawaited(
@@ -241,6 +250,7 @@ class NewDocumentMenu {
   /// A new notebook that asks for its pages as it opens.
   Future<void> _newFrom(BuildContext context, NewPageSource source) async {
     final router = GoRouter.of(context);
+    if (!await Pro.mayAddNotebook(context)) return;
     final filePath = await _pathFor('');
     NoteStart.set(filePath, NoteStart(source: source));
     unawaited(router.push(RoutePaths.editFilePath(filePath)));
@@ -256,12 +266,16 @@ class NewDocumentMenu {
     if (lower.endsWith('.sbn') ||
         lower.endsWith('.sbn2') ||
         lower.endsWith('.sba')) {
+      final here = router.routerDelegate.navigatorKey.currentContext;
+      if (here == null || !await Pro.mayAddNotebook(here)) return;
       final imported = await FileManager.importFile(filePath, '${path ?? ''}/');
       if (imported != null) {
         unawaited(router.push(RoutePaths.editFilePath(imported)));
       }
     } else if (lower.endsWith('.pdf')) {
       if (!Editor.canRasterPdf) return;
+      final here = router.routerDelegate.navigatorKey.currentContext;
+      if (here == null || !await Pro.mayAddPdf(here, filePath)) return;
       final name = file.name.substring(0, file.name.length - '.pdf'.length);
       final sbnFilePath = await FileManager.suffixFilePathToMakeItUnique(
         '${path ?? ''}/$name',

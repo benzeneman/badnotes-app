@@ -4,15 +4,19 @@ Owner: Shivam Saini
 
 ## Who we are
 
-BadNotes is made and owned by Shivam Saini. This policy says what the app does with your data. Last updated 24 November 2026.
+BadNotes is made and owned by Shivam Saini. This policy says what the app does with your data. Last updated 25 November 2026.
 
 ## Your notes
 
-Your notes, pictures, recordings and settings are stored on this device. BadNotes has no servers of its own, does not collect them and cannot see them.
+Your notes, pictures, recordings and settings are stored on this device. BadNotes does not collect them and cannot see them. Its only server is the one that records BadNotes Pro purchases (below), and your notes never go there.
 
 ## Cloud sync (optional)
 
 If you sign in to Google Drive or OneDrive, your notes are copied to that account so they reach your other devices. They stay in your account, under that provider's own terms and privacy policy. With Google Drive and OneDrive, BadNotes can only open the files it created itself, and reads your account's email address and profile picture to show who is signed in. You can sign out at any time; files already in your cloud stay there until you delete them. BadNotes's use and transfer of information received from Google APIs follows the Google API Services User Data Policy, including its Limited Use requirements: the data is used only to sync your notes, is never sold or used for advertising, and is never shared with anyone.
+
+## BadNotes Pro purchases
+
+When you buy BadNotes Pro, or the app checks whether you have it, the app sends the Google purchase token and a sign-in token from your Google account to the BadNotes server at api.badnotes.space. The server reads only your account's email address from Google, checks the purchase with Google Play, and stores your email address, the purchase token, the order number and the purchase date, so that Pro works on every device where you sign in with that account. Payments are made through Google Play; BadNotes never sees your card, UPI or bank details. Nothing about your notes is sent. To have this record deleted, write to the address below.
 
 ## Microphone
 

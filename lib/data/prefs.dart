@@ -109,6 +109,18 @@ class Stows {
       ncPassword.value.isNotEmpty &&
       encPassword.value.isNotEmpty;
 
+  /// The BadNotes Pro licence the server signed for this account, or ''.
+  final proLicence = SecureStow('proLicence', '', volatile: _volatile);
+
+  /// When the licence server was last asked, in ms since the epoch.
+  final proCheckedMs = _plain('proCheckedMs', 0);
+
+  /// A paid Play purchase the server hasn't recorded yet, as JSON, or ''.
+  final proWaiting = _plain('proWaiting', '');
+
+  /// Developer builds only: Pro unlocked on this device without buying.
+  final proDevUnlock = _plain('proDevUnlock', false);
+
   /// The account picture.
   final pfp = PlainStow<Uint8List?>(
     'pfp',

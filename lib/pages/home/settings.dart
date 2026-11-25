@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:badnotes/components/editor_ui/option_previews.dart';
 import 'package:badnotes/components/onboarding/tour.dart';
+import 'package:badnotes/components/pro/paywall.dart';
 import 'package:badnotes/components/settings/pen_input_settings.dart';
 import 'package:badnotes/components/settings/app_info.dart';
 import 'package:badnotes/components/settings/nextcloud_profile.dart';
@@ -15,6 +16,7 @@ import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/lag_recorder.dart';
 import 'package:badnotes/data/locales.dart';
 import 'package:badnotes/data/prefs.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/i18n/strings.g.dart';
 import 'package:file_picker/file_picker.dart';
@@ -341,6 +343,10 @@ class _AccountSettings extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 12, bottom: 4),
+          child: ProSettingsCard(),
+        ),
         const NextcloudProfile(),
         BnSettingsGroup(
           label: 'When to sync',
@@ -415,6 +421,9 @@ class _GeneralSettings extends StatelessWidget {
                   'ones are deleted. Only on this device (not synced). '
                   'See them in a note: ⋯ › Version History.',
               pref: stows.keepVersions,
+              trailingBadge: const ProBadge(),
+              allow: (context, on) async =>
+                  !on || await Pro.require(context, ProFeature.versions),
             ),
           ],
         ),

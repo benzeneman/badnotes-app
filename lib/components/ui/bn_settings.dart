@@ -189,6 +189,8 @@ class BnPrefSwitchRow extends StatelessWidget {
     this.subtitle,
     this.icon,
     required this.pref,
+    this.allow,
+    this.trailingBadge,
   });
 
   final String title;
@@ -196,19 +198,40 @@ class BnPrefSwitchRow extends StatelessWidget {
   final IconData? icon;
   final Stow<dynamic, bool, dynamic> pref;
 
+  /// Asked before [pref] changes; false keeps it as it is.
+  final Future<bool> Function(BuildContext context, bool to)? allow;
+
+  /// Shown before the toggle, e.g. a Pro lock.
+  final Widget? trailingBadge;
+
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
     valueListenable: pref,
-    builder: (context, value, _) => Semantics(
-      toggled: value,
-      child: BnSettingsRow(
-        title: title,
-        subtitle: subtitle,
-        icon: icon,
-        onTap: () => pref.value = !value,
-        trailing: BnToggle(value: value, onChanged: (v) => pref.value = v),
-      ),
-    ),
+    builder: (context, value, _) {
+      Future<void> set(bool to) async {
+        final check = allow;
+        if (check != null && !await check(context, to)) return;
+        pref.value = to;
+      }
+
+      final toggle = BnToggle(value: value, onChanged: set);
+      return Semantics(
+        toggled: value,
+        child: BnSettingsRow(
+          title: title,
+          subtitle: subtitle,
+          icon: icon,
+          onTap: () => set(!value),
+          trailing: trailingBadge == null
+              ? toggle
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 8,
+                  children: [trailingBadge!, toggle],
+                ),
+        ),
+      );
+    },
   );
 }
 

@@ -1,3 +1,5 @@
+import 'package:badnotes/components/pro/paywall.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/canvas/canvas_background_preview.dart';
 import 'package:badnotes/components/editor/board_kits.dart';
 import 'package:badnotes/components/editor/board_paper.dart';
@@ -92,7 +94,9 @@ class _DocumentStudio extends StatefulWidget {
 class _DocumentStudioState extends State<_DocumentStudio> {
   final _name = TextEditingController();
   var _hasCover = true;
-  CoverDesign _cover = CoverDesign.standard;
+  CoverDesign _cover = Pro.has
+      ? CoverDesign.standard
+      : ProLimits.freeDefaultCover;
 
   // a notebook
   PaperKind _paper = PaperKind.essentials.first;
@@ -119,10 +123,18 @@ class _DocumentStudioState extends State<_DocumentStudio> {
   bool get _whiteboard => widget.whiteboard;
 
   /// The covers offered in a row; the rest are in the cover library.
-  static final _quickCovers = [
+  static final _proCovers = [
     CoverDesign.standard,
     ...CoverDesign.all.where((c) => c != CoverDesign.standard).take(8),
   ];
+
+  /// In the free version the free covers come first.
+  static List<CoverDesign> get _quickCovers => Pro.has
+      ? _proCovers
+      : [
+          for (final id in ProLimits.freeCovers) CoverDesign.fromId(id)!,
+          ..._proCovers.take(5),
+        ];
 
   @override
   void initState() {
@@ -581,12 +593,31 @@ class _DocumentStudioState extends State<_DocumentStudio> {
           tile(
             label: '${design.name} cover',
             selected: _hasCover && design == _cover,
-            onTap: () => setState(() {
-              _cover = design;
-              _hasCover = true;
-            }),
+            onTap: () async {
+              if (!ProLimits.isFreeCover(design) &&
+                  !await Pro.require(context, ProFeature.covers)) {
+                return;
+              }
+              if (!mounted) return;
+              setState(() {
+                _cover = design;
+                _hasCover = true;
+              });
+            },
             // its art is a still picture already
-            child: NotebookCover(design: design, title: ''),
+            child: ProLimits.isFreeCover(design) || Pro.has
+                ? NotebookCover(design: design, title: '')
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      NotebookCover(design: design, title: ''),
+                      const Positioned(
+                        top: 3,
+                        right: 3,
+                        child: ProBadge(size: 9),
+                      ),
+                    ],
+                  ),
           ),
         tile(
           label: 'No cover',

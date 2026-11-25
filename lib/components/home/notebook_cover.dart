@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:badnotes/components/pro/paywall.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/cover_designs.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
@@ -303,6 +305,17 @@ class CoverTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tile = _tile(context);
+    if (ProLimits.isFreeCover(design) || Pro.has) return tile;
+    return Stack(
+      children: [
+        tile,
+        const Positioned(top: 4, right: 4, child: ProBadge(size: 11)),
+      ],
+    );
+  }
+
+  Widget _tile(BuildContext context) {
     final colors = BadNotesColors.of(context);
     return Semantics(
       button: true,
@@ -429,10 +442,17 @@ class _CoverLibraryState extends State<_CoverLibrary> {
   late bool? _showName = widget.showName;
   bool get _namesShown => _showName ?? _chosen?.label ?? true;
 
-  void _apply() => Navigator.pop<CoverChoice>(context, (
-    design: _chosen,
-    showName: _showName,
-  ));
+  Future<void> _apply() async {
+    if (!ProLimits.isFreeCover(_chosen) &&
+        !await Pro.require(context, ProFeature.covers)) {
+      return;
+    }
+    if (!mounted) return;
+    Navigator.pop<CoverChoice>(context, (
+      design: _chosen,
+      showName: _showName,
+    ));
+  }
   void _none() =>
       Navigator.pop<CoverChoice>(context, (design: null, showName: null));
 

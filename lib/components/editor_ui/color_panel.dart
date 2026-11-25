@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/editor_ui/color_wheel.dart';
 import 'package:badnotes/components/editor_ui/editor_ui_colors.dart';
 import 'package:badnotes/components/editor_ui/screen_color_picker.dart';
@@ -200,9 +201,14 @@ class _ColorPanelState extends State<ColorPanel> {
     _hex.text = widget.replacing ? _hexOf(_color) : '';
   });
 
-  void _add() {
+  Future<void> _add() async {
     final c = _draft;
     if (c == null) return;
+    if (!stows.pinnedColors.value.contains(_keyOf(c)) &&
+        !await Pro.mayAddColor(context, _custom.length)) {
+      return;
+    }
+    if (!mounted) return;
     if (!stows.pinnedColors.value.contains(_keyOf(c))) {
       stows.pinnedColors.value = [...stows.pinnedColors.value, _keyOf(c)];
     }

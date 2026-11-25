@@ -1,3 +1,4 @@
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/editor/boards_panel.dart';
 import 'package:badnotes/components/home/delete_note_button.dart';
 import 'package:badnotes/components/home/desk.dart';
@@ -181,7 +182,11 @@ class _BoardCard extends StatelessWidget {
             AppleMenuItem(
               'Duplicate',
               icon: Icons.copy_outlined,
-              onTap: () => duplicateNotes([path]),
+              onTap: () async {
+                if (await Pro.mayDuplicate(context, [path])) {
+                  await duplicateNotes([path]);
+                }
+              },
             ),
             AppleMenuItem(
               'Delete',

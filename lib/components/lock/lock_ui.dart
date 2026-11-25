@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show ImageFilter;
 
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/cover_designs.dart';
 import 'package:badnotes/components/home/notebook_cover.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
@@ -121,13 +122,19 @@ Future<bool> showSetLockSheet(
   required String path,
   required LockKind kind,
   bool change = false,
-}) async =>
-    await showBnSheet<bool>(
-      context: context,
-      builder: (context) =>
-          _SetLockSheet(path: path, kind: kind, change: change),
-    ) ??
-    false;
+}) async {
+  // changing an existing lock's password stays free
+  if (!change && !await Pro.require(context, ProFeature.noteLock)) {
+    return false;
+  }
+  if (!context.mounted) return false;
+  return await showBnSheet<bool>(
+        context: context,
+        builder: (context) =>
+            _SetLockSheet(path: path, kind: kind, change: change),
+      ) ??
+      false;
+}
 
 class _SetLockSheet extends StatefulWidget {
   const new({

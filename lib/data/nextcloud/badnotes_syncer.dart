@@ -11,6 +11,7 @@ import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/nextcloud/errors.dart';
 import 'package:badnotes/data/nextcloud/remote_store.dart';
 import 'package:badnotes/data/prefs.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/i18n/strings.g.dart';
 import 'package:badnotes/pages/editor/editor.dart';
 import 'package:worker_manager/worker_manager.dart';
@@ -774,6 +775,8 @@ extension BadNotesSyncerComponent on SyncerComponent {
   /// whether it was queued.
   Future<bool> enqueueRel(String relativeFilePath) async {
     if (!stows.loggedIn) return false;
+    // the free version uploads when the cloud button is pressed
+    if (!Pro.autoSync) return false;
     if (!await BadNotesSyncInterface.canSyncNow()) return false;
     // a held-back thumbnail is picked up by uploader.refresh() on Wi-Fi
     final isPreview = relativeFilePath.endsWith(

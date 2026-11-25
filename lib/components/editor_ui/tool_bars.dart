@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/canvas/shape_style.dart';
 import 'package:badnotes/components/editor_ui/bar_color_row.dart';
 import 'package:badnotes/components/editor_ui/color_panel.dart';
@@ -637,10 +638,13 @@ class _ToolSubBarState extends State<ToolSubBar> {
     }
 
     // the + : a color chosen joins the end of the row
-    void open(BuildContext dot) => _openColors(dot, pen, (color) {
-      BarColors.add(key, color);
-      pick(color);
-    });
+    Future<void> open(BuildContext dot) async {
+      if (!await Pro.mayAddColor(dot, colors.length) || !dot.mounted) return;
+      _openColors(dot, pen, (color) {
+        BarColors.add(key, color);
+        pick(color);
+      });
+    }
 
     // a dot of the row, tapped again: the color chosen takes its place,
     // live as it's chosen on the grid or wheel. The row is saved a moment
@@ -1102,7 +1106,12 @@ class _ToolSubBarState extends State<ToolSubBar> {
                 message: 'Draw your own pattern',
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => ToolPanel.push(
+                  onTap: () async {
+                    if (!await Pro.require(context, ProFeature.customTape)) {
+                      return;
+                    }
+                    if (!context.mounted) return;
+                    ToolPanel.push(
                     context,
                     PanelPage(
                       title: 'Your pattern',
@@ -1122,7 +1131,8 @@ class _ToolSubBarState extends State<ToolSubBar> {
                         },
                       ),
                     ),
-                  ),
+                  );
+                },
                   child: CustomPaint(
                     painter: BnDashedCirclePainter(
                       BadNotesColors.of(context).disabled,

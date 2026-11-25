@@ -1,3 +1,4 @@
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/canvas/canvas_background_preview.dart';
 import 'package:badnotes/components/canvas/inner_canvas.dart';
 import 'package:badnotes/components/toolbar/ink_dial.dart';
@@ -12,13 +13,17 @@ Future<MyTemplate?> showSaveTemplateSheet(
   BuildContext context, {
   required EditorCoreInfo note,
   required int pageIndex,
-}) => showModalBottomSheet<MyTemplate>(
-  context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  backgroundColor: InkPalette.of(context).desk,
-  builder: (context) => _SaveTemplatePanel(note: note, pageIndex: pageIndex),
-);
+}) async {
+  if (!await Pro.require(context, ProFeature.templates)) return null;
+  if (!context.mounted) return null;
+  return showModalBottomSheet<MyTemplate>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    backgroundColor: InkPalette.of(context).desk,
+    builder: (context) => _SaveTemplatePanel(note: note, pageIndex: pageIndex),
+  );
+}
 
 class _SaveTemplatePanel extends StatefulWidget {
   const new({required this.note, required this.pageIndex});

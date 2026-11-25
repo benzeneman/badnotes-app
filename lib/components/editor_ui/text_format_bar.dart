@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/editor/sticky_note_dialog.dart';
 import 'package:badnotes/components/editor/text_box_overlay.dart';
 import 'package:badnotes/components/editor_ui/color_panel.dart';
@@ -220,6 +221,7 @@ class TextFormatBar extends StatelessWidget {
         },
       );
       Future<void> add() async {
+        if (!await Pro.require(context, ProFeature.fonts)) return;
         try {
           final family = await CustomFonts.add({
             ...textBoxFonts.keys,

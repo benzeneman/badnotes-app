@@ -413,6 +413,12 @@ class GoogleDriveStore extends _CloudStore {
     return tokens?.accessToken;
   }
 
+  /// An access token for [email] without showing anything, or null when
+  /// Google wants the user to sign in again. The licence server reads the
+  /// account's email from it.
+  static Future<String?> accessToken(String email) =>
+      _authorize(email, prompt: false);
+
   /// The picture of the account [login] last signed in, if it has one.
   static Uint8List? lastPhoto;
 

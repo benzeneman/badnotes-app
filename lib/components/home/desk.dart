@@ -1,3 +1,4 @@
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/cloud_status.dart';
 import 'package:badnotes/components/home/delete_folder_button.dart';
 import 'package:badnotes/components/home/delete_note_button.dart';
@@ -728,6 +729,8 @@ class NotebookSelectionBar extends StatelessWidget {
           ),
         SelectionAction('Duplicate', BnIcons.copy, () async {
           if (!await unlockEach(context, [...selected])) return;
+          if (!context.mounted) return;
+          if (!await Pro.mayDuplicate(context, [...selected])) return;
           await duplicateNotes([...selected]);
           unselect();
         }),

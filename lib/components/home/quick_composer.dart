@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/pinch_zoom.dart';
 import 'package:badnotes/components/home/quick_board.dart';
 import 'package:badnotes/components/home/quick_ink.dart';
@@ -223,7 +224,12 @@ class _QuickComposerState extends State<QuickComposer> {
 
   /// The editor's color panel (presets, grid, wheel): [replacing] the
   /// ringed dot of the row, or adding a color at its end.
-  void _openColors(BuildContext anchor, {Color? replacing}) {
+  Future<void> _openColors(BuildContext anchor, {Color? replacing}) async {
+    if (replacing == null &&
+        (!await Pro.mayAddColor(anchor, BarColors.of(_rowKey).length) ||
+            !anchor.mounted)) {
+      return;
+    }
     var slot = replacing;
     ColorPanel.show(
       anchor,

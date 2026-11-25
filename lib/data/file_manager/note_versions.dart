@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:archive/archive_io.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/components/home/note_facts.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
@@ -60,7 +61,7 @@ abstract final class NoteVersions {
   }
 
   /// Whether versions are kept (Settings › Version history).
-  static bool get enabled => stows.keepVersions.value;
+  static bool get enabled => stows.keepVersions.value && Pro.has;
   static set enabled(bool value) => stows.keepVersions.value = value;
 
   static Future<Directory> _dirOf(String notePath) async =>

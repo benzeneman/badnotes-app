@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/editor/export_progress.dart';
 
 import 'package:file_picker/file_picker.dart';
@@ -956,6 +957,7 @@ class EditorState extends State<Editor> {
 
   /// Copies a whiteboard and opens the copy.
   Future<void> _duplicateBoard(String path) async {
+    if (!await Pro.mayDuplicate(context, [path])) return;
     if (path == coreInfo.filePath) await saveToFile();
     final copies = await duplicateNotes([path]);
     if (copies.isNotEmpty && mounted) await _openBoard(copies.first);
@@ -6574,7 +6576,8 @@ class EditorState extends State<Editor> {
       return;
     }
     _inkFollowsAudio = true;
-    final mode = stows.playbackMode.value;
+    // the free version plays the voice over the notes as they are
+    final mode = Pro.has ? stows.playbackMode.value : 'static';
     for (final page in coreInfo.pages) {
       if (mode == 'static') {
         // the notes as they are; only the voice plays

@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:badnotes/components/pro/paywall.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/cloud_status.dart';
 import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
@@ -208,6 +212,7 @@ class _ProfileMenu extends HookWidget {
     final theme = useValueListenable(stows.appTheme);
     final trash = useValueListenable(Trash.entries);
     final provider = useValueListenable(stows.syncProvider);
+    useValueListenable(Pro.isPro);
     final signedIn = stows.loggedIn && username.isNotEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -239,6 +244,13 @@ class _ProfileMenu extends HookWidget {
                         : 'Notes stay on this device',
                     style: BnType.caption.copyWith(color: colors.muted),
                   ),
+                  Text(
+                    Pro.has ? 'BadNotes Pro' : 'Free version',
+                    style: BnType.micro.copyWith(
+                      color: colors.highlightText,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -269,6 +281,15 @@ class _ProfileMenu extends HookWidget {
           onChanged: (mode) => stows.appTheme.value = mode,
         ),
         const BnDivider(),
+        if (!Pro.has)
+          BnMenuRow(
+            icon: BnIcons.lock,
+            label: 'Get BadNotes Pro',
+            onTap: () {
+              Navigator.of(menu).pop();
+              unawaited(showPaywall(home));
+            },
+          ),
         BnMenuRow(
           icon: BnIcons.settings,
           label: 'Settings',

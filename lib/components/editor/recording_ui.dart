@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/editor/audio_notes.dart';
 import 'package:badnotes/components/editor_ui/option_previews.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
@@ -667,7 +668,8 @@ class _RecordingsPanelState extends State<RecordingsPanel> {
     ) => ValueListenableBuilder(
       valueListenable: stows.playbackMode,
       builder: (context, value, _) {
-        final selected = value == key;
+        // the free version only plays back as it is
+        final selected = Pro.has ? value == key : key == 'static';
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Material(
@@ -681,7 +683,11 @@ class _RecordingsPanelState extends State<RecordingsPanel> {
             ),
             child: InkWell(
               borderRadius: const BorderRadius.all(Radius.circular(14)),
-              onTap: () {
+              onTap: () async {
+                if (key != 'static' &&
+                    !await Pro.require(context, ProFeature.playback)) {
+                  return;
+                }
                 stows.playbackMode.value = key;
                 // shows the change at once
                 final at = audio.playbackAt.value;

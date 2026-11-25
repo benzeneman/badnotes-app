@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/delete_note_button.dart';
 import 'package:badnotes/components/home/move_note_button.dart';
 import 'package:badnotes/components/home/rename_note_button.dart';
@@ -537,7 +538,9 @@ class _NotebookMenu extends HookWidget {
               label: 'Copy',
               // a copy has no lock: only after the password
               onTap: closeThen(menu, () async {
-                if (await ensureUnlocked(page, path) && page.mounted) {
+                if (await ensureUnlocked(page, path) &&
+                    page.mounted &&
+                    await Pro.mayDuplicate(page, [path])) {
                   await duplicateNotes([path]);
                 }
               }),

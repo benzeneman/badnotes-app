@@ -26,6 +26,8 @@ import 'package:badnotes/data/locks.dart';
 import 'package:badnotes/data/nextcloud/badnotes_syncer.dart';
 import 'package:badnotes/data/backup.dart';
 import 'package:badnotes/data/prefs.dart';
+import 'package:badnotes/data/pro/pro.dart';
+import 'package:badnotes/data/pro/pro_billing.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/data/tools/stroke_properties.dart';
 import 'package:badnotes/i18n/strings.g.dart';
@@ -162,6 +164,12 @@ void _afterLaunch() {
   LagRecorder.start();
   NoteLocks.init();
   CustomFonts.loadAll();
+  unawaited(Pro.init().then((_) => ProBilling.init()));
+  // turning Pro on starts automatic sync at once
+  Pro.isPro.addListener(() {
+    if (Pro.autoSync && stows.loggedIn) _syncBothWays();
+    setupBackgroundSync();
+  });
   startSyncAfterLoaded();
   setupBackgroundSync();
 
@@ -201,7 +209,9 @@ void startSyncAfterLoaded() async {
 
   // a short pause so the remaining prefs can finish loading
   await Future.delayed(const Duration(milliseconds: 100));
-  _syncBothWays();
+  // the free version syncs only from the cloud button
+  await Pro.init();
+  if (Pro.autoSync) _syncBothWays();
 
   // The weekly Drive backup waits a minute so it doesn't compete with start-up.
   await stows.autoDriveBackup.waitUntilRead();
@@ -210,7 +220,9 @@ void startSyncAfterLoaded() async {
 
   // Getting Wi-Fi back is a good moment to catch up.
   _wifiWatch ??= Connectivity().onConnectivityChanged.listen((links) {
-    if (stows.loggedIn && links.contains(ConnectivityResult.wifi)) {
+    if (stows.loggedIn &&
+        Pro.autoSync &&
+        links.contains(ConnectivityResult.wifi)) {
       _syncBothWays();
     }
   });
@@ -218,14 +230,14 @@ void startSyncAfterLoaded() async {
   // Returning to the app may mean other devices changed something meanwhile.
   _returnWatch ??= AppLifecycleListener(
     onResume: () {
-      if (stows.loggedIn) _syncBothWays();
+      if (stows.loggedIn && Pro.autoSync) _syncBothWays();
     },
   );
 
   // While the app is open, look for other devices' changes every minute
   // (and a full look for local ones every fifth), never mid-stroke.
   _syncTick ??= Timer.periodic(const Duration(minutes: 1), (timer) {
-    if (!stows.loggedIn) return;
+    if (!stows.loggedIn || !Pro.autoSync) return;
     final open =
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     if (!open || EditorSignals.drawing.value) return;
@@ -268,10 +280,23 @@ void setupBackgroundSync() {
     return;
   }
   allowed.removeListener(setupBackgroundSync);
-  if (!allowed.value) return;
+  const taskName = 'background-sync';
+  // background sync is automatic sync: Pro only
+  if (!allowed.value || !Pro.autoSync) {
+    if (_backgroundSyncOn) {
+      _backgroundSyncOn = false;
+      unawaited(
+        Workmanager().cancelByUniqueName(taskName).catchError((Object e) {
+          Logger('Sync').info('Could not cancel background sync: $e');
+        }),
+      );
+    }
+    return;
+  }
+  if (_backgroundSyncOn) return;
+  _backgroundSyncOn = true;
 
   final scheduler = Workmanager()..initialize(doBackgroundSync);
-  const taskName = 'background-sync';
   const every = Duration(hours: 12);
   final conditions = Constraints(
     networkType: NetworkType.unmetered,
@@ -298,6 +323,8 @@ void setupBackgroundSync() {
     );
   }
 }
+
+var _backgroundSyncOn = false;
 
 /// The background job itself. It runs without the UI, so it sets up only what
 /// syncing needs and stops after a handful of downloads to spare data and
@@ -398,7 +425,9 @@ class const App({super.key}) extends StatefulWidget {
 
     final ext = p.extension(source).isEmpty ? '.sbn2' : p.extension(source);
 
+    final here = _navigation.routerDelegate.navigatorKey.currentContext;
     if (_noteExtensions.contains(ext)) {
+      if (here == null || !await Pro.mayAddNotebook(here)) return;
       final imported = await FileManager.importFile(
         source,
         null,
@@ -412,6 +441,7 @@ class const App({super.key}) extends StatefulWidget {
     }
 
     if (ext == '.pdf' && Editor.canRasterPdf) {
+      if (here == null || !await Pro.mayAddPdf(here, source)) return;
       final notePath = await FileManager.suffixFilePathToMakeItUnique(
         '/${p.basenameWithoutExtension(source)}',
       );
