@@ -5,7 +5,7 @@ import 'package:badnotes/components/home/cover_designs.dart';
 abstract final class ProLimits {
   /// Notebooks (not whiteboards, not notes made from a PDF). Trash and
   /// folders don't count.
-  static const notebooks = 5;
+  static const notebooks = 3;
 
   /// Whiteboards made by the user; the Quick whiteboard doesn't count.
   static const whiteboards = 1;
@@ -19,7 +19,7 @@ abstract final class ProLimits {
 
   /// Colours in each tool's row in the bar, and own colours in the colour
   /// panel.
-  static const colors = 8;
+  static const colors = 5;
 
   /// The covers free notebooks can have: the first four plain colours.
   static final freeCovers = {

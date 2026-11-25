@@ -142,12 +142,12 @@ void main() {
     });
 
     test('the numbers agreed for the free version', () {
-      expect(ProLimits.notebooks, 5);
+      expect(ProLimits.notebooks, 3);
       expect(ProLimits.whiteboards, 1);
       expect(ProLimits.pdfs, 5);
       expect(ProLimits.pdfPages, 30);
       expect(ProLimits.pdfBytes, 10 * 1024 * 1024);
-      expect(ProLimits.colors, 8);
+      expect(ProLimits.colors, 5);
     });
 
     test('tests run with Pro on unless asked not to', () {
