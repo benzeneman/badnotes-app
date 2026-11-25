@@ -97,7 +97,7 @@ abstract final class Pro {
     final email = account;
     if (email == null) return null;
     try {
-      return await GoogleDriveStore.accessToken(email);
+      return await GoogleDriveStore.silentAccessToken(email);
     } catch (e) {
       log.info('No access token: $e');
       return null;
