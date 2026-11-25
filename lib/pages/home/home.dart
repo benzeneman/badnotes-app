@@ -52,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   /// Old trash is cleared at most once while the app is running.
   static var _trashCleared = false;
   Timer? _trashTimer;
+  Timer? _tourTimer;
 
   @override
   void initState() {
@@ -63,7 +64,7 @@ class _HomePageState extends State<HomePage> {
       if (mounted) UpdateManager.showUpdateDialog(context);
     });
     // the feature tour, once after a fresh install, when the desk is up
-    Future.delayed(const Duration(milliseconds: 700), () {
+    _tourTimer = Timer(const Duration(milliseconds: 700), () {
       if (mounted) maybeShowFeatureTour(context);
     });
 
@@ -79,6 +80,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     DynamicMaterialApp.removeFullscreenListener(_rebuild);
     _trashTimer?.cancel();
+    _tourTimer?.cancel();
     super.dispose();
   }
 

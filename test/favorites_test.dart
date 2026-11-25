@@ -1,8 +1,10 @@
 import 'package:badnotes/data/favorites.dart';
+import 'package:badnotes/data/flavor_config.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  FlavorConfig.setup();
   test('a folder and a notebook with the same name are starred apart', () {
     stows.favoriteNotes.value = [];
 

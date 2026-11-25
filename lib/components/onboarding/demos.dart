@@ -109,11 +109,7 @@ Color _inkColor(double dark) =>
 /// Plays [builder] over and over, one loop every [duration], on a stage of
 /// its own layer. With animations turned off it holds still at [rest].
 class _Loop extends StatefulWidget {
-  const new({
-    required this.duration,
-    required this.builder,
-    this.rest = 0.6,
-  });
+  const new({required this.duration, required this.builder, this.rest = 0.6});
 
   final Duration duration;
   final double rest;
@@ -451,10 +447,7 @@ Widget lassoDemo() => _Loop(
       recolor,
     )!;
     // the picked strokes scale about their own centre
-    final pickedAt =
-        picked.center +
-        shift +
-        (at - picked.center) * grow;
+    final pickedAt = picked.center + shift + (at - picked.center) * grow;
     final page = Offset(pageRect.left, pageRect.top);
     final barShown = _span(t, 0.33, 0.4);
     final zoom = 1 + 0.14 * _span(t, 0.04, 0.3) - 0.14 * _span(t, 0.36, 0.48);
@@ -471,11 +464,7 @@ Widget lassoDemo() => _Loop(
                 pageRect,
                 inks: [
                   _Ink(_goldenEq, at: at, scale: scale, where: (i) => i >= 6),
-                  const _Ink(
-                    _goldenProof,
-                    at: Offset(300, 200),
-                    scale: 0.62,
-                  ),
+                  const _Ink(_goldenProof, at: Offset(300, 200), scale: 0.62),
                   _Ink(
                     _goldenEq,
                     at: pickedAt,
@@ -707,9 +696,7 @@ Widget shapesDemo() => _Loop(
             _page(
               context,
               const Rect.fromLTWH(24, 20, 592, 460),
-              inks: [
-                const _Ink(_topology, at: Offset(36, 26), scale: 0.62),
-              ],
+              inks: [const _Ink(_topology, at: Offset(36, 26), scale: 0.62)],
               extra: (canvas) {
                 final line = Paint()
                   ..color = ink
@@ -736,9 +723,7 @@ Widget shapesDemo() => _Loop(
                       points.last,
                       7 + 11 * h,
                       Paint()
-                        ..color = colors.accent.withValues(
-                          alpha: 0.6 * (1 - h),
-                        )
+                        ..color = colors.accent.withValues(alpha: 0.6 * (1 - h))
                         ..style = PaintingStyle.stroke
                         ..strokeWidth = 2,
                     );
@@ -845,9 +830,8 @@ Widget searchDemo() => _Loop(
                   if (marks <= 0) return;
                   // as the editor marks a match on the page
                   final fill = Paint()
-                    ..color = const Color(
-                      0xFFFFC107,
-                    ).withValues(alpha: 0.45 * marks);
+                    ..color = const Color(0xFFFFC107)
+                        .withValues(alpha: 0.45 * marks);
                   for (final w in words) {
                     canvas.drawRRect(
                       RRect.fromRectAndRadius(w, const Radius.circular(3)),
@@ -959,9 +943,7 @@ Widget recordingDemo() => _Loop(
       at: const Offset(175, 66),
       scale: 0.85,
       progress: progress,
-      ghost: spotlight
-          ? _inkColor(pageDark).withValues(alpha: 0.16)
-          : null,
+      ghost: spotlight ? _inkColor(pageDark).withValues(alpha: 0.16) : null,
     );
     final seconds = (t * 135).round();
     String clock(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
@@ -1131,8 +1113,7 @@ void _drawTape(Canvas canvas, Rect r, double laid, double peeked) {
   }
   canvas.drawRect(
     rect,
-    Paint()
-      ..color = Color.lerp(color, color.withValues(alpha: 0.2), peeked)!,
+    Paint()..color = Color.lerp(color, color.withValues(alpha: 0.2), peeked)!,
   );
   if (covered <= 0) return;
   final stamps = _tapeStamps.putIfAbsent(
@@ -1170,9 +1151,7 @@ Widget tapeDemo() => _Loop(
     ];
     final laid = [_span(t, 0.06, 0.16), _span(t, 0.16, 0.26)];
     final taps = [0.36, 0.5];
-    final peeked = [
-      for (final tap in taps) _span(t, tap + 0.02, tap + 0.06),
-    ];
+    final peeked = [for (final tap in taps) _span(t, tap + 0.02, tap + 0.06)];
     final start = _pagesDark(context) ? 1.0 : 0.0;
     final dark = (start - _span(t, 0.62, 0.74)).abs();
     return _desk(context, [
@@ -1184,9 +1163,7 @@ Widget tapeDemo() => _Loop(
               context,
               const Rect.fromLTWH(24, 20, 592, 460),
               dark: dark,
-              inks: [
-                const _Ink(_axioms, at: at, scale: scale),
-              ],
+              inks: [const _Ink(_axioms, at: at, scale: scale)],
               extra: (canvas) {
                 for (var i = 0; i < tapes.length; i++) {
                   _drawTape(canvas, tapes[i], laid[i], peeked[i]);
@@ -1258,12 +1235,15 @@ Widget _tab(
             ),
           ),
         ),
-        Text(
-          name,
-          maxLines: 1,
-          style: BnType.body.copyWith(
-            color: active ? colors.text : colors.text2,
-            fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+        Flexible(
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: BnType.body.copyWith(
+              color: active ? colors.text : colors.text2,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+            ),
           ),
         ),
         if (active) Icon(BnIcons.close, size: 13, color: colors.muted),
@@ -1289,7 +1269,11 @@ Widget splitDemo() => _Loop(
     final dragged =
         Offset.lerp(tabB, dropAt, drag)! + Offset(0, -40 * sin(pi * drag));
     const single = Rect.fromLTWH(150, 54, 340, 440);
-    final left = Rect.lerp(single, const Rect.fromLTWH(14, 54, 296, 440), split)!;
+    final left = Rect.lerp(
+      single,
+      const Rect.fromLTWH(14, 54, 296, 440),
+      split,
+    )!;
     final right = Rect.lerp(
       const Rect.fromLTWH(640, 54, 296, 440),
       const Rect.fromLTWH(330, 54, 296, 440),
@@ -1302,10 +1286,7 @@ Widget splitDemo() => _Loop(
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned.fill(
-              top: 38,
-              child: ColoredBox(color: ui.desk),
-            ),
+            Positioned.fill(top: 38, child: ColoredBox(color: ui.desk)),
             Positioned(
               top: 37,
               left: 0,
