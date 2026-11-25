@@ -608,9 +608,21 @@ class CanvasPainter extends CustomPainter {
       bands[0].addAll(ordered.where((s) => s.toolId != .highlighter));
       return bands;
     }
-    const cell = 40.0;
-    final columns = max(1, (pageSize.width / cell).ceil());
-    final rows = max(1, (pageSize.height / cell).ceil());
+    // The grid covers the ink, not the page: a whiteboard's page is
+    // 200000 units square, and a grid over all of it (25 million cells,
+    // made again on every paint) took 300-850 ms a frame there.
+    Rect? area;
+    for (final stroke in ordered) {
+      final bounds = stroke.bounds.inflate(stroke.options.size / 2);
+      if (!bounds.isFinite) continue;
+      area = area == null ? bounds : area.expandToInclude(bounds);
+    }
+    area ??= Offset.zero & pageSize;
+    // ponytail: cells grow on ink spread far over a board, so the grid stays
+    // near 250k cells; ordering is coarser there
+    final cell = max(40.0, sqrt(area.width * area.height / 250000));
+    final columns = max(1, (area.width / cell).ceil());
+    final rows = max(1, (area.height / cell).ceil());
     // the top layer on each square, -1 for none
     final top = List.filled(columns * rows, -1);
     for (final stroke in ordered) {
@@ -620,10 +632,10 @@ class CanvasPainter extends CustomPainter {
         bands[0].add(stroke);
         continue;
       }
-      final x0 = (bounds.left / cell).floor().clamp(0, columns - 1);
-      final y0 = (bounds.top / cell).floor().clamp(0, rows - 1);
-      final x1 = (bounds.right / cell).floor().clamp(0, columns - 1);
-      final y1 = (bounds.bottom / cell).floor().clamp(0, rows - 1);
+      final x0 = ((bounds.left - area.left) / cell).floor().clamp(0, columns - 1);
+      final y0 = ((bounds.top - area.top) / cell).floor().clamp(0, rows - 1);
+      final x1 = ((bounds.right - area.left) / cell).floor().clamp(0, columns - 1);
+      final y1 = ((bounds.bottom - area.top) / cell).floor().clamp(0, rows - 1);
       var base = -1;
       for (int y = y0; y <= y1; y++) {
         for (int x = x0; x <= x1; x++) {
@@ -1869,6 +1881,11 @@ class _LongStroke {
   /// that size would be too big, so it never has to change size mid-stroke.
   late final double pixels = () {
     final page = stroke.page.size;
+    // a whiteboard's page is 200000 units square: sized to all of it, the
+    // image had about 0.016 pixels a unit and the line was a grey smudge
+    // behind the pen. There it's as on screen, and [keep] stops at the
+    // image size limit instead.
+    if (page.width * page.height > 1e8) return min(scale, 4.0);
     final most = min(
       sqrt(maxPixels / max(page.width * page.height, 1)),
       maxSide / max(max(page.width, page.height), 1),
@@ -1876,8 +1893,9 @@ class _LongStroke {
     return min(scale, most);
   }();
 
-  /// Adds a piece to [image].
-  void keep(Stroke piece) {
+  /// Adds a piece to [image]; false when the image would be too big
+  /// (a line wandering far over a whiteboard), and the rest is drawn live.
+  bool keep(Stroke piece) {
     final bounds = piece.bounds.inflate(piece.options.size + 2);
     final wanted = image == null ? bounds : area.expandToInclude(bounds);
     // whole pixels on a grid from the page's corner
@@ -1886,7 +1904,10 @@ class _LongStroke {
     final right = (wanted.right * pixels).ceilToDouble();
     final bottom = (wanted.bottom * pixels).ceilToDouble();
     final width = (right - left).toInt(), height = (bottom - top).toInt();
-    if (width <= 0 || height <= 0) return;
+    if (width <= 0 || height <= 0) return true;
+    if (width > maxSide || height > maxSide || width * height > maxPixels) {
+      return false;
+    }
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     if (image case final old?) {
@@ -1917,6 +1938,7 @@ class _LongStroke {
       right / pixels,
       bottom / pixels,
     );
+    return true;
   }
 
   /// Draws [stroke] if it's long enough to draw in pieces; false if not.
@@ -1954,7 +1976,7 @@ class _LongStroke {
     while (n - long.keptTo > piece + overlap * 2) {
       final from = max(long.keptTo - overlap, 0);
       final to = long.keptTo + piece;
-      long.keep(stroke.livePiece(from, to));
+      if (!long.keep(stroke.livePiece(from, to))) break;
       long.keptTo = to;
     }
     if (long.image case final image?) {

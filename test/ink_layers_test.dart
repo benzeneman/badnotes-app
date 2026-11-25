@@ -172,6 +172,17 @@ void main() {
     expect(CanvasPainter.inkBands(strokes, _page).length, 2);
   });
 
+  test('on a whiteboard-sized page the layers come out the same, quickly', () {
+    final s = _staircase();
+    const board = Size.square(200000);
+    final watch = Stopwatch()..start();
+    final bands = CanvasPainter.inkBands(s, board);
+    watch.stop();
+    expect(bands, CanvasPainter.inkBands(s, _page));
+    // the grid covers the ink, not the 200000-unit page
+    expect(watch.elapsedMilliseconds, lessThan(50));
+  });
+
   test('a page of 2000 strokes and 200 highlighters: layers in under 20 ms', () {
     var seed = 7;
     double next() => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
