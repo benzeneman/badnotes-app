@@ -660,6 +660,8 @@ class InkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     if (clip != null) canvas.clipPath(clip!);
+    // the camera only for the page; the stylus is placed after it
+    canvas.save();
     final m = cam.matrix(t);
     canvas.transform(m.storage);
     if (drawPaper) canvas.drawPicture(paper(dark, dots));
