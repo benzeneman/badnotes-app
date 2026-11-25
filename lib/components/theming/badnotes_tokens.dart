@@ -84,8 +84,15 @@ abstract final class BnColors {
   static const inkGreen = Color(0xFF2F9E77);
 }
 
+/// A folder's shades: back panel + tab, front panel, icon ink.
+abstract interface class BnFolderShades {
+  Color get back;
+  Color get front;
+  Color get ink;
+}
+
 /// Folder colours: back panel + tab, front panel, icon ink.
-enum BnFolderColor {
+enum BnFolderColor implements BnFolderShades {
   lavender(Color(0xFFCFC2F5), Color(0xFFE6DEFB), Color(0xFF5A43B8)),
   peach(Color(0xFFF2C2B1), Color(0xFFFBE3DA), Color(0xFFA9502F)),
   mint(Color(0xFFB5DDD0), Color(0xFFDCEFE9), Color(0xFF2A7660)),
@@ -94,6 +101,7 @@ enum BnFolderColor {
   rose(Color(0xFFEFC1D0), Color(0xFFF8DDE6), Color(0xFF9E3E5E));
 
   new(this.back, this.front, this.ink);
+  @override
   final Color back, front, ink;
 
   /// The colour stored as [key] in a folder's style file; lavender if unknown.
@@ -105,6 +113,27 @@ enum BnFolderColor {
     ),
     null => lavender,
   };
+}
+
+/// A folder in any colour: [back] is the colour itself, the front panel a
+/// paler and the ink a deeper shade of it, as in the presets.
+class BnCustomFolderColor implements BnFolderShades {
+  BnCustomFolderColor(Color color)
+    : back = color.withValues(alpha: 1),
+      front = Color.lerp(color.withValues(alpha: 1), const Color(0xFFFFFFFF), 0.55)!,
+      ink = color.computeLuminance() < 0.2
+          ? Color.lerp(color.withValues(alpha: 1), const Color(0xFFFFFFFF), 0.8)!
+          : HSLColor.fromColor(color.withValues(alpha: 1)).withLightness(0.32).toColor();
+
+  @override
+  final Color back, front, ink;
+
+  @override
+  bool operator ==(Object other) =>
+      other is BnCustomFolderColor && other.back == back;
+
+  @override
+  int get hashCode => back.hashCode;
 }
 
 abstract final class BnRadius {

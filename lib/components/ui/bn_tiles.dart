@@ -26,7 +26,7 @@ class BnFolderTile extends StatelessWidget {
 
   /// e.g. "12 items".
   final String count;
-  final BnFolderColor color;
+  final BnFolderShades color;
   final BnFolderIcon? icon;
 
   /// The colours of up to two covers that peek out of the folder.

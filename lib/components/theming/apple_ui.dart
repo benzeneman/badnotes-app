@@ -85,13 +85,16 @@ Future<void> showAppleMenu(
   BuildContext context, {
   required Rect anchor,
   required List<AppleMenuEntry> entries,
+  /// [BadNotesColors.scrim] by default; a small menu over the page can do
+  /// without greying the whole screen.
+  Color? barrierColor,
 }) {
   HapticFeedback.selectionClick();
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: BadNotesColors.of(context).scrim,
+    barrierColor: barrierColor ?? BadNotesColors.of(context).scrim,
     transitionDuration: BnMotion.fast,
     pageBuilder: (context, animation, _) => _AppleMenuLayout(
       anchor: anchor,

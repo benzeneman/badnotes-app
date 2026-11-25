@@ -971,6 +971,14 @@ class FileManager {
   /// Follows a file to its new path in the favourites, tags and recent list.
   static Future _renameReferences(String fromPath, String toPath) async {
     Favorites.rename(fromPath, toPath);
+    // stars are kept without the extension
+    if (fromPath.endsWith(Editor.extension) &&
+        toPath.endsWith(Editor.extension)) {
+      Favorites.rename(
+        _cut(fromPath, Editor.extension),
+        _cut(toPath, Editor.extension),
+      );
+    }
     NoteTags.rename(fromPath, toPath);
     NoteLocks.renameFile(fromPath, toPath);
 

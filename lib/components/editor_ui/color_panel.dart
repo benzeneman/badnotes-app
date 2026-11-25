@@ -91,9 +91,13 @@ class ColorPanel extends StatefulWidget {
     })?
     fill,
     bool replacing = false,
+    bool freezeEditor = false,
+    bool keepFocus = false,
   }) => showToolPanel(
     context,
     anchor: anchor,
+    freezeEditor: freezeEditor,
+    keepFocus: keepFocus,
     page: PanelPage(
       title: title,
       width: 320,

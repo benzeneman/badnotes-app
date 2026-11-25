@@ -154,7 +154,7 @@ void main() {
             builder: (_) => NewFolderDialog(
               createFolder: (_) {},
               doesFolderExist: (_) => false,
-              onColor: (color) => chosen = color,
+              onColor: (style) => chosen = style.color,
             ),
           ),
         );

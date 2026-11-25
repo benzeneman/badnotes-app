@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:badnotes/components/home/cover_designs.dart';
+import 'package:badnotes/components/editor_ui/color_panel.dart';
 import 'package:badnotes/components/home/notebook_cover.dart';
+import 'package:badnotes/components/ui/bn_tool_panels.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/pages/editor/editor.dart';
@@ -54,6 +56,16 @@ const _designColors = <String, Color>{
   'd:neon': Color(0xFF1C1C2E),
   'd:marble': Color(0xFF2E2E33),
   'd:peaks': Color(0xFF23314F),
+  'd:midgrid': Color(0xFF141A33),
+  'd:constellation': Color(0xFF0F1426),
+  'd:charterrazzo': Color(0xFF25262B),
+  'd:forestnight': Color(0xFF12261F),
+  'd:plumwaves': Color(0xFF2A1730),
+  'd:inkmarble': Color(0xFF1A1D22),
+  'd:tealgeo': Color(0xFF0E2A2E),
+  'd:graphdots': Color(0xFF202226),
+  'd:nightcity': Color(0xFF141428),
+  'd:auroralines': Color(0xFF0F1720),
 };
 
 /// What a folder tile shows about what's inside.
@@ -149,30 +161,53 @@ abstract final class FolderInfos {
 /// A folder's colour and icon, kept in `<folder>/.style.json`, so it moves,
 /// renames and syncs with the folder.
 class FolderStyle {
-  const new({this.color = BnFolderColor.lavender, this.icon});
+  const new({this.color = BnFolderColor.lavender, this.custom, this.icon});
 
+  /// The preset; also what older versions show when [custom] is set.
   final BnFolderColor color;
+
+  /// Any colour the user picked (ARGB), in place of [color]'s.
+  final int? custom;
   final BnFolderIcon? icon;
 
-  FolderStyle copyWith({BnFolderColor? color, BnFolderIcon? icon, bool noIcon = false}) =>
-      FolderStyle(color: color ?? this.color, icon: noIcon ? null : icon ?? this.icon);
+  /// What the folder is drawn in.
+  BnFolderShades get shades =>
+      custom == null ? color : BnCustomFolderColor(Color(custom!));
+
+  /// A preset [color] drops the [custom] colour; a [custom] one keeps the
+  /// preset underneath.
+  FolderStyle copyWith({
+    BnFolderColor? color,
+    int? custom,
+    BnFolderIcon? icon,
+    bool noIcon = false,
+  }) => FolderStyle(
+    color: color ?? this.color,
+    custom: custom ?? (color != null ? null : this.custom),
+    icon: noIcon ? null : icon ?? this.icon,
+  );
 
   static FolderStyle fromJson(Map<String, dynamic> json) => FolderStyle(
     color: BnFolderColor.fromKey(json['color'] as String?),
+    custom: json['customColor'] as int?,
     icon: BnFolderIcon.fromKey(json['icon'] as String?),
   );
 
   Map<String, dynamic> toJson() => {
     'color': color.name,
+    if (custom != null) 'customColor': custom,
     if (icon != null) 'icon': icon!.key,
   };
 
   @override
   bool operator ==(Object other) =>
-      other is FolderStyle && other.color == color && other.icon == icon;
+      other is FolderStyle &&
+      other.color == color &&
+      other.custom == custom &&
+      other.icon == icon;
 
   @override
-  int get hashCode => Object.hash(color, icon);
+  int get hashCode => Object.hash(color, custom, icon);
 }
 
 /// Each folder's [FolderStyle]: the default at once, the saved one as soon as
@@ -236,4 +271,36 @@ abstract final class FolderStyles {
     final style = _styles.remove(from);
     if (style != null) _styles[to] = style;
   }
+}
+
+/// The "+" at the end of a row of folder colours: any colour, from the full
+/// colour panel (presets, grid, wheel).
+class FolderColorPlus extends StatelessWidget {
+  const new({
+    super.key,
+    required this.current,
+    required this.onChanged,
+    this.size = 30,
+  });
+
+  /// The folder's custom colour, if it has one.
+  final Color? current;
+  final ValueChanged<Color> onChanged;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => BnAddColorDot(
+    size: size,
+    tooltip: 'Any color',
+    onTap: () {
+      final box = context.findRenderObject()! as RenderBox;
+      ColorPanel.show(
+        context,
+        anchor: box.localToGlobal(Offset.zero) & box.size,
+        title: 'Folder color',
+        color: current,
+        onChanged: (color) => onChanged(color.withValues(alpha: 1)),
+      );
+    },
+  );
 }

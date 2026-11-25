@@ -102,10 +102,14 @@ class _PatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final base = pattern == BoardPattern.cork ? const Color(0xFFC9A57A) : color;
-    canvas.drawRect(Offset.zero & size, Paint()..color = base);
+    final clear = base.a == 0;
+    if (!clear) canvas.drawRect(Offset.zero & size, Paint()..color = base);
     final dark = base.computeLuminance() < 0.3;
     final mark = Paint()
-      ..color = dark
+      ..color = clear
+          // no fill: a grey that shows on a light or a dark desk
+          ? const Color(0x33808080)
+          : dark
           ? Colors.white.withValues(alpha: 0.12)
           : Color.lerp(base, Colors.black, 0.12)!;
     switch (pattern) {
@@ -305,6 +309,22 @@ class _BackgroundPanelState extends State<_BackgroundPanel> {
             spacing: 8,
             runSpacing: 8,
             children: [
+              // transparent: just the pattern on the desk
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  BnColorDot(
+                    color: colors.surface,
+                    size: 26,
+                    label: 'Transparent',
+                    selected: color.a == 0,
+                    onTap: () => setState(() => stows.boardColor.value = 0),
+                  ),
+                  IgnorePointer(
+                    child: Icon(BnIcons.close, size: 14, color: colors.faint),
+                  ),
+                ],
+              ),
               for (final c in boardColors)
                 BnColorDot(
                   color: c,

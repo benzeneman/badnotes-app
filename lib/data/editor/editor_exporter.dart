@@ -8,6 +8,7 @@ import 'package:badnotes/components/canvas/_stroke.dart';
 import 'package:badnotes/components/canvas/canvas_preview.dart';
 import 'package:badnotes/components/canvas/image/editor_image.dart';
 import 'package:badnotes/components/canvas/inner_canvas.dart';
+import 'package:badnotes/components/canvas/shape_style.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/editor/page.dart';
 import 'package:badnotes/data/is_this_a_test.dart';
@@ -178,7 +179,8 @@ abstract class EditorExporter {
         );
         return true;
       case RectangleStroke(:final rect):
-        final corner = stroke.options.size / 4;
+        final corner = (stroke.shapeStyle ?? ShapeStyle.plain)
+            .boxCornerRadius(stroke.options.size, rect);
         canvas.drawRRect(
           rect.left,
           pageHeight - rect.bottom,

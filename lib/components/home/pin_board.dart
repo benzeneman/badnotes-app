@@ -630,7 +630,7 @@ class _PinnedCard extends StatelessWidget {
       children: [
         if (due != null)
           chip(
-            '⏰ ${dueLabel(due)}',
+            'Due ${dueLabel(due)}',
             bg: item.dueNow ? BnColors.danger : null,
             fg: item.dueNow ? Colors.white : null,
           ),

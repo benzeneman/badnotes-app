@@ -6,6 +6,9 @@ import 'package:badnotes/components/editor_ui/editor_ui_colors.dart';
 import 'package:badnotes/components/editor_ui/tool_chips.dart';
 import 'package:badnotes/components/editor_ui/tool_panel.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
+import 'package:badnotes/components/ui/bn_tool_panels.dart';
+import 'package:badnotes/components/ui/ui.dart';
+import 'package:badnotes/data/custom_fonts.dart';
 
 /// The three fonts offered first, by the name shown, then the family.
 const textMainFonts = <String, String>{
@@ -56,6 +59,7 @@ class TextFormatBar extends StatelessWidget {
     this.leading = const [],
     this.trailing = const [],
     this.afterPanel,
+    this.freezeEditor = false,
   });
 
   final StickyNoteResult format;
@@ -66,10 +70,24 @@ class TextFormatBar extends StatelessWidget {
   /// Called when a panel it opened has closed, as to type again.
   final VoidCallback? afterPanel;
 
+  /// Its panels show a still picture of the pages under them: for when
+  /// nothing on the page changes as they're used (the tool's own bar).
+  final bool freezeEditor;
+
+  /// Typing in a text box ([afterPanel] set): the panels leave the keyboard
+  /// up rather than closing it and opening it again around each one.
+  bool get _keepFocus => afterPanel != null;
+
   static const _ink = Color(0xFF202124);
 
   Future<void> _panel(BuildContext anchor, PanelPage page) async {
-    await showToolPanel(anchor, anchor: rectOf(anchor), page: page);
+    await showToolPanel(
+      anchor,
+      anchor: rectOf(anchor),
+      page: page,
+      freezeEditor: freezeEditor,
+      keepFocus: _keepFocus,
+    );
     afterPanel?.call();
   }
 
@@ -152,6 +170,7 @@ class TextFormatBar extends StatelessWidget {
     builder: (context, _) {
       Widget row(String name, String family) => PanelNavRow(
         title: name,
+        titleStyle: _fontStyle(family),
         chevron: false,
         checked: _now.font == family,
         onTap: () {
@@ -173,28 +192,81 @@ class TextFormatBar extends StatelessWidget {
             children: [
               PanelNavRow(
                 title: 'More Fonts…',
-                onTap: () => ToolPanel.push(
-                  context,
-                  PanelPage(
-                    title: 'More Fonts',
-                    width: 260,
-                    builder: (context, _) => PanelGroup(
-                      children: [
-                        for (final MapEntry(:key, :value)
-                            in textBoxFonts.entries)
-                          PanelNavRow(
-                            title: value,
-                            chevron: false,
-                            checked: _now.font == key,
-                            onTap: () {
-                              _set(_now.copyWith(font: key));
-                              Navigator.pop(context);
-                            },
-                          ),
-                      ],
+                onTap: () => ToolPanel.push(context, _moreFontsPage()),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  );
+
+  /// [family] at the size of a panel row, to show a font in itself.
+  static TextStyle _fontStyle(String family) =>
+      BnType.body.copyWith(fontFamily: family, fontSize: 16);
+
+  PanelPage _moreFontsPage() => PanelPage(
+    title: 'More Fonts',
+    width: 280,
+    builder: (context, setPanel) {
+      Widget row(String family, String name) => PanelNavRow(
+        title: name,
+        titleStyle: _fontStyle(family),
+        chevron: false,
+        checked: _now.font == family,
+        onTap: () {
+          _set(_now.copyWith(font: family));
+          Navigator.pop(context);
+        },
+      );
+      Future<void> add() async {
+        try {
+          final family = await CustomFonts.add({
+            ...textBoxFonts.keys,
+            ...textMainFonts.values,
+          });
+          if (family == null) return;
+          _set(_now.copyWith(font: family));
+          setPanel(() {});
+        } on FormatException catch (e) {
+          if (context.mounted) showBanner(context, e.message);
+        } catch (e) {
+          if (context.mounted) showBanner(context, 'Font not added: $e');
+        }
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PanelGroup(
+            children: [
+              for (final MapEntry(:key, :value) in textBoxFonts.entries)
+                row(key, value),
+            ],
+          ),
+          const PanelSection('Your Fonts'),
+          PanelGroup(
+            children: [
+              for (final family in CustomFonts.families.value)
+                Row(
+                  children: [
+                    Expanded(child: row(family, family)),
+                    BnSubButton(
+                      icon: BnIcons.trash,
+                      iconSize: 16,
+                      tooltip: 'Remove $family',
+                      onTap: () async {
+                        await CustomFonts.remove(family);
+                        setPanel(() {});
+                      },
                     ),
-                  ),
+                  ],
                 ),
+              PanelNavRow(
+                icon: BnIcons.add,
+                title: 'Add Font…',
+                chevron: false,
+                onTap: add,
               ),
             ],
           ),
@@ -393,10 +465,18 @@ class TextFormatBar extends StatelessWidget {
           );
         }
 
-        Future<void> pickColor(String title, Color? now, bool fill) =>
-            ColorPanel.show(
-              context,
-              anchor: rectOf(context),
+        // anchored at the row tapped, not the whole panel: a panel-sized
+        // anchor left no room on screen, so the colours opened half cut off
+        Future<void> pickColor(
+          BuildContext row,
+          String title,
+          Color? now,
+          bool fill,
+        ) => ColorPanel.show(
+              row,
+              anchor: rectOf(row),
+              freezeEditor: freezeEditor,
+              keepFocus: _keepFocus,
               title: title,
               color: now ?? Colors.white,
               onChanged: (c) => apply(
@@ -426,13 +506,19 @@ class TextFormatBar extends StatelessWidget {
             else
               PanelGroup(
                 children: [
-                  PanelNavRow(
-                    title: 'Background Color',
-                    onTap: () => pickColor('Background Color', f.boxFill, true),
+                  Builder(
+                    builder: (row) => PanelNavRow(
+                      title: 'Background Color',
+                      onTap: () =>
+                          pickColor(row, 'Background Color', f.boxFill, true),
+                    ),
                   ),
-                  PanelNavRow(
-                    title: 'Border Color',
-                    onTap: () => pickColor('Border Color', f.boxBorder, false),
+                  Builder(
+                    builder: (row) => PanelNavRow(
+                      title: 'Border Color',
+                      onTap: () =>
+                          pickColor(row, 'Border Color', f.boxBorder, false),
+                    ),
                   ),
                   PanelStepperRow(
                     title: 'Round Corner',
@@ -501,6 +587,8 @@ class TextFormatBar extends StatelessWidget {
               await ColorPanel.show(
                 dot,
                 anchor: rectOf(dot),
+                freezeEditor: freezeEditor,
+                keepFocus: _keepFocus,
                 title: 'Text Color',
                 color: f.textColor ?? _ink,
                 presets: textColorPresets,

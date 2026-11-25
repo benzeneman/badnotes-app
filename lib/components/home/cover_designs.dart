@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
 import 'package:path_drawing/path_drawing.dart';
@@ -101,6 +102,16 @@ class CoverDesign {
     const CoverDesign._('d:tulips', 'Tulips', 'Simple', _tulips),
     const CoverDesign._('d:blossom', 'Blossom', 'Patterns', _blossom),
     const CoverDesign._('d:ribbons', 'Ribbons', 'Patterns', _ribbons),
+    const CoverDesign._('d:midgrid', 'Midnight Grid', 'Dark', _midnightGrid, label: true),
+    const CoverDesign._('d:constellation', 'Constellation', 'Dark', _constellation, label: true),
+    const CoverDesign._('d:charterrazzo', 'Charcoal Terrazzo', 'Dark', _charcoalTerrazzo, label: true),
+    const CoverDesign._('d:forestnight', 'Forest Night', 'Dark', _forestNight, label: true),
+    const CoverDesign._('d:plumwaves', 'Plum Waves', 'Dark', _plumWaves, label: true),
+    const CoverDesign._('d:inkmarble', 'Ink Marble', 'Dark', _inkMarble, label: true),
+    const CoverDesign._('d:tealgeo', 'Teal Geometry', 'Dark', _tealGeometry, label: true),
+    const CoverDesign._('d:graphdots', 'Graphite Dots', 'Dark', _graphiteDots, label: true),
+    const CoverDesign._('d:nightcity', 'Night City', 'Dark', _nightCity, label: true),
+    const CoverDesign._('d:auroralines', 'Aurora Lines', 'Dark', _auroraLines, label: true),
     for (final color in solidColors) CoverDesign.solid(color),
   ];
 
@@ -1472,3 +1483,251 @@ void _tulips(Canvas c, Size s) => _board(c, s, const Color(0xFFDCEFE9), (c) {
     c.drawPath(_svg(data), _fillPaint(color));
   }
 });
+
+// --- dark patterns (2026-11-25), same 300 × 400 board -----------------------
+
+/// [_board] on a dark [background], with a darker [spine] strip under the
+/// binding's shading.
+void _darkBoard(
+  Canvas c,
+  Size s,
+  Color background,
+  Color spine,
+  void Function(Canvas) draw,
+) {
+  _board(c, s, background, draw);
+  c.drawRect(Rect.fromLTWH(0, 0, s.width * 0.075, s.height), _fillPaint(spine));
+}
+
+void _midnightGrid(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF141A33), const Color(0xFF0B0F22), (c) {
+      final minor = _strokePaint(const Color(0x993B4A7A), 1)
+        ..strokeCap = StrokeCap.butt;
+      final major = _strokePaint(const Color(0xFF3B4A7A), 1)
+        ..strokeCap = StrokeCap.butt;
+      for (double x = 0; x <= 300; x += 20) {
+        c.drawLine(Offset(x, 0), Offset(x, 400), x % 100 == 0 ? major : minor);
+      }
+      for (double y = 0; y <= 400; y += 20) {
+        c.drawLine(Offset(0, y), Offset(300, y), y % 100 == 0 ? major : minor);
+      }
+      c.drawCircle(
+        const Offset(210, 120),
+        46,
+        _strokePaint(const Color(0xB38FA6FF), 2),
+      );
+      c.drawCircle(const Offset(210, 120), 2.5, _fillPaint(const Color(0xB38FA6FF)));
+    });
+
+void _constellation(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF0F1426), const Color(0xFF090C19), (c) {
+      c.drawPath(
+        _svg('M60 60L120 90L200 50L250 140M90 180L170 220L230 300'),
+        _strokePaint(const Color(0x8CC9B6FF), 1),
+      );
+      final star = _fillPaint(const Color(0xFFFFFFFF));
+      final halo = _fillPaint(const Color(0x1FFFFFFF));
+      const stars = [
+        (60.0, 60.0, 1.6),
+        (120.0, 90.0, 1.2),
+        (200.0, 50.0, 2.0),
+        (250.0, 140.0, 1.3),
+        (90.0, 180.0, 1.8),
+        (170.0, 220.0, 1.1),
+        (230.0, 300.0, 1.7),
+        (70.0, 320.0, 1.2),
+        (150.0, 360.0, 1.5),
+        (260.0, 370.0, 1.0),
+      ];
+      for (final (x, y, r) in stars) {
+        if (r >= 1.5) c.drawCircle(Offset(x, y), r * 2.6, halo);
+        c.drawCircle(Offset(x, y), r, star);
+      }
+      // a crescent cut out as a shape, so the sky behind it isn't painted over
+      final moon = Path.combine(
+        PathOperation.difference,
+        Path()..addOval(Rect.fromCircle(center: const Offset(230, 95), radius: 26)),
+        Path()..addOval(Rect.fromCircle(center: const Offset(240, 88), radius: 24)),
+      );
+      c.drawPath(moon, _fillPaint(const Color(0xE6F4E2A8)));
+    });
+
+void _charcoalTerrazzo(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF25262B), const Color(0xFF18191D), (c) {
+      final random = math.Random(17);
+      final grit = _fillPaint(const Color(0x26F2EFE8));
+      for (var i = 0; i < 40; i++) {
+        c.drawCircle(
+          Offset(30 + random.nextDouble() * 265, random.nextDouble() * 400),
+          0.6 + random.nextDouble() * 0.9,
+          grit,
+        );
+      }
+      const chips = [
+        ('M40 60l14 6-6 12-12-4z', Color(0xE6E0785B)),
+        ('M200 40l18 4-4 14-16-6z', Color(0xE6E8C26A)),
+        ('M120 150l12 8-8 10-10-8z', Color(0xE67FB8A8)),
+        ('M240 200l16 2-2 16-14-4z', Color(0xE6E0785B)),
+        ('M70 260l10 10-10 8-8-10z', Color(0xE6F2EFE8)),
+        ('M180 300l14 6-6 12-12-6z', Color(0xE67FB8A8)),
+        ('M90 110l12 2-2 12-10-4z', Color(0xE6E8C26A)),
+        ('M260 330l10 8-8 8-8-8z', Color(0xE6F2EFE8)),
+      ];
+      for (final (data, color) in chips) {
+        c.drawPath(_svg(data), _fillPaint(color));
+      }
+      c.drawCircle(const Offset(150, 90), 4, _fillPaint(const Color(0xE6F2EFE8)));
+      c.drawCircle(const Offset(40, 200), 3, _fillPaint(const Color(0xE6E8C26A)));
+      c.drawCircle(const Offset(210, 120), 3, _fillPaint(const Color(0xE6E0785B)));
+    });
+
+void _forestNight(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF12261F), const Color(0xFF0B1914), (c) {
+      final stem = _strokePaint(const Color(0xFF3F7F63), 2);
+      c.drawPath(_svg('M40 380C80 300 60 220 120 160'), stem);
+      c.drawPath(_svg('M200 400C230 320 200 250 250 190'), stem);
+      final vein = _strokePaint(const Color(0x33FFFFFF), 1);
+      const leaves = [
+        ('M120 160c-30-10-40-30-30-50 20 10 30 30 30 50z', Color(0xFF2F6B52), 120.0, 160.0, 92.0, 114.0),
+        ('M95 260c-30 0-45-15-45-35 25 0 40 15 45 35z', Color(0xFF3F8A68), 95.0, 260.0, 54.0, 228.0),
+        ('M250 190c25-5 40 5 40 25-25 5-38-5-40-25z', Color(0xFF5AA585), 250.0, 190.0, 286.0, 213.0),
+        ('M225 300c20-10 40-5 45 15-20 10-40 5-45-15z', Color(0xFF2F6B52), 225.0, 300.0, 266.0, 314.0),
+      ];
+      for (final (data, color, x0, y0, x1, y1) in leaves) {
+        c.drawPath(_svg(data), _fillPaint(color));
+        c.drawLine(Offset(x0, y0), Offset(x1, y1), vein);
+      }
+    });
+
+void _plumWaves(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF2A1730), const Color(0xFF1D0F21), (c) {
+      const colors = [
+        Color(0xFF7A4A8A),
+        Color(0xFF9A5FA8),
+        Color(0xFFC07FC4),
+        Color(0xFF9A5FA8),
+        Color(0xFF7A4A8A),
+      ];
+      for (var i = 0; i < colors.length; i++) {
+        final y = 120 + i * 50;
+        c.drawPath(
+          _svg('M0 ${y}q37-25 75 0t75 0 75 0 75 0'),
+          _strokePaint(colors[i], 3),
+        );
+      }
+    });
+
+void _inkMarble(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF1A1D22), const Color(0xFF111317), (c) {
+      final vein = _strokePaint(const Color(0xE65D6676), 1.2);
+      for (final data in const [
+        'M-10 80c60-30 120 40 180 0s120-30 140-10',
+        'M-10 160c80 20 120-40 200 0s90 20 120 0',
+        'M-10 250c50-20 110 30 170 0s120-20 150 10',
+        'M-10 330c70 30 130-30 200 0s100 10 120-10',
+      ]) {
+        c.drawPath(_svg(data), vein);
+      }
+      c.drawPath(
+        _svg('M-10 200c60-25 140 35 200 5s100-25 120-5'),
+        _strokePaint(const Color(0xFFC8A96A), 2),
+      );
+    });
+
+void _tealGeometry(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF0E2A2E), const Color(0xFF08191B), (c) {
+      final outline = _strokePaint(const Color(0xFF1F5A5F), 2);
+      const tips = [
+        (50.0, 40.0),
+        (150.0, 40.0),
+        (250.0, 40.0),
+        (100.0, 150.0),
+        (50.0, 260.0),
+        (150.0, 260.0),
+        (250.0, 260.0),
+      ];
+      for (final (x, y) in tips) {
+        c.drawPath(_svg('M$x ${y}l40 70h-80z'), outline);
+      }
+      c.drawPath(
+        _svg('M200 150l40 70h-80z'),
+        _fillPaint(const Color(0xE6E8B04A)),
+      );
+    });
+
+void _graphiteDots(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF202226), const Color(0xFF16171A), (c) {
+      c.drawPoints(
+        PointMode.points,
+        [
+          for (double y = 9; y < 400; y += 18)
+            for (double x = 9; x < 300; x += 18) Offset(x, y),
+        ],
+        _strokePaint(const Color(0xFF4A4D55), 4),
+      );
+      final label = RRect.fromRectAndRadius(
+        const Rect.fromLTWH(60, 150, 180, 100),
+        const Radius.circular(12),
+      );
+      c.drawRRect(label, _fillPaint(const Color(0xFF202226)));
+      c.drawRRect(label, _strokePaint(const Color(0xFFE2E2E6), 1.5));
+    });
+
+void _nightCity(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF141428), const Color(0xFF0C0C1A), (c) {
+      final star = _fillPaint(const Color(0x99FFFFFF));
+      for (final (x, y, r) in const [
+        (60.0, 50.0, 1.2),
+        (120.0, 110.0, 1.0),
+        (150.0, 40.0, 1.4),
+        (270.0, 140.0, 1.0),
+        (40.0, 160.0, 1.1),
+      ]) {
+        c.drawCircle(Offset(x, y), r, star);
+      }
+      c.drawCircle(const Offset(210, 90), 30, _fillPaint(const Color(0xFFF6D27A)));
+      final building = _fillPaint(const Color(0xFF2C2C5E));
+      for (final (x, y, w) in const [
+        (20.0, 230.0, 40.0),
+        (65.0, 190.0, 50.0),
+        (120.0, 260.0, 35.0),
+        (160.0, 210.0, 45.0),
+        (210.0, 250.0, 40.0),
+        (255.0, 180.0, 45.0),
+      ]) {
+        c.drawRect(Rect.fromLTWH(x, y, w, 400 - y), building);
+      }
+      final window = _fillPaint(const Color(0xCCF6D27A));
+      for (final (x, y) in const [
+        (75.0, 210.0),
+        (95.0, 240.0),
+        (170.0, 230.0),
+        (185.0, 270.0),
+        (265.0, 200.0),
+        (280.0, 250.0),
+      ]) {
+        c.drawRect(Rect.fromLTWH(x, y, 6, 6), window);
+      }
+    });
+
+void _auroraLines(Canvas c, Size s) =>
+    _darkBoard(c, s, const Color(0xFF0F1720), const Color(0xFF090E14), (c) {
+      final star = _fillPaint(const Color(0xB3FFFFFF));
+      for (final (x, y, r) in const [
+        (50.0, 60.0, 1.3),
+        (140.0, 40.0, 1.0),
+        (230.0, 80.0, 1.5),
+        (100.0, 130.0, 1.0),
+        (260.0, 150.0, 1.2),
+      ]) {
+        c.drawCircle(Offset(x, y), r, star);
+      }
+      const ribbons = [
+        ('M0 300C80 220 160 330 300 230', Color(0xF23CCF9E)),
+        ('M0 320C90 250 170 350 300 260', Color(0xC238A3D6)),
+        ('M0 340C100 280 180 370 300 290', Color(0xAA8A6BD8)),
+      ];
+      for (final (data, color) in ribbons) {
+        c.drawPath(_svg(data), _strokePaint(color, 3));
+      }
+    });

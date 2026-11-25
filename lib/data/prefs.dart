@@ -412,8 +412,8 @@ class Stows {
   final penPresets = _plain('penPresets', <String>[]);
 
   /// Every pen's stylus pressure goes through this curve: light, normal,
-  /// firm or custom (see `PressureCurve`).
-  final pressureCurve = _plain('pressureCurve', 'normal');
+  /// firm or custom (see `PressureCurve`). Light unless chosen otherwise.
+  final pressureCurve = _plain('pressureCurve', 'light');
 
   /// The custom curve's one point, 0 to 1 each: how hard the pen presses
   /// (x) and how thick that comes out (y).
@@ -568,7 +568,8 @@ class Stows {
 
   /// The board's backdrop: "none", "dots", "grid", "cork" or "photo".
   final boardPattern = _plain('boardPattern', 'dots');
-  final boardColor = _plain('boardColor', 0xFFF3EEE4);
+  /// ARGB; 0 (the default) is transparent, no fill behind the pattern.
+  final boardColor = _plain('boardColor', 0x00000000);
 
   /// How much a photo backdrop is faded.
   final boardPhotoFade = _plain('boardPhotoFade', 0.3);
@@ -599,6 +600,10 @@ class Stows {
 
   /// Up to 8 recent searches across all notes, newest first.
   final recentSearches = _plain('recentSearches', <String>[]);
+
+  /// The feature tour has been shown (or skipped on an install that already
+  /// had notes when it updated), so it doesn't open on its own again.
+  final tourSeen = _plain('tourSeen', false);
 
   // ---------------------------------------------------------------------
   // Focus timer

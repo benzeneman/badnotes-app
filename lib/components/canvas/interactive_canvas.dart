@@ -37,6 +37,10 @@ class InteractiveCanvasViewer extends StatefulWidget {
   /// slid out from under the fingers, toward the other side.
   static var pinching = false;
 
+  /// Whether fingers are scrolling or zooming the canvas right now (not
+  /// drawing): nothing else may move the zoom meanwhile.
+  static var fingersDown = false;
+
   /// Create an InteractiveCanvasViewer.
   new({
     super.key,
@@ -767,6 +771,9 @@ class _InteractiveCanvasViewerState extends State<InteractiveCanvasViewer>
         DateTime.now().difference(ended) < const Duration(milliseconds: 150);
     _zooming = false;
     InteractiveCanvasViewer.pinching = false;
+    _leftoverFrom = _afterZoom && details.pointerCount == 1
+        ? details.localFocalPoint
+        : null;
     if (_controller.isAnimating) {
       _controller.stop();
       _controller.reset();
@@ -789,8 +796,18 @@ class _InteractiveCanvasViewerState extends State<InteractiveCanvasViewer>
     if (widget.isDrawGesture?.call(details) ?? false) {
       isCurrentGestureADrawGesture = true;
       widget.onDrawStart?.call(details);
+    } else {
+      InteractiveCanvasViewer.fingersDown = true;
     }
   }
+
+  /// Where the finger left on the page after a pinch started out, until it
+  /// has moved well away from there: [_leftoverSlop].
+  Offset? _leftoverFrom;
+
+  /// How far the finger left after a pinch has to move before it scrolls.
+  /// Fingers rolling off the glass as they lift nudged the page.
+  static const _leftoverSlop = 2 * kTouchSlop;
 
   // Handle an update to an ongoing gesture. All of pan, scale, and rotate are
   // handled with GestureDetector's scale gesture.
@@ -880,7 +897,12 @@ class _InteractiveCanvasViewerState extends State<InteractiveCanvasViewer>
 
         if (isCurrentGestureADrawGesture) {
           widget.onDrawUpdate?.call(details);
+        } else if (_leftoverFrom case final from?
+            when (details.localFocalPoint - from).distance < _leftoverSlop) {
+          // still just the end of the pinch: the page stays put
+          _referenceFocalPoint = focalPointScene;
         } else {
+          _leftoverFrom = null;
           _currentAxis ??= _getPanAxis(_referenceFocalPoint!, focalPointScene);
           // Translate so that the same point in the scene is underneath the
           // focal point before and after the movement.
@@ -951,6 +973,8 @@ class _InteractiveCanvasViewerState extends State<InteractiveCanvasViewer>
   // are handled with GestureDetector's scale gesture.
   void _onScaleEnd(ScaleEndDetails details) {
     InteractiveCanvasViewer.pinching = false;
+    InteractiveCanvasViewer.fingersDown = false;
+    _leftoverFrom = null;
     if (_zooming) _zoomEnded = DateTime.now();
     widget.onInteractionEnd?.call(details);
 
@@ -1163,6 +1187,9 @@ class _InteractiveCanvasViewerState extends State<InteractiveCanvasViewer>
 
   @override
   void dispose() {
+    // closed mid-gesture: no onScaleEnd comes
+    InteractiveCanvasViewer.pinching = false;
+    InteractiveCanvasViewer.fingersDown = false;
     _controller.dispose();
     _scaleController.dispose();
     _transformer.removeListener(_handleTransformation);

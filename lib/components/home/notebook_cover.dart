@@ -235,15 +235,15 @@ class CoverPicker extends StatelessWidget {
               padding: padding,
               sliver: SliverLayoutBuilder(
                 builder: (context, constraints) {
-                  // rows that fill the width (design N26): small swatches
-                  // for the solid colors, 88-wide covers for the rest
+                  // rows that fill the width (design N26): 88-wide covers,
+                  // the solid colors the same size as the rest
                   final solid = section == 'Solid colors';
-                  final gap = solid ? 8.0 : 12.0;
-                  final minWidth = solid ? 40.0 : 88.0;
+                  const gap = 12.0;
+                  const minWidth = 88.0;
                   final width = constraints.crossAxisExtent;
                   final columns = ((width + gap) / (minWidth + gap))
                       .floor()
-                      .clamp(1, solid ? 6 : 8);
+                      .clamp(1, 8);
                   final tile = ((width - gap * (columns - 1)) / columns)
                       .floorToDouble();
                   return SliverGrid.builder(
@@ -252,7 +252,7 @@ class CoverPicker extends StatelessWidget {
                       crossAxisSpacing: gap,
                       mainAxisSpacing: gap,
                       // the cover, and the name under it
-                      mainAxisExtent: tile * 118 / 88 + (solid ? 0 : 22),
+                      mainAxisExtent: tile * 118 / 88 + 22,
                     ),
                     itemCount: designs.length,
                     itemBuilder: (context, i) => Align(

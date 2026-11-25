@@ -295,7 +295,8 @@ class _BrowsePageState extends State<BrowsePage> {
       ];
       folders = [
         for (final folder in folders)
-          if (favorites.contains('${path ?? ''}/$folder')) folder,
+          if (favorites.contains(Favorites.folderKey('${path ?? ''}/$folder')))
+            folder,
       ];
     }
     if (tag != null) {
@@ -547,9 +548,9 @@ class _BrowsePageState extends State<BrowsePage> {
               final info = useValueListenable(FolderInfos.of(folderPath));
               final starred = useValueListenable(
                 stows.favoriteNotes,
-              ).contains(folderPath);
+              ).contains(Favorites.folderKey(folderPath));
               return HomeTitle(
-                leading: FolderGlyph(color: style.color),
+                leading: FolderGlyph(color: style.shades),
                 title: parts.last,
                 caption: info == null
                     ? null
@@ -565,7 +566,7 @@ class _BrowsePageState extends State<BrowsePage> {
                     BnButton(
                       label: starred ? 'Starred' : 'Star',
                       icon: starred ? Icons.star_rounded : BnIcons.favorites,
-                      onPressed: () => Favorites.toggle(folderPath),
+                      onPressed: () => Favorites.toggleFolder(folderPath),
                     ),
                     Builder(
                       builder: (context) => BnButton.primary(

@@ -44,6 +44,9 @@ class const DoneLoginStep({
     if (email != linked) return tell(t.profile.wrongAccount(email: linked));
 
     stows.ncPassword.value = credential;
+    if (stows.syncProvider.value == SyncProvider.googleDrive) {
+      stows.pfp.value = GoogleDriveStore.lastPhoto ?? stows.pfp.value;
+    }
     stows.syncNeedsLogin.value = false;
     syncer.downloader.refresh();
     syncer.uploader.refresh();

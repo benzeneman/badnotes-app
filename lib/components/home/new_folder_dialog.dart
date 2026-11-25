@@ -1,3 +1,4 @@
+import 'package:badnotes/components/home/folder_info.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/bn_home_dialogs.dart';
 import 'package:badnotes/components/ui/ui.dart';
@@ -12,7 +13,6 @@ class NewFolderDialog extends StatefulWidget {
     required this.createFolder,
     required this.doesFolderExist,
     this.onColor,
-    this.initialColor = BnFolderColor.lavender,
   });
 
   final void Function(String) createFolder;
@@ -20,8 +20,7 @@ class NewFolderDialog extends StatefulWidget {
 
   /// Receives the picked colour right after [createFolder] runs; storing it
   /// is the caller's job.
-  final ValueChanged<BnFolderColor>? onColor;
-  final BnFolderColor initialColor;
+  final ValueChanged<FolderStyle>? onColor;
 
   @override
   State<NewFolderDialog> createState() => _NewFolderDialogState();
@@ -30,7 +29,7 @@ class NewFolderDialog extends StatefulWidget {
 class _NewFolderDialogState extends State<NewFolderDialog> {
   final _form = GlobalKey<FormState>();
   final _name = TextEditingController();
-  late var _color = widget.initialColor;
+  var _style = const FolderStyle();
 
   /// Leading and trailing spaces never become part of a folder's name.
   static String _tidy(String name) => name.trim();
@@ -49,7 +48,7 @@ class _NewFolderDialogState extends State<NewFolderDialog> {
   void _submit() {
     if (!_form.currentState!.validate()) return;
     widget.createFolder(_tidy(_name.text));
-    widget.onColor?.call(_color);
+    widget.onColor?.call(_style);
     Navigator.of(context).pop();
   }
 
@@ -80,7 +79,7 @@ class _NewFolderDialogState extends State<NewFolderDialog> {
                 builder: (context, _) {
                   final typed = _name.text.trim();
                   return _FolderPreview(
-                    color: _color,
+                    color: _style.shades,
                     name: typed.isEmpty ? placeholder : typed,
                   );
                 },
@@ -104,9 +103,25 @@ class _NewFolderDialogState extends State<NewFolderDialog> {
                     BnSwatchDot(
                       color: option.back,
                       label: option.name,
-                      selected: option == _color,
-                      onTap: () => setState(() => _color = option),
+                      selected: _style.custom == null && option == _style.color,
+                      onTap: () => setState(
+                        () => _style = _style.copyWith(color: option),
+                      ),
                     ),
+                  if (_style.custom case final custom?)
+                    BnSwatchDot(
+                      color: Color(custom),
+                      label: 'custom',
+                      selected: true,
+                      onTap: () {},
+                    ),
+                  FolderColorPlus(
+                    size: 32,
+                    current: _style.custom == null ? null : Color(_style.custom!),
+                    onChanged: (c) => setState(
+                      () => _style = _style.copyWith(custom: c.toARGB32()),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -135,7 +150,7 @@ class _NewFolderDialogState extends State<NewFolderDialog> {
 class _FolderPreview extends StatelessWidget {
   const new({required this.color, required this.name});
 
-  final BnFolderColor color;
+  final BnFolderShades color;
   final String name;
 
   @override

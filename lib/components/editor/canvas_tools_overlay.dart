@@ -1332,6 +1332,16 @@ class _CountdownChipState extends State<CountdownChip> {
   }
 }
 
+/// Closes the timer's or stopwatch's card at [context], unless it's already
+/// closing. Popping the navigator again then popped the route under the
+/// card: the note itself. Stop closes the card and then the chip, and the
+/// card's ticker, seeing the chip gone while the card faded out, closed it
+/// a second time.
+void _closeCard(BuildContext context) {
+  final route = ModalRoute.of(context);
+  if (route != null && route.isCurrent) Navigator.of(context).pop();
+}
+
 /// A running timer's card: the ring, more time, reset, pause and stop.
 class _CountdownCard extends StatefulWidget {
   const _CountdownCard(this.chip);
@@ -1352,7 +1362,7 @@ class _CountdownCardState extends State<_CountdownCard> {
       if (widget.chip.mounted) return setState(() {});
       // the time is up, or the timer was closed
       _ticker.cancel();
-      Navigator.maybePop(context);
+      _closeCard(context);
     });
   }
 
@@ -1412,7 +1422,7 @@ class _CountdownCardState extends State<_CountdownCard> {
             BnButton.destructive(
               label: 'Stop',
               onPressed: () {
-                Navigator.pop(context);
+                _closeCard(context);
                 chip.widget.onClose();
               },
             ),
@@ -1697,7 +1707,7 @@ class _StopwatchCardState extends State<_StopwatchCard> {
             BnButton.destructive(
               label: 'Stop',
               onPressed: () {
-                Navigator.pop(context);
+                _closeCard(context);
                 widget.onClose();
               },
             ),

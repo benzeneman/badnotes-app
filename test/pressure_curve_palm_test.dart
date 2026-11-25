@@ -47,6 +47,19 @@ void main() {
       expect(PressureCurve.apply(-0.2, 0.6), 0);
     });
 
+    test('light by default; the lightest touch that draws starts at 0', () {
+      expect(stows.pressureCurve.value, 'light');
+      final light = gammas['light']!;
+      expect(PressureCurve.adjustWith(0, light, 0), 0);
+      expect(PressureCurve.adjustWith(0.1, light, 0.1), 0);
+      expect(PressureCurve.adjustWith(1, light, 0.1), closeTo(1, 1e-9));
+      expect(PressureCurve.adjustWith(0.3, 1, 0), 0.3);
+      expect(
+        PressureCurve.adjustWith(0.2, light, 0.1),
+        lessThan(PressureCurve.apply(0.2, light)),
+      );
+    });
+
     test('lightest touch: none by default, never for a pen without '
         'pressure', () {
       expect(PressureCurve.tooLight(0.01), isFalse);

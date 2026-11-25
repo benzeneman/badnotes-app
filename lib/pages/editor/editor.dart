@@ -1786,6 +1786,8 @@ class EditorState extends State<Editor> {
     await showAppleMenu(
       context,
       anchor: globalPosition & Size.zero,
+      // a small menu at the finger: no grey over the whole page
+      barrierColor: Colors.transparent,
       entries: [
         if (NoteClipboard.hasContent) ...[
           AppleMenuItem(

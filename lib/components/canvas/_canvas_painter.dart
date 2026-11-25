@@ -18,6 +18,7 @@ import 'package:badnotes/data/tools/eraser.dart';
 import 'package:badnotes/data/tools/laser_pointer.dart';
 import 'package:badnotes/data/tools/pen.dart';
 import 'package:badnotes/data/tools/select.dart';
+import 'package:badnotes/data/tools/shape_pen.dart';
 
 /// Paints one page's finished ink (from [inkCache]'s images where it can),
 /// the laser pointer, the lasso selection and the page number. A page is
@@ -997,16 +998,20 @@ class CanvasPainter extends CustomPainter {
           Rect.fromCircle(center: stroke.center, radius: stroke.radius),
         );
     } else if (stroke is RectangleStroke) {
-      final style = stroke.shapeStyle ?? ShapeStyle.plain;
       outline = Path()
         ..addRRect(
           RRect.fromRectAndRadius(
             stroke.rect,
-            Radius.circular(style.rounded ? stroke.options.size / 4 : 0),
+            Radius.circular(
+              (stroke.shapeStyle ?? ShapeStyle.plain).boxCornerRadius(
+                stroke.options.size,
+                stroke.rect,
+              ),
+            ),
           ),
         );
     } else if (stroke.toolId == .shapePen) {
-      outline = stroke.polylinePath;
+      outline = _shapeOutline(stroke);
     } else if (stroke.toolId == .ballpointPen) {
       // A ball pen has one width, so no outline is needed. That outline was
       // recalculated for the whole stroke on every move, which is what lagged.
@@ -1045,6 +1050,28 @@ class CanvasPainter extends CustomPainter {
       scale: _drawScale,
     );
     return true;
+  }
+
+  /// The rounded line of each shape, kept with the line it was made from
+  /// (a new line when the points change) and the pen size.
+  static final _roundedOutlines = Expando<(double, Path)>();
+
+  /// [stroke]'s line, its corners rounded if its style says so.
+  static Path _shapeOutline(Stroke stroke) {
+    final line = stroke.polylinePath;
+    if (!(stroke.shapeStyle ?? ShapeStyle.plain).rounded) return line;
+    final size = stroke.options.size;
+    if (_roundedOutlines[line] case (final s, final path) when s == size) {
+      return path;
+    }
+    final path = ShapeStyle.roundCorners(
+      stroke.centerPoints,
+      ShapePen.cornerIndices(stroke),
+      ShapeStyle.cornerRadius(size),
+      closed: stroke.isClosedShape,
+    );
+    _roundedOutlines[line] = (size, path);
+    return path;
   }
 
   /// Tiles of the ink, see [InkCache.tiles]. [drawArea] draws the ink on an

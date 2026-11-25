@@ -513,15 +513,22 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector>
     }
     _sharpenAfterZoom(widget._transformationController.value.approxScale);
     if (widget.board) return;
+    // A snap to 100% still due from the start of a pinch (passing near 100%
+    // before the fingers had zoomed far enough to count as zooming) went off
+    // mid-pinch: the zoom jumped back to 100%, then to the fingers' zoom on
+    // their next move, 100% -> 200% -> 100% -> 250%. The fingers have it.
+    _snapZoomTimer?.cancel();
     if (InteractiveCanvasViewer.pinching || _settling) return;
     final scale = widget._transformationController.value.approxScale;
 
     // a zoom that ends up just off 100% goes to exactly 100% a moment later;
     // within 0.001 of it is rounding, not a real difference
-    _snapZoomTimer?.cancel();
     final diffFrom1 = (scale - 1).abs();
-    if (zoomLockedValue == null && diffFrom1 < 0.03 && diffFrom1 > 0.001)
-      _snapZoomTimer = Timer(const Duration(milliseconds: 200), resetZoom);
+    if (zoomLockedValue == null && diffFrom1 < 0.03 && diffFrom1 > 0.001) {
+      _snapZoomTimer = Timer(const Duration(milliseconds: 200), () {
+        if (!InteractiveCanvasViewer.fingersDown) resetZoom();
+      });
+    }
 
     final (adjustmentX, adjustmentY) = _intoView(
       widget._transformationController.value,

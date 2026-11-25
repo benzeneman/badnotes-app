@@ -5,6 +5,7 @@ import 'package:badnotes/components/home/trash.dart';
 import 'package:badnotes/components/ui/covered_snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:badnotes/components/navbar/responsive_navbar.dart';
+import 'package:badnotes/components/onboarding/tour.dart';
 import 'package:badnotes/components/settings/update_manager.dart';
 import 'package:badnotes/components/theming/dynamic_material_app.dart';
 import 'package:badnotes/pages/home/browse.dart';
@@ -60,6 +61,10 @@ class _HomePageState extends State<HomePage> {
     // context is only usable once initState has returned
     scheduleMicrotask(() {
       if (mounted) UpdateManager.showUpdateDialog(context);
+    });
+    // the feature tour, once after a fresh install, when the desk is up
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted) maybeShowFeatureTour(context);
     });
 
     if (!_trashCleared) {

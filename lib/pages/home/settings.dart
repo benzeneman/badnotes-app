@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:badnotes/components/editor_ui/option_previews.dart';
+import 'package:badnotes/components/onboarding/tour.dart';
 import 'package:badnotes/components/settings/pen_input_settings.dart';
 import 'package:badnotes/components/settings/app_info.dart';
 import 'package:badnotes/components/settings/nextcloud_profile.dart';
@@ -11,12 +12,14 @@ import 'package:badnotes/components/ui/bn_settings.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/backup.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/lag_recorder.dart';
 import 'package:badnotes/data/locales.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/i18n/strings.g.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/note_tags.dart';
 import 'package:badnotes/components/home/trash.dart';
@@ -39,6 +42,9 @@ enum _Part {
 }
 
 extension on _Part {
+  /// Advanced only holds "View logs", which is for the lag test build.
+  bool get shown => this != .advanced || LagRecorder.enabled || kDebugMode;
+
   String get title => switch (this) {
     .account => 'Account & Sync',
     .backup => 'Backup & restore',
@@ -206,7 +212,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             style: BnType.display.copyWith(color: colors.text),
                           ),
                           const SizedBox(height: 20),
-                          for (final part in _Part.values) ...[
+                          for (final part in _Part.values)
+                            if (part.shown) ...[
                             BnSettingsNavItem(
                               label: part.title,
                               selected: part == chosen,
@@ -214,6 +221,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             const SizedBox(height: 2),
                           ],
+                          // Help: not a part, it opens the tour
+                          const SizedBox(height: 14),
+                          BnSettingsNavItem(
+                            label: 'Feature tour',
+                            selected: false,
+                            onTap: () => showFeatureTour(context),
+                          ),
                         ],
                       ),
                     ),
@@ -297,7 +311,20 @@ class _SettingsPageState extends State<SettingsPage> {
           label: 'More',
           children: [
             for (final part in [_Part.backup, _Part.advanced, _Part.about])
-              row(part),
+              if (part.shown) row(part),
+          ],
+        ),
+        BnSettingsGroup(
+          label: 'Help',
+          children: [
+            BnSettingsRow(
+              icon: LucideIcons.circleQuestionMark,
+              title: 'Feature tour',
+              subtitle: 'A one-minute look at what BadNotes can do',
+              chevron: true,
+              minHeight: 40,
+              onTap: () => showFeatureTour(context),
+            ),
           ],
         ),
       ],

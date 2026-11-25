@@ -37,6 +37,7 @@ Future<void> showToolPanel(
   required Rect anchor,
   required PanelPage page,
   bool freezeEditor = false,
+  bool keepFocus = false,
 }) {
   HapticFeedback.selectionClick();
   final screen = MediaQuery.sizeOf(context);
@@ -56,6 +57,9 @@ Future<void> showToolPanel(
       barrierColor: colors.scrim,
       isScrollControlled: true,
       showDragHandle: true,
+      // [keepFocus]: typing stays where it was, so the keyboard doesn't go
+      // down and come back up (the whole editor laid out twice) around it
+      requestFocus: keepFocus ? false : null,
       constraints: BoxConstraints(maxHeight: screen.height * 0.75),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -73,6 +77,7 @@ Future<void> showToolPanel(
     barrierLabel: 'Close',
     barrierColor: Colors.transparent,
     transitionDuration: BnMotion.normal,
+    requestFocus: keepFocus ? false : null,
     pageBuilder: (context, animation, _) =>
         _Placed(anchor: anchor, animation: animation, page: page),
   ).whenComplete(done);
@@ -110,20 +115,29 @@ class _Placed extends StatelessWidget {
         (anchor.left < 80 || anchor.right > screen.width - 80) &&
             anchor.top > 120;
     double left, top;
+    final minTop = padding.top + margin;
+    final maxBottom = screen.height - padding.bottom - margin;
     // a button low on the screen opens its panel above it
-    final below = screen.height - anchor.bottom - padding.bottom;
-    final above = !side && below < 320 && anchor.top - padding.top > below;
+    final roomBelow = maxBottom - anchor.bottom - _gap;
+    final roomAbove = anchor.top - _gap - minTop;
+    var above = !side && roomBelow < 320 && roomAbove > roomBelow;
     if (side) {
       left = anchor.center.dx < screen.width / 2
           ? anchor.right + _gap
           : anchor.left - width - _gap;
-      top = (anchor.top - 40).clamp(padding.top + margin, screen.height - 200);
+      top = (anchor.top - 40).clamp(minTop, math.max(minTop, maxBottom - 320));
     } else {
       left = (anchor.center.dx - width / 2).clamp(
         margin,
         screen.width - width - margin,
       );
       top = anchor.bottom + _gap;
+      // no room either side of a big anchor (or the keyboard is up): over
+      // it from the top of the screen, all of it on screen, not cut short
+      if (math.max(roomAbove, roomBelow) < 240) {
+        above = false;
+        top = minTop;
+      }
     }
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final curved = CurvedAnimation(
@@ -138,9 +152,7 @@ class _Placed extends StatelessWidget {
     );
     final panel = ConstrainedBox(
       constraints: BoxConstraints(
-        maxHeight: above
-            ? anchor.top - padding.top - _gap - margin
-            : screen.height - top - padding.bottom - margin,
+        maxHeight: math.max(0, above ? roomAbove : maxBottom - top),
       ),
       child: RepaintBoundary(
         child: DecoratedBox(

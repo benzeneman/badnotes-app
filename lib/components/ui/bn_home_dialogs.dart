@@ -156,7 +156,14 @@ class BnTextInput extends StatelessWidget {
     this.fontSize = 16,
     this.fontWeight = FontWeight.w600,
     this.clearButton = false,
+    this.minLines = 1,
+    this.maxLines = 1,
+    this.keyboardType,
   });
+
+  /// More than one line: Enter starts a new line rather than submitting.
+  final int minLines, maxLines;
+  final TextInputType? keyboardType;
 
   final TextEditingController controller;
   final String? hint;
@@ -184,7 +191,12 @@ class BnTextInput extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       onFieldSubmitted: onSubmitted,
-      textInputAction: TextInputAction.done,
+      minLines: minLines,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      textInputAction: maxLines > 1
+          ? TextInputAction.newline
+          : TextInputAction.done,
       cursorColor: colors.accent,
       style: TextStyle(
         fontSize: fontSize,

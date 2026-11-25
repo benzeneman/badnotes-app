@@ -433,6 +433,24 @@ class GoogleDriveStore extends _CloudStore {
     return user['emailAddress'] as String;
   }
 
+  /// [email]'s profile picture without showing any UI, for accounts signed
+  /// in before the photo was saved; null if it can't be had right now.
+  static Future<Uint8List?> silentPhoto(String email) async {
+    try {
+      final token = await _authorize(email, prompt: false);
+      if (token == null) return null;
+      final response = await http.get(
+        Uri.parse('$_api/about?fields=user(photoLink)'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode != HttpStatus.ok) return null;
+      final user = jsonDecode(response.body)['user'] as Map;
+      return await _fetchPhoto(user['photoLink'] as String?);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The profile picture at [link], or null if there is none or it can't be
   /// fetched (the avatar then shows the account's letter).
   static Future<Uint8List?> _fetchPhoto(String? link) async {

@@ -216,6 +216,12 @@ flutter:
     - assets/google_fonts/Pacifico/OFL.txt
     - assets/google_fonts/PlayfairDisplay/OFL.txt
     - assets/google_fonts/ShadowsIntoLight/OFL.txt
+    - assets/google_fonts/Lora/OFL.txt
+    - assets/google_fonts/Nunito/OFL.txt
+    - assets/google_fonts/Poppins/OFL.txt
+    - assets/google_fonts/Kalam/OFL.txt
+    - assets/google_fonts/PatrickHand/OFL.txt
+    - assets/google_fonts/JetBrainsMono/OFL.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -304,3 +310,27 @@ flutter:
     - family: ShadowsIntoLight
       fonts:
         - asset: assets/google_fonts/ShadowsIntoLight/ShadowsIntoLight.ttf
+    - family: Lora
+      fonts:
+        - asset: assets/google_fonts/Lora/Lora.ttf
+    - family: Nunito
+      fonts:
+        - asset: assets/google_fonts/Nunito/Nunito.ttf
+    - family: Poppins
+      fonts:
+        - asset: assets/google_fonts/Poppins/Poppins-Regular.ttf
+        - asset: assets/google_fonts/Poppins/Poppins-Italic.ttf
+          style: italic
+        - asset: assets/google_fonts/Poppins/Poppins-Bold.ttf
+          weight: 700
+    - family: Kalam
+      fonts:
+        - asset: assets/google_fonts/Kalam/Kalam-Regular.ttf
+        - asset: assets/google_fonts/Kalam/Kalam-Bold.ttf
+          weight: 700
+    - family: PatrickHand
+      fonts:
+        - asset: assets/google_fonts/PatrickHand/PatrickHand-Regular.ttf
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/google_fonts/JetBrainsMono/JetBrainsMono.ttf

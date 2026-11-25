@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:badnotes/components/theming/apple_ui.dart';
+import 'package:badnotes/components/theming/badnotes_theme.dart';
+import 'package:badnotes/components/ui/bn_home_dialogs.dart';
+import 'package:badnotes/components/ui/ui.dart';
 import 'package:flutter/material.dart';
 import 'package:badnotes/components/editor/sticky_note_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -134,41 +137,79 @@ class _PinEditorState extends State<_PinEditor> {
   @override
   Widget build(BuildContext context) {
     final isComment = widget.kind == .comment;
-    return AlertDialog(
-      title: Text(isComment ? 'Comment' : 'Link'),
-      content: Column(
-        mainAxisSize: .min,
-        spacing: 8,
-        children: [
-          if (!isComment)
-            TextField(
-              controller: _url,
-              autofocus: true,
-              keyboardType: TextInputType.url,
-              decoration: InputDecoration(
-                labelText: 'Web address',
-                hintText: 'example.com',
-                errorText: _badLink ? 'This address can\'t be opened' : null,
+    return BnDialogCard(
+      width: 440,
+      padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          children: [
+            BnDialogTitle(
+              title: isComment ? 'Comment' : 'Link',
+              size: 22,
+              onClose: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 18),
+            if (!isComment) ...[
+              const BnFieldLabel('Web address'),
+              BnTextInput(
+                controller: _url,
+                hint: 'example.com',
+                autofocus: true,
+                keyboardType: TextInputType.url,
+                fontWeight: FontWeight.w500,
+                onChanged: (_) {
+                  if (_badLink) setState(() => _badLink = false);
+                },
+                onSubmitted: (_) => _submit(),
               ),
+              if (_badLink)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 4),
+                  child: Text(
+                    "This address can't be opened",
+                    style: BnType.caption.copyWith(
+                      color: BadNotesColors.of(context).danger,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 14),
+            ],
+            BnFieldLabel(isComment ? 'Comment' : 'Text to show (optional)'),
+            BnTextInput(
+              controller: _text,
+              autofocus: isComment,
+              hint: isComment ? 'Write a comment' : null,
+              fontWeight: FontWeight.w500,
+              minLines: isComment ? 3 : 1,
+              maxLines: isComment ? 6 : 1,
+              onSubmitted: isComment ? null : (_) => _submit(),
             ),
-          TextField(
-            controller: _text,
-            autofocus: isComment,
-            minLines: isComment ? 3 : 1,
-            maxLines: isComment ? 6 : 1,
-            decoration: InputDecoration(
-              labelText: isComment ? 'Comment' : 'Text to show (optional)',
+            const SizedBox(height: 22),
+            Row(
+              spacing: 10,
+              children: [
+                Expanded(
+                  child: BnPillButton(
+                    label: 'Cancel',
+                    expand: true,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Expanded(
+                  child: BnPillButton(
+                    label: 'Save',
+                    kind: BnPillKind.accent,
+                    expand: true,
+                    onPressed: _submit,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          ],
         ),
-        TextButton(onPressed: _submit, child: const Text('Save')),
-      ],
+      ),
     );
   }
 }
@@ -185,40 +226,64 @@ Future<PinAction?> showPinDialog(
   builder: (context) {
     final url = pin.url;
     final link = url == null ? null : parseLink(url);
-    return AlertDialog(
-      title: Text(
-        pin.kind == .comment
-            ? 'Comment'
-            : pin.text.isEmpty
-            ? 'Link'
-            : pin.text,
+    final colors = BadNotesColors.of(context);
+    return BnDialogCard(
+      width: 440,
+      padding: const EdgeInsets.fromLTRB(24, 22, 24, 22),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          children: [
+            BnDialogTitle(
+              title: pin.kind == .comment
+                  ? 'Comment'
+                  : pin.text.isEmpty
+                  ? 'Link'
+                  : pin.text,
+              size: 22,
+              onClose: () => Navigator.pop(context),
+            ),
+            const SizedBox(height: 12),
+            SelectableText(
+              pin.kind == .comment ? pin.text : url ?? '',
+              style: BnType.bodyLarge.copyWith(
+                fontWeight: FontWeight.w400,
+                height: 1.45,
+                color: pin.kind == .comment ? colors.text : colors.accent,
+              ),
+            ),
+            const SizedBox(height: 22),
+            Row(
+              spacing: 10,
+              children: [
+                if (editable) ...[
+                  BnPillButton(
+                    label: 'Delete',
+                    icon: BnIcons.trash,
+                    onPressed: () => Navigator.pop(context, PinAction.delete),
+                  ),
+                  BnPillButton(
+                    label: 'Edit',
+                    icon: BnIcons.rename,
+                    onPressed: () => Navigator.pop(context, PinAction.edit),
+                  ),
+                ],
+                const Spacer(),
+                if (link != null)
+                  BnPillButton(
+                    label: 'Open',
+                    kind: BnPillKind.accent,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      launchUrl(link, mode: LaunchMode.externalApplication);
+                    },
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
-      content: SelectableText(pin.kind == .comment ? pin.text : url ?? ''),
-      actions: [
-        if (editable) ...[
-          TextButton(
-            onPressed: () => Navigator.pop(context, PinAction.delete),
-            child: const Text('Delete'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, PinAction.edit),
-            child: const Text('Edit'),
-          ),
-        ],
-        if (link != null)
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              launchUrl(link, mode: LaunchMode.externalApplication);
-            },
-            child: const Text('Open'),
-          )
-        else
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-      ],
     );
   },
 );

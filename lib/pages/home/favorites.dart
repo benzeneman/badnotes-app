@@ -96,8 +96,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
     ];
     final folders = [
       if (_show == .all || _show == .folders)
-        for (final path in favorites)
-          if (FileManager.isDirectory(path)) path,
+        for (final key in favorites)
+          if (key.endsWith('/') && FileManager.isDirectory(key))
+            key.substring(0, key.length - 1),
     ];
     final folderActions = FolderActions(
       onTap: (name) {},

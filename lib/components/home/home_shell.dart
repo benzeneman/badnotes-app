@@ -2,6 +2,7 @@ import 'package:badnotes/components/home/cloud_status.dart';
 import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
+import 'package:badnotes/data/nextcloud/remote_store.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/pages/home/search.dart';
@@ -138,11 +139,28 @@ class const _SearchField() extends StatelessWidget {
 class HomeAvatar extends HookWidget {
   const new({super.key});
 
+  static var _photoTried = false;
+
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     final username = useValueListenable(stows.username).trim();
     final signedIn = stows.loggedIn && username.isNotEmpty;
+    useEffect(() {
+      // Google accounts signed in before the photo was saved get it once.
+      if (signedIn &&
+          !_photoTried &&
+          stows.pfp.value == null &&
+          stows.syncProvider.value == SyncProvider.googleDrive) {
+        _photoTried = true;
+        GoogleDriveStore.silentPhoto(username).then((photo) {
+          if (photo != null && stows.username.value == username) {
+            stows.pfp.value = photo;
+          }
+        });
+      }
+      return null;
+    }, [signedIn]);
     return Tooltip(
       message: signedIn ? username : 'Settings',
       child: GestureDetector(
@@ -303,9 +321,11 @@ class _ProfileMenu extends HookWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             children: [
+              const BnLogo(size: 22),
+              const SizedBox(width: 8),
               Text(
-                'bad notes',
-                style: BnType.section.copyWith(
+                'BadNotes',
+                style: BnType.title.copyWith(
                   color: colors.text,
                   letterSpacing: -0.3,
                 ),

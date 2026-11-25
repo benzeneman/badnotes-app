@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -98,6 +99,8 @@ void _syncNow() {
 /// The cloud next to the New button: red when syncing stopped, and a panel
 /// of what's going on when tapped (design N09).
 class CloudStatusButton extends HookWidget {
+  static var _batchTotal = 0;
+
   const CloudStatusButton({super.key});
 
   @override
@@ -105,8 +108,11 @@ class CloudStatusButton extends HookWidget {
     _useSyncStatus();
     final colors = BadNotesColors.of(context);
     final problem = SyncProblem.of(SyncStatus.error.value);
-    final busy =
-        syncer.uploader.pendingNotEmpty || syncer.downloader.pendingNotEmpty;
+    final pending = syncer.uploader.numPending + syncer.downloader.numPending;
+    final busy = pending > 0;
+    // The batch's size is the most files ever waiting since it started.
+    _batchTotal = busy ? max(_batchTotal, pending) : 0;
+    final done = _batchTotal - pending;
 
     final IconData icon;
     final Color color;
@@ -115,7 +121,7 @@ class CloudStatusButton extends HookWidget {
     } else if (problem != null) {
       (icon, color) = (BnIcons.cloud, colors.danger);
     } else if (busy) {
-      (icon, color) = (LucideIcons.cloudUpload, colors.accent);
+      (icon, color) = (BnIcons.cloud, colors.accent);
     } else {
       (icon, color) = (BnIcons.synced, colors.text2);
     }
@@ -136,6 +142,22 @@ class CloudStatusButton extends HookWidget {
             builder: (_) => _CloudStatusPanel(home: context),
           ),
         ),
+        // Only while syncing: spins until the first file is done, then
+        // shows done / total and stands still between queue changes.
+        if (stows.loggedIn && problem == null && busy)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: CircularProgressIndicator(
+                  value: done > 0 ? done / _batchTotal : null,
+                  strokeWidth: 2,
+                  color: colors.accent,
+                  backgroundColor: colors.hairline,
+                ),
+              ),
+            ),
+          ),
         if (stows.loggedIn && problem != null)
           Positioned(
             right: 6,

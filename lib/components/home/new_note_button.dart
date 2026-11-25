@@ -171,12 +171,9 @@ class NewDocumentMenu {
         doesFolderExist:
             doesFolderExist ??
             (name) => FileManager.isDirectory('/$name'),
-        onColor: (color) {
-          if (created == null || color == BnFolderColor.lavender) return;
-          FolderStyles.save(
-            '${path ?? ''}/$created',
-            FolderStyle(color: color),
-          );
+        onColor: (style) {
+          if (created == null || style == const FolderStyle()) return;
+          FolderStyles.save('${path ?? ''}/$created', style);
         },
       ),
     );

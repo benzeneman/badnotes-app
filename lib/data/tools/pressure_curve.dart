@@ -37,11 +37,21 @@ abstract final class PressureCurve {
     stows.pressureCurveY.value,
   );
 
-  /// [pressure] through the saved curve; Normal leaves it exactly as it was.
+  /// [pressure] through the saved curve, starting from the lightest touch
+  /// that draws: that touch is 0, so a line starts from nothing instead of
+  /// jumping in at the threshold's width. Normal with no threshold leaves it
+  /// exactly as it was.
   static double? adjust(double? pressure) {
     if (pressure == null) return null;
-    final gamma = PressureCurve.gamma;
-    return gamma == 1 ? pressure : apply(pressure, gamma);
+    return adjustWith(pressure, gamma, stows.pressureThreshold.value);
+  }
+
+  /// [pressure] from [threshold] (as 0) to 1 through the curve of [gamma].
+  static double adjustWith(double pressure, double gamma, double threshold) {
+    if (threshold > 0 && threshold < 1) {
+      pressure = (pressure - threshold) / (1 - threshold);
+    }
+    return gamma == 1 && threshold <= 0 ? pressure : apply(pressure, gamma);
   }
 
   /// Whether [pressure] is too light to draw. A pen with no pressure always

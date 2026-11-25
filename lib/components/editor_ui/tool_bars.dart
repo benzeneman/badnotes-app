@@ -412,6 +412,8 @@ class _ToolSubBarState extends State<ToolSubBar> {
   List<Widget> _textItems() => [
     TextFormatBar(
       axis: axis,
+      // only the format for the next text box: nothing on the page changes
+      freezeEditor: true,
       format: TextBoxOverlay.lastFormat,
       onChanged: (f) => setState(() => TextBoxOverlay.lastFormat = f),
     ),

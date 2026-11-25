@@ -65,7 +65,7 @@ class DeskFolderTile extends HookWidget {
           key: ValueKey(style),
           name: name,
           count: info?.itemsLabel ?? '',
-          color: style.color,
+          color: style.shades,
           icon: style.icon,
           peeks: info?.peeks ?? const [],
           onTap: () => actions.onTap(name),
@@ -86,7 +86,7 @@ class DeskFolderTile extends HookWidget {
 class FolderGlyph extends StatelessWidget {
   const new({super.key, this.color = BnFolderColor.lavender, this.width = 52});
 
-  final BnFolderColor color;
+  final BnFolderShades color;
   final double width;
 
   @override
@@ -179,7 +179,7 @@ class _LiftedFolder extends HookWidget {
     return BnFolderTile(
       name: name,
       count: info?.itemsLabel ?? '',
-      color: style.color,
+      color: style.shades,
       icon: style.icon,
       peeks: info?.peeks ?? const [],
     );
@@ -208,7 +208,7 @@ class _FolderMenu extends HookWidget {
     final info = useValueListenable(FolderInfos.of(path));
     final style = useValueListenable(FolderStyles.of(path));
     final favorites = useValueListenable(stows.favoriteNotes);
-    final starred = favorites.contains(path);
+    final starred = favorites.contains(Favorites.folderKey(path));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -221,16 +221,16 @@ class _FolderMenu extends HookWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: style.color.front,
+                  color: style.shades.front,
                   borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
                 alignment: Alignment.center,
                 child: style.icon == null
-                    ? Icon(BnIcons.folder, size: 17, color: style.color.ink)
+                    ? Icon(BnIcons.folder, size: 17, color: style.shades.ink)
                     : BnPathIcon(
                         style.icon!.path,
                         size: 17,
-                        color: style.color.ink,
+                        color: style.shades.ink,
                       ),
               ),
               const SizedBox(width: 10),
@@ -288,17 +288,32 @@ class _FolderMenu extends HookWidget {
                   color: color.back,
                   size: 30,
                   label: color.name,
-                  selected: color == style.color,
+                  selected: style.custom == null && color == style.color,
                   onTap: () =>
                       FolderStyles.save(path, style.copyWith(color: color)),
                 ),
+              if (style.custom case final custom?)
+                BnColorDot(
+                  color: Color(custom),
+                  size: 30,
+                  label: 'custom',
+                  selected: true,
+                  onTap: () {},
+                ),
+              FolderColorPlus(
+                current: style.custom == null ? null : Color(style.custom!),
+                onChanged: (c) => FolderStyles.save(
+                  path,
+                  FolderStyles.of(path).value.copyWith(custom: c.toARGB32()),
+                ),
+              ),
             ],
           ),
         ),
         MenuRow(
           icon: BnIcons.favorites,
           label: starred ? 'Remove from Favorites' : 'Add to Favorites',
-          onTap: closeThen(menu, () => Favorites.toggle(path)),
+          onTap: closeThen(menu, () => Favorites.toggleFolder(path)),
         ),
         for (final action in LockAction.of(path, .folder))
           MenuRow(
@@ -912,7 +927,7 @@ class _EditFolderState extends State<_EditFolder> {
     Navigator.of(context).pop();
     if (name != widget.name) {
       FolderStyles.moved(widget.path, path);
-      Favorites.rename(widget.path, path);
+      Favorites.renameFolder(widget.path, path);
       await widget.actions.rename(widget.name, name);
       FolderInfos.clear();
     }
@@ -954,7 +969,7 @@ class _EditFolderState extends State<_EditFolder> {
             child: BnFolderTile(
               name: _name.text.trim().isEmpty ? widget.name : _name.text.trim(),
               count: info?.itemsLabel ?? '',
-              color: _style.color,
+              color: _style.shades,
               icon: _style.icon,
               peeks: info?.peeks ?? const [],
               height: 150,
@@ -1008,10 +1023,24 @@ class _EditFolderState extends State<_EditFolder> {
                   color: color.back,
                   size: 30,
                   label: color.name,
-                  selected: color == _style.color,
+                  selected: _style.custom == null && color == _style.color,
                   onTap: () =>
                       setState(() => _style = _style.copyWith(color: color)),
                 ),
+              if (_style.custom case final custom?)
+                BnColorDot(
+                  color: Color(custom),
+                  size: 30,
+                  label: 'custom',
+                  selected: true,
+                  onTap: () {},
+                ),
+              FolderColorPlus(
+                current: _style.custom == null ? null : Color(_style.custom!),
+                onChanged: (c) => setState(
+                  () => _style = _style.copyWith(custom: c.toARGB32()),
+                ),
+              ),
             ],
           ),
           label('Icon', _style.icon?.label ?? 'None'),

@@ -9,6 +9,13 @@ import 'package:badnotes/components/theming/apple_ui.dart';
 /// Font families a text box can use, with the name shown for each.
 const textBoxFonts = <String, String>{
   'AtkinsonHyperlegibleNext': 'Clean',
+  'Inter': 'Inter',
+  'Poppins': 'Poppins',
+  'Nunito': 'Nunito',
+  'Lora': 'Lora',
+  'Kalam': 'Kalam',
+  'PatrickHand': 'Patrick Hand',
+  'JetBrainsMono': 'JetBrains Mono',
   'Caveat': 'Caveat',
   'IndieFlower': 'Indie Flower',
   'ShadowsIntoLight': 'Shadows',

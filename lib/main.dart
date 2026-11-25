@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:badnotes/data/custom_fonts.dart';
 import 'package:badnotes/components/ui/editor_signals.dart';
 import 'package:badnotes/components/editor/handwriting_ocr.dart';
 import 'package:flutter/foundation.dart';
@@ -18,6 +19,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:printing/printing.dart';
 import 'package:badnotes/data/lag_recorder.dart';
 import 'package:badnotes/components/theming/dynamic_material_app.dart';
+import 'package:badnotes/data/favorites.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/flavor_config.dart';
 import 'package:badnotes/data/locks.dart';
@@ -55,6 +57,12 @@ const _bundledFontLicenses = [
   'assets/google_fonts/Dekko/OFL.txt',
   'assets/google_fonts/Fira_Mono/OFL.txt',
   'assets/google_fonts/Neucha/OFL.txt',
+  'assets/google_fonts/Lora/OFL.txt',
+  'assets/google_fonts/Nunito/OFL.txt',
+  'assets/google_fonts/Poppins/OFL.txt',
+  'assets/google_fonts/Kalam/OFL.txt',
+  'assets/google_fonts/PatrickHand/OFL.txt',
+  'assets/google_fonts/JetBrainsMono/OFL.txt',
 ];
 
 /// Brings the whole app up: logging, storage and plugins first, then the
@@ -118,7 +126,10 @@ void _configureLogging(List<String> args) {
 Future<void> _prepareServices() {
   final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   return Future.wait([
-    stows.customDataDir.waitUntilRead().then((_) => FileManager.init()),
+    stows.customDataDir.waitUntilRead().then((_) async {
+      await FileManager.init();
+      unawaited(Favorites.upgradeFolderStars());
+    }),
     if (isDesktop) windowManager.ensureInitialized(),
     workerManager.init(isolatesCount: _workerIsolates),
     if (DynamicMaterialApp.useYaruTitlebar)
@@ -150,6 +161,7 @@ void _afterLaunch() {
   LagRecorder.location = App.location;
   LagRecorder.start();
   NoteLocks.init();
+  CustomFonts.loadAll();
   startSyncAfterLoaded();
   setupBackgroundSync();
 
