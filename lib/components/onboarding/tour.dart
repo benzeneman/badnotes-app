@@ -1,128 +1,116 @@
 import 'dart:async';
+import 'dart:math';
 
-import 'package:badnotes/components/onboarding/demos.dart';
+import 'package:badnotes/components/onboarding/scenes/biology.dart';
+import 'package:badnotes/components/onboarding/scenes/board.dart';
+import 'package:badnotes/components/onboarding/scenes/brain.dart';
+import 'package:badnotes/components/onboarding/scenes/chemistry.dart';
+import 'package:badnotes/components/onboarding/scenes/heart.dart';
+import 'package:badnotes/components/onboarding/scenes/math.dart';
+import 'package:badnotes/components/onboarding/scenes/physics.dart';
+import 'package:badnotes/components/onboarding/tour_engine.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/components/ui/bn_controls.dart';
+import 'package:badnotes/components/ui/bn_icons.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// One page of the tour: a live demo and what it shows.
+/// One page of the tour: a scene and what it shows.
 class _Slide {
-  const new(this.kicker, this.title, this.text, this.demo);
+  const new(this.kicker, this.title, this.text, this.scene);
 
   final String kicker, title, text;
-  final Widget Function() demo;
+  final TourScene Function() scene;
 }
 
 final _slides = <_Slide>[
-  const _Slide(
+  _Slide(
     'Welcome',
-    'Handwriting, with a few tricks paper never had.',
-    'A one-minute look at what BadNotes can do. Skip it whenever you like; '
-        'it stays in Settings under Help.',
-    welcomeDemo,
+    'Write like paper. Edit like magic.',
+    'Smooth ink, real pens and smart tools for every subject you study.',
+    () => dnaScene,
   ),
-  const _Slide(
-    'Lasso',
-    'Circle it, then move it anywhere.',
-    'Draw a loop round any writing with the lasso. Drag it to move, pull a '
-        'corner to resize, and use the bar underneath to recolor, copy, '
-        'duplicate or take a screenshot of it.',
-    lassoDemo,
+  _Slide(
+    'Pens',
+    'Pens that feel like ink.',
+    'Fountain pen, ballpoint, brush and highlighter in any colour, one tap '
+        'apart in the toolbar.',
+    () => neuronScene,
   ),
-  const _Slide(
+  _Slide(
     'Shapes',
-    'Draw it rough. Hold, and it snaps.',
-    'With Draw shapes, sketch a circle, box or arrow and keep the pen still '
-        'for a moment: it turns into a clean shape. Turn on Hold for shapes '
-        'to do the same with the ballpoint.',
-    shapesDemo,
+    'Sketch it rough. Hold to snap.',
+    'With Draw shapes, keep the pen still at the end of a line, box or arrow '
+        'and it turns clean.',
+    () => physicsScene,
   ),
-  const _Slide(
+  _Slide(
+    'Lasso',
+    'Circle it. Move it. Restyle it.',
+    'Lasso any writing to move it, pull a corner to resize, and recolour or '
+        'copy it from the bar.',
+    () => lassoScene,
+  ),
+  _Slide(
     'Search',
-    'Search finds your handwriting.',
-    'BadNotes reads your writing in the background, so a search finds '
-        'handwritten words like typed ones, in a note or across all of them '
-        'from the desk.',
-    searchDemo,
+    'Search your handwriting.',
+    'BadNotes reads what you write, so a typed search finds handwritten '
+        'words too.',
+    () => searchScene,
   ),
-  const _Slide(
+  _Slide(
     'Recording',
-    'Play back the lecture, and your notes with it.',
-    'Record while you write. On playback, each line writes itself in time '
-        'with the sound, or Spotlight fades the page and brings up what you '
-        'wrote at that moment.',
-    recordingDemo,
+    'Replay the lecture with your notes.',
+    'Record while you write. Playback redraws each line in time, or '
+        'Spotlight brings up what you wrote at that moment.',
+    () => recordingScene,
   ),
-  const _Slide(
+  _Slide(
     'Study',
-    'Tape over the answers. Tap to check.',
-    'Cover anything with the tape and tap a strip to peek underneath; Tape '
-        'Quiz in the More menu runs through them like flashcards. At night, '
-        'pages turn dark with the app.',
-    tapeDemo,
+    'Tape over it. Quiz yourself.',
+    'Cover labels with tape and tap to peek, or run Tape Quiz from the More '
+        'menu.',
+    () => tapeScene,
   ),
-  const _Slide(
-    'Tabs and split view',
-    'Two notes, side by side.',
-    'Notes you open stay as tabs. Hold a tab and drag it onto the page to '
-        'read and write in both, or pick Split View in the More menu.',
-    splitDemo,
-  ),
-  const _Slide(
+  _Slide(
     'Make it yours',
-    'Floating or docked. Light or dark.',
-    'Keep the tools in a bar that floats over the page, or dock them in the '
-        'header. Toolbar style is under Settings › Editor, and the theme '
-        'under Settings › General.',
-    toolbarDemo,
+    'Dark pages. Your toolbar, your way.',
+    'Pages turn dark with the app, and the tools float over the page or dock '
+        'in the header.',
+    () => darkScene,
   ),
-  const _Slide(
-    'Present',
-    'Point, and it fades away.',
-    'The laser draws a glowing trail that disappears once you stop. Share › '
-        'Present puts the note on a TV or projector: everything, just your '
-        'ink, or the whole page.',
-    presentDemo,
-  ),
-  const _Slide(
+  _Slide(
     'Pin board',
-    'Quick notes, pinned to your desk.',
-    'Jot something down, write on it by hand, and it lands on the board on '
-        'your desk. Hold a note to move, resize or turn it.',
-    pinBoardDemo,
-  ),
-  const _Slide(
-    'Version history',
-    'Go back to any earlier version.',
-    'Versions are kept while you work. Open Version History from the More '
-        'menu to look back, open one as a copy, or restore it.',
-    versionsDemo,
-  ),
-  const _Slide(
-    'All set',
-    'Start your first notebook.',
-    'Tap New on the desk for a notebook, a whiteboard or a quick note.',
-    startDemo,
+    'Pin it to your desk.',
+    'Quick notes, to-dos and sketches stay on your desk. Tap New to start '
+        'your first notebook.',
+    () => boardScene,
   ),
 ];
 
-/// Shows the tour as a full-screen page that fades in.
-Future<void> showFeatureTour(BuildContext context) =>
-    Navigator.of(context, rootNavigator: true).push(
-      PageRouteBuilder<void>(
-        transitionDuration: const Duration(milliseconds: 420),
-        reverseTransitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (_, _, _) => const FeatureTour(),
-        transitionsBuilder: (_, animation, _, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: child,
-        ),
+/// Shows the tour as a card over the dimmed desk. Only Skip (or the last
+/// page's button) closes it: a tap beside it does nothing.
+Future<void> showFeatureTour(BuildContext context) => showGeneralDialog<void>(
+  context: context,
+  useRootNavigator: true,
+  barrierDismissible: false,
+  barrierColor: const Color(0x8C0E0E12),
+  transitionDuration: const Duration(milliseconds: 380),
+  pageBuilder: (_, _, _) => const FeatureTour(),
+  transitionBuilder: (_, animation, _, child) {
+    final eased = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: eased,
+      child: ScaleTransition(
+        scale: Tween(begin: 0.96, end: 1.0).animate(eased),
+        child: child,
       ),
     );
+  },
+);
 
 var _checked = false;
 
@@ -153,7 +141,7 @@ Future<void> maybeShowFeatureTour(BuildContext context) async {
   if (context.mounted) await showFeatureTour(context);
 }
 
-/// What BadNotes can do, one live demo at a time: shown once after a fresh
+/// What BadNotes can do, one short film at a time: shown once after a fresh
 /// install and from Settings › Help.
 class FeatureTour extends StatefulWidget {
   const new({super.key});
@@ -163,10 +151,8 @@ class FeatureTour extends StatefulWidget {
 }
 
 class _FeatureTourState extends State<FeatureTour> {
+  final _pages = PageController();
   var _index = 0;
-
-  /// 1 going forward, -1 going back: which side the text comes in from.
-  var _direction = 1;
 
   @override
   void initState() {
@@ -175,14 +161,25 @@ class _FeatureTourState extends State<FeatureTour> {
     stows.tourSeen.value = true;
   }
 
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
   bool get _last => _index == _slides.length - 1;
 
   void _go(int to) {
     if (to < 0 || to >= _slides.length || to == _index) return;
-    setState(() {
-      _direction = to > _index ? 1 : -1;
-      _index = to;
-    });
+    if (MediaQuery.disableAnimationsOf(context) || (to - _index).abs() > 1) {
+      _pages.jumpToPage(to);
+    } else {
+      _pages.animateToPage(
+        to,
+        duration: const Duration(milliseconds: 520),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
   void _next() => _last ? _close() : _go(_index + 1);
@@ -206,236 +203,291 @@ class _FeatureTourState extends State<FeatureTour> {
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
-    final still = MediaQuery.disableAnimationsOf(context);
-    final slide = _slides[_index];
+    return Focus(
+      autofocus: true,
+      onKeyEvent: _onKey,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final size = constraints.biggest;
+            final wide = size.width >= 640 && size.height >= 520;
+            final pad = wide ? 24.0 : 14.0;
+            final textHeight = wide ? 102.0 : 122.0;
+            const headerHeight = 50.0, footerHeight = 66.0, gap = 16.0;
+            const chrome = headerHeight + gap + footerHeight;
+            final maxW = wide ? min(880.0, size.width - 48) : size.width * 0.92;
+            final maxH = size.height - (wide ? 40 : 24);
+            var stageW = maxW - pad * 2;
+            var stageH = stageW / 1.6;
+            if (stageH + textHeight + chrome > maxH) {
+              stageH = max(120.0, maxH - textHeight - chrome);
+              stageW = stageH * 1.6;
+            }
+            final cardW = wide ? stageW + pad * 2 : maxW;
+            final cardH = min(maxH, stageH + textHeight + chrome);
 
-    // the demo: scales up from 0.96 as it fades in; one plays at a time
-    final stage = AnimatedSwitcher(
-      duration: still ? Duration.zero : const Duration(milliseconds: 480),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: ScaleTransition(
-          scale: Tween(begin: 0.96, end: 1.0).animate(animation),
-          child: child,
-        ),
-      ),
-      child: KeyedSubtree(key: ValueKey(_index), child: slide.demo()),
-    );
-
-    final stageCard = DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border.all(color: colors.hairline),
-        borderRadius: const BorderRadius.all(Radius.circular(BnRadius.popover)),
-        boxShadow: BnShadows.floating,
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BnRadius.popover - 1),
-        ),
-        child: AspectRatio(aspectRatio: 4 / 3, child: stage),
-      ),
-    );
-
-    final skip = _last
-        ? const SizedBox(height: 40)
-        : BnButton(
-            label: 'Skip',
-            kind: BnButtonKind.quiet,
-            onPressed: _close,
-          );
-
-    return Scaffold(
-      backgroundColor: colors.desk,
-      body: Focus(
-        autofocus: true,
-        onKeyEvent: _onKey,
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onHorizontalDragEnd: (details) {
-            final v = details.primaryVelocity ?? 0;
-            if (v < -250) _next();
-            if (v > 250) _go(_index - 1);
-          },
-          child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final wide =
-                    constraints.maxWidth >= 720 &&
-                    constraints.maxWidth > constraints.maxHeight * 0.9;
-                final text = _SlideText(
-                  slide: slide,
-                  index: _index,
-                  direction: _direction,
-                  still: still,
-                  large: wide,
-                );
-                final controls = _Controls(
-                  index: _index,
-                  last: _last,
-                  onBack: _index == 0 ? null : () => _go(_index - 1),
-                  onNext: _next,
-                  onDot: _go,
-                );
-                if (wide) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(40, 16, 40, 32),
-                    child: Column(
-                      children: [
-                        Align(alignment: Alignment.centerRight, child: skip),
-                        Expanded(
+            return Center(
+              child: Container(
+                width: cardW,
+                height: cardH,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: const BorderRadius.all(Radius.circular(28)),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x2E000000), blurRadius: 60, offset: Offset(0, 24)),
+                    BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: headerHeight,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: pad + 4, right: pad - 6),
                           child: Row(
                             children: [
-                              Expanded(
-                                flex: 11,
-                                child: Center(child: stageCard),
-                              ),
-                              const SizedBox(width: 48),
-                              Expanded(
-                                flex: 7,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    text,
-                                    const SizedBox(height: 32),
-                                    controls,
-                                  ],
+                              Text(
+                                '${_index + 1} / ${_slides.length}',
+                                style: BnType.caption.copyWith(
+                                  color: colors.muted,
+                                  fontWeight: FontWeight.w600,
+                                  fontFeatures: const [FontFeature.tabularFigures()],
                                 ),
                               ),
+                              const Spacer(),
+                              if (_last)
+                                IconButton(
+                                  tooltip: 'Close',
+                                  onPressed: _close,
+                                  icon: Icon(BnIcons.close, size: 20, color: colors.muted),
+                                )
+                              else
+                                BnButton(
+                                  label: 'Skip',
+                                  kind: BnButtonKind.quiet,
+                                  height: 36,
+                                  onPressed: _close,
+                                ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  );
-                }
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(alignment: Alignment.centerRight, child: skip),
-                      const SizedBox(height: 4),
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxHeight: constraints.maxHeight * 0.48,
-                          ),
-                          child: stageCard,
-                        ),
                       ),
-                      const SizedBox(height: 24),
                       Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: text,
+                        child: PageView.builder(
+                          controller: _pages,
+                          itemCount: _slides.length,
+                          onPageChanged: (i) => setState(() => _index = i),
+                          itemBuilder: (context, i) => _Crossfade(
+                            controller: _pages,
+                            index: i,
+                            child: _Page(
+                              slide: _slides[i],
+                              active: i == _index,
+                              stage: Size(stageW, stageH),
+                              textHeight: textHeight,
+                              pad: pad,
+                              wide: wide,
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: controls,
+                      SizedBox(
+                        height: footerHeight,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(pad + 4, 0, pad, 6),
+                          child: _Controls(
+                            index: _index,
+                            last: _last,
+                            onBack: _index == 0 ? null : () => _go(_index - 1),
+                            onNext: _next,
+                            onDot: _go,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
-          ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-/// The kicker, title and description, sliding in 12 dp from the side the
-/// tour is going.
-class _SlideText extends StatelessWidget {
+/// Holds a page in place as the pager slides it, so pages crossfade (with
+/// a slight scale) instead of moving sideways.
+class _Crossfade extends StatelessWidget {
+  const new({required this.controller, required this.index, required this.child});
+
+  final PageController controller;
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: controller,
+    builder: (context, child) {
+      var delta = 0.0;
+      if (controller.hasClients && controller.position.haveDimensions) {
+        delta = (controller.page ?? index.toDouble()) - index;
+      }
+      final d = delta.abs().clamp(0.0, 1.0);
+      return LayoutBuilder(
+        builder: (context, c) => Transform.translate(
+          offset: Offset(delta * c.maxWidth, 0),
+          child: Opacity(
+            opacity: Curves.easeInOut.transform(1 - d),
+            child: Transform.scale(scale: 1 - 0.04 * d, child: child),
+          ),
+        ),
+      );
+    },
+    child: child,
+  );
+}
+
+/// A page: the stage, then the kicker, title and line under it, which
+/// rise into place when the page comes up.
+class _Page extends StatefulWidget {
   const new({
     required this.slide,
-    required this.index,
-    required this.direction,
-    required this.still,
-    required this.large,
+    required this.active,
+    required this.stage,
+    required this.textHeight,
+    required this.pad,
+    required this.wide,
   });
 
   final _Slide slide;
-  final int index, direction;
-  final bool still, large;
+  final bool active, wide;
+  final Size stage;
+  final double textHeight, pad;
+
+  @override
+  State<_Page> createState() => _PageState();
+}
+
+class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
+  late final _enter = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 640),
+    value: widget.active ? 0 : 1,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _enter.value = 1;
+    } else if (widget.active && _enter.value == 0) {
+      _enter.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(_Page old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active && !MediaQuery.disableAnimationsOf(context)) {
+      _enter.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _enter.dispose();
+    super.dispose();
+  }
+
+  /// [child] fading in and rising 14 dp, between [a] and [b] of the entrance.
+  Widget _rise(double a, double b, Widget child) {
+    final k = CurvedAnimation(parent: _enter, curve: Interval(a, b, curve: Curves.easeOutCubic));
+    return FadeTransition(
+      opacity: k,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, 0.35), end: Offset.zero).animate(k),
+        child: child,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
-    return AnimatedSwitcher(
-      duration: still ? Duration.zero : const Duration(milliseconds: 420),
-      layoutBuilder: (current, previous) => Stack(
-        alignment: Alignment.topLeft,
-        children: [...previous, ?current],
-      ),
-      transitionBuilder: (child, animation) {
-        // the new text waits a moment for the demo, the old one just fades
-        final incoming = child.key == ValueKey(index);
-        final eased = CurvedAnimation(
-          parent: animation,
-          curve: incoming
-              ? const Interval(0.2, 1, curve: Curves.easeOutCubic)
-              : Curves.easeOut,
-        );
-        return FadeTransition(
-          opacity: eased,
-          child: incoming
-              ? AnimatedBuilder(
-                  animation: eased,
-                  builder: (context, child) => Transform.translate(
-                    offset: Offset(12.0 * direction * (1 - eased.value), 0),
-                    child: child,
+    final slide = widget.slide;
+    return Column(
+      children: [
+        Center(
+          child: SizedBox.fromSize(
+            size: widget.stage,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.hairline),
+                borderRadius: const BorderRadius.all(Radius.circular(18)),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(17)),
+                child: TourStage(scene: slide.scene(), playing: widget.active),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: widget.textHeight,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.pad + 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _rise(0, 0.6, Text(
+                  slide.kicker.toUpperCase(),
+                  maxLines: 1,
+                  style: BnType.micro.copyWith(
+                    color: colors.accent,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
                   ),
-                  child: child,
-                )
-              : child,
-        );
-      },
-      child: Column(
-        key: ValueKey(index),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            slide.kicker.toUpperCase(),
-            style: BnType.micro.copyWith(
-              color: colors.accent,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
+                )),
+                const SizedBox(height: 6),
+                _rise(0.1, 0.75, Text(
+                  slide.title,
+                  maxLines: widget.wide ? 1 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: BnType.display.copyWith(
+                    color: colors.text,
+                    fontSize: widget.wide ? 26 : 21,
+                    height: 1.15,
+                  ),
+                )),
+                const SizedBox(height: 6),
+                Flexible(
+                  child: _rise(0.22, 0.9, Text(
+                    slide.text,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: BnType.bodyLarge.copyWith(
+                      color: colors.text2,
+                      fontSize: widget.wide ? 15 : 14,
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                    ),
+                  )),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            slide.title,
-            style: BnType.display.copyWith(
-              color: colors.text,
-              fontSize: large ? 34 : 26,
-              height: 1.12,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            slide.text,
-            style: BnType.bodyLarge.copyWith(
-              color: colors.text2,
-              fontSize: large ? 16 : 15,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// The progress pills and the buttons.
+/// The progress dots (the current one stretched) and the buttons.
 class _Controls extends StatelessWidget {
   const new({
     required this.index,
@@ -457,48 +509,53 @@ class _Controls extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (var i = 0; i < _slides.length; i++)
-                Semantics(
-                  button: true,
-                  selected: i == index,
-                  label: 'Page ${i + 1} of ${_slides.length}',
-                  child: GestureDetector(
-                    onTap: () => onDot(i),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 320),
-                        curve: Curves.easeOutCubic,
-                        width: i == index ? 22 : 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: i == index
-                              ? colors.accent
-                              : i < index
-                              ? colors.handle
-                              : colors.hairline,
-                          borderRadius: BorderRadius.circular(3),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < _slides.length; i++)
+                    Semantics(
+                      button: true,
+                      selected: i == index,
+                      label: 'Page ${i + 1} of ${_slides.length}',
+                      child: GestureDetector(
+                        onTap: () => onDot(i),
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 10),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 320),
+                            curve: Curves.easeOutCubic,
+                            width: i == index ? 22 : 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: i == index
+                                  ? colors.accent
+                                  : i < index
+                                  ? colors.handle
+                                  : colors.hairline,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         if (onBack != null) ...[
-          BnButton(label: 'Back', kind: BnButtonKind.quiet, onPressed: onBack),
+          BnButton(label: 'Back', kind: BnButtonKind.quiet, height: 42, onPressed: onBack),
           const SizedBox(width: 4),
         ],
         BnButton.primary(
           label: last ? 'Get started' : 'Next',
-          height: 44,
+          height: 42,
           onPressed: onNext,
         ),
       ],
