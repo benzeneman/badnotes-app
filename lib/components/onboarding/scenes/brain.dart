@@ -68,7 +68,11 @@ final _matches = [
         .inflate(2),
 ];
 
-final _inks = () {
+const _ms = 14000;
+
+late final List<Drawn> _lobes;
+
+final _inks = paced(_ms, () {
   List<Drawn> lobe(String d, (Color, Color) c) => [
     InkFill(d, color: c.$1),
     InkLine(d, pen: Pen.fountain, color: _outline, width: 1.7),
@@ -76,15 +80,16 @@ final _inks = () {
   InkLine fold(String d, Color c) =>
       InkLine(d, pen: Pen.fineliner, color: c, width: 1.3);
   final r = _heading.rectOf('The Brain');
+  _lobes = [
+    ...lobe(_frontalSvg, _frontal),
+    ...lobe(_parietalSvg, _parietal),
+    ...lobe(_occipitalSvg, _occipital),
+    ...lobe(_temporalSvg, _temporal),
+    ...lobe(_stemSvg, _stem),
+    ...lobe(_cerebellumSvg, _cerebellum),
+  ];
   return <Drawn>[
-    ...lay(0.03, 0.34, [
-      ...lobe(_frontalSvg, _frontal),
-      ...lobe(_parietalSvg, _parietal),
-      ...lobe(_occipitalSvg, _occipital),
-      ...lobe(_temporalSvg, _temporal),
-      ...lobe(_stemSvg, _stem),
-      ...lobe(_cerebellumSvg, _cerebellum),
-    ], gap: 10),
+    ...lay(0.03, 0.34, _lobes, gap: 10),
     ...lay(0.345, 0.42, [
       fold('M118 128 C 136 140 150 130 168 146', _frontal.$2),
       fold('M100 168 C 124 160 142 178 170 172', _frontal.$2),
@@ -100,8 +105,8 @@ final _inks = () {
       fold('M306 294 C 326 290 346 292 360 296', _cerebellum.$2),
     ], gap: 4),
     ...lay(0.425, 0.58, [
-      ...label('Frontal lobe', const Offset(22, 100), const Offset(122, 150), _frontal.$2),
-      ...label('Parietal lobe', const Offset(330, 58), const Offset(290, 120), _parietal.$2),
+      ...label('Frontal lobe', const Offset(14, 100), const Offset(122, 150), _frontal.$2),
+      ...label('Parietal lobe', const Offset(332, 62), const Offset(290, 120), _parietal.$2),
       ...label('Occipital lobe', const Offset(388, 112), const Offset(356, 178), _occipital.$2),
       ...label('Temporal lobe', const Offset(92, 298), const Offset(190, 258), _temporal.$2),
       ...label('Cerebellum', const Offset(386, 300), const Offset(344, 282), _cerebellum.$2),
@@ -118,21 +123,28 @@ final _inks = () {
     ]),
     ...lay(0.63, 0.71, _notes, gap: 10),
   ];
+});
+
+final _cam = () {
+  final all = boundsOf(_inks);
+  final brain = boundsOf(_lobes);
+  final notes = boundsOf(_notes);
+  return Cam([
+    (0.0, brain),
+    (0.34, brain),
+    (0.43, all),
+    (0.79, all),
+    (0.85, notes),
+    (0.93, notes),
+    (0.97, all),
+  ]);
 }();
 
-const _cam = Cam([
-  (0.0, Offset(210, 200), 1.25),
-  (0.34, Offset(230, 215), 1.25),
-  (0.43, Offset(320, 200), 1),
-  (0.79, Offset(320, 200), 1),
-  (0.85, Offset(500, 196), 1.45),
-  (0.94, Offset(510, 196), 1.45),
-  (0.97, Offset(320, 200), 1),
-]);
-
 final searchScene = TourScene(
-  duration: const Duration(milliseconds: 10000),
-  rest: 0.83,
+  duration: const Duration(milliseconds: _ms),
+  done: 0.98,
+  inks: _inks,
+  cam: _cam,
   build: (context, t) {
     final typed = (_query.length * span(t, 0.72, 0.78, Curves.linear)).floor();
     final found = span(t, 0.79, 0.83);
@@ -143,7 +155,6 @@ final searchScene = TourScene(
       t: t,
       inks: _inks,
       cam: _cam,
-      fade: loopFade(t, out: 0.95),
       under: (canvas) {
         if (found <= 0) return;
         // as the editor marks matches: amber, the current one stronger
@@ -185,14 +196,13 @@ class _SearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     return Container(
-      width: 300,
-      height: 38,
+      width: 320,
+      height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border.all(color: colors.hairline),
         borderRadius: const BorderRadius.all(Radius.circular(BnRadius.dock)),
-        boxShadow: BnShadows.floating,
       ),
       child: Row(
         children: [

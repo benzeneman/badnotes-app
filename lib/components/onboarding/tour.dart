@@ -91,6 +91,10 @@ final _slides = <_Slide>[
   ),
 ];
 
+/// Every page's scene, in order (for tests).
+@visibleForTesting
+List<TourScene> get tourScenes => [for (final s in _slides) s.scene()];
+
 /// Shows the tour as a card over the dimmed desk. Only Skip (or the last
 /// page's button) closes it: a tap beside it does nothing.
 Future<void> showFeatureTour(BuildContext context) => showGeneralDialog<void>(
@@ -171,7 +175,11 @@ class _FeatureTourState extends State<FeatureTour> {
 
   void _go(int to) {
     if (to < 0 || to >= _slides.length || to == _index) return;
-    if (MediaQuery.disableAnimationsOf(context) || (to - _index).abs() > 1) {
+    final from = _index;
+    // the page coming in starts playing (from its first frame) now, not
+    // halfway through the slide, and the one going out holds its frame
+    setState(() => _index = to);
+    if (MediaQuery.disableAnimationsOf(context) || (to - from).abs() > 1) {
       _pages.jumpToPage(to);
     } else {
       _pages.animateToPage(
@@ -376,7 +384,6 @@ class _PageState extends State<_Page> with SingleTickerProviderStateMixin {
   late final _enter = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 640),
-    value: widget.active ? 0 : 1,
   );
 
   @override

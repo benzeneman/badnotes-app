@@ -108,23 +108,57 @@ abstract class Drawn {
 
   /// Where the pen is when [p] is written.
   Offset tipAt(double p);
+
+  /// What it covers on the page once written.
+  Rect get bounds;
+}
+
+/// What [items] cover on the page together.
+Rect boundsOf(Iterable<Drawn> items) =>
+    items.map((d) => d.bounds).reduce((a, b) => a.expandToInclude(b));
+
+/// How long the timeline [lay] is pacing strokes on is, in ms. Set by
+/// [paced] while a scene's ink is laid out.
+var _layMs = 14000.0;
+
+/// Builds a scene's ink with [lay] pacing it for a timeline [ms] long, so
+/// the pauses between strokes come out in real time.
+T paced<T>(int ms, T Function() build) {
+  final before = _layMs;
+  _layMs = ms.toDouble();
+  try {
+    return build();
+  } finally {
+    _layMs = before;
+  }
 }
 
 /// Lays [items] one after the other between [from] and [to] at an even
-/// pace: each gets time for its [Drawn.cost], plus [gap] units between.
+/// pace: each gets time for its [Drawn.cost], plus [gap] units between,
+/// plus a natural pause of 60–150 ms (never more than a quarter of the
+/// window, so dense runs like base pairs stay brisk).
 List<T> lay<T extends Drawn>(
   double from,
   double to,
   List<T> items, {
   double gap = 24,
 }) {
+  final window = to - from;
+  final r = Random(items.length * 31 + (from * 1000).round());
+  final pauses = [
+    for (var i = 0; i < items.length - 1; i++) (60 + 90 * r.nextDouble()) / _layMs,
+  ];
+  final paused = pauses.fold<double>(0, (s, p) => s + p);
+  final k = paused > window * 0.25 ? window * 0.25 / paused : 1.0;
+  final writing = window - paused * k;
   final total = items.fold<double>(0, (s, d) => s + d.cost + gap) - gap;
   var at = from;
-  for (final d in items) {
-    final len = (to - from) * d.cost / total;
+  for (var i = 0; i < items.length; i++) {
+    final d = items[i];
+    final len = writing * d.cost / total;
     d.a = at;
     d.b = at + len;
-    at += len + (to - from) * gap / total;
+    if (i < pauses.length) at += len + writing * gap / total + pauses[i] * k;
   }
   return items;
 }
@@ -328,6 +362,9 @@ class InkLine extends Drawn {
     return _contours.last.points.last;
   }
 
+  @override
+  late final Rect bounds = path.getBounds().inflate(width);
+
   /// Evenly spaced points along the line (its first part), [step] apart.
   List<Offset> points() => _contours.first.points;
 }
@@ -343,6 +380,7 @@ class InkFill extends Drawn {
        super(Pen.brush, color);
 
   final Path path;
+  @override
   late final Rect bounds = path.getBounds();
 
   @override
@@ -391,6 +429,7 @@ class InkText extends Drawn {
     this.font = 'PatrickHand',
     this.weight = FontWeight.w400,
     this.angle = 0,
+    this.backing = false,
     Pen pen = Pen.ballpoint,
   }) : super(pen, color);
 
@@ -400,6 +439,26 @@ class InkText extends Drawn {
   final String font;
   final FontWeight weight;
   final double angle;
+
+  /// A soft paper-coloured card behind it, so a label reads over colour.
+  final bool backing;
+
+  static const _backPad = EdgeInsets.fromLTRB(4, 1, 4, 0);
+
+  @override
+  late final Rect bounds = () {
+    final r = _backPad.inflateRect(Offset.zero & box);
+    if (angle == 0) return r.shift(at);
+    final corners = [r.topLeft, r.topRight, r.bottomLeft, r.bottomRight]
+        .map((c) => at + Offset(
+              c.dx * cos(angle) - c.dy * sin(angle),
+              c.dx * sin(angle) + c.dy * cos(angle),
+            ));
+    return corners.skip(1).fold(
+      Rect.fromPoints(corners.first, corners.first),
+      (b, c) => b.expandToInclude(Rect.fromPoints(c, c)),
+    );
+  }();
 
   TextStyle _style(Paint? foreground, Color c) => TextStyle(
     fontFamily: font,
@@ -445,9 +504,24 @@ class InkText extends Drawn {
     canvas.save();
     canvas.translate(at.dx, at.dy);
     if (angle != 0) canvas.rotate(angle);
-    if (p >= 1 && fade >= 1) {
+    if (backing) {
+      final paper = pageInk(Colors.white, dark);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          _backPad.inflateRect(Offset.zero & box),
+          const Radius.circular(5),
+        ),
+        Paint()..color = paper.withValues(alpha: 0.85 * fade * min(1.0, p * 4)),
+      );
+    }
+    if (p >= 1) {
+      // whole: laid out once per look (faded ones in steps of 1/40)
+      final step = (fade * 40).round();
       _solid
-          .putIfAbsent(dark, () => _layout(_style(null, c)))
+          .putIfAbsent(
+            (dark, step),
+            () => _layout(_style(null, c.withValues(alpha: c.a * step / 40))),
+          )
           .paint(canvas, Offset.zero);
     } else {
       // a soft edge moving across: ink up to it, nothing past it
@@ -481,46 +555,74 @@ class InkText extends Drawn {
   }
 }
 
-/// Camera moves: (time, centre, zoom) keys, eased from one to the next.
+/// The strip at the top of the stage that holds the toolbar (or a search
+/// field, a mode switch), docked like the editor's header, so nothing
+/// floats over the ink.
+const headerH = 46.0;
+
+/// Where the page shows under the header strip.
+const pageArea = Rect.fromLTRB(0, headerH, 640, 400);
+
+/// How far the camera stays out from what it frames, in page units.
+const camMargin = 16.0;
+
+/// The camera never zooms in further than this, so a close-up still shows
+/// a stroke's surroundings.
+const maxZoom = 1.25;
+
+/// Camera moves: (time, what to frame) keys. Each key's rectangle is shown
+/// whole in the view (with [camMargin] round it), as large as fits up to
+/// [maxZoom]; the camera glides gently from one to the next.
 class Cam {
   const new(this.keys);
 
-  final List<(double, Offset, double)> keys;
+  final List<(double, Rect)> keys;
 
-  static const still = Cam([(0, Offset(320, 200), 1)]);
+  /// [r] framed in [view]: its centre and the zoom that fits it.
+  static (Offset, double) _frame(Rect r, Rect view) {
+    final m = r.inflate(camMargin);
+    final z = min(maxZoom, min(view.width / m.width, view.height / m.height));
+    return (m.center, z);
+  }
 
-  (Offset, double) at(double t) {
-    if (t <= keys.first.$1 || keys.length == 1) return (keys.first.$2, keys.first.$3);
+  (Offset, double) at(double t, Rect view) {
+    if (keys.length == 1 || t <= keys.first.$1) return _frame(keys.first.$2, view);
     for (var i = 0; i < keys.length - 1; i++) {
-      final (t0, c0, z0) = keys[i];
-      final (t1, c1, z1) = keys[i + 1];
+      final (t0, r0) = keys[i];
+      final (t1, r1) = keys[i + 1];
       if (t <= t1) {
-        final k = span(t, t0, t1);
+        final k = span(t, t0, t1, Curves.easeInOutSine);
+        final (c0, z0) = _frame(r0, view);
+        final (c1, z1) = _frame(r1, view);
         return (Offset.lerp(c0, c1, k)!, z0 + (z1 - z0) * k);
       }
     }
-    return (keys.last.$2, keys.last.$3);
+    return _frame(keys.last.$2, view);
   }
 
-  /// The camera's transform at [t]: zoomed about its centre, kept on the
-  /// page.
-  Matrix4 matrix(double t) {
-    final (c, z) = at(t);
-    final hw = stageSize.width / 2 / z, hh = stageSize.height / 2 / z;
-    final cx = z <= 1 ? c.dx : c.dx.clamp(hw, stageSize.width - hw);
-    final cy = z <= 1 ? c.dy : c.dy.clamp(hh, stageSize.height - hh);
+  /// Page to stage at [t]: the framed part zoomed into [view].
+  Matrix4 matrix(double t, Rect view) {
+    final (c, z) = at(t, view);
     return Matrix4.identity()
-      ..translateByDouble(stageSize.width / 2, stageSize.height / 2, 0, 1)
+      ..translateByDouble(view.center.dx, view.center.dy, 0, 1)
       ..scaleByDouble(z, z, 1, 1)
-      ..translateByDouble(-cx, -cy, 0, 1);
+      ..translateByDouble(-c.dx, -c.dy, 0, 1);
   }
 }
 
+final _fits = Expando<Cam>();
+
+/// A still camera on all of [inks].
+Cam fitAll(List<Drawn> inks) =>
+    _fits[inks] ??= Cam([(0, boundsOf(inks))]);
+
 final _papers = <(bool, Color), ui.Picture>{};
 
-/// The editor's dotted paper for the whole stage, recorded once.
+/// The editor's dotted paper, recorded once, reaching well past the stage
+/// so a camera zoomed out a little still sees paper.
 ui.Picture paper(bool dark, Color dots) => _papers.putIfAbsent((dark, dots), () {
   final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder)..translate(-312, -192);
   CanvasBackgroundPainter(
     invert: dark,
     backgroundColor: Colors.white,
@@ -529,7 +631,7 @@ ui.Picture paper(bool dark, Color dots) => _papers.putIfAbsent((dark, dots), () 
     lineThickness: 1,
     primaryColor: dots,
     secondaryColor: dots,
-  ).paint(Canvas(recorder), stageSize);
+  ).paint(canvas, const Size(1272, 792));
   return recorder.endRecording();
 });
 
@@ -561,49 +663,49 @@ Drawn? activeInk(List<Drawn> inks, double t) {
   return null;
 }
 
-/// A stylus resting on [tip], its nib in [ink].
+/// A slim stylus resting on [tip]: a thin two-tone barrel, a small nib
+/// with a dot of [ink], and a soft shadow offset down and right.
 void drawStylus(Canvas canvas, Offset tip, Color ink, {double opacity = 1}) {
   if (opacity <= 0) return;
+  void shape(Paint barrel, Paint? top, Paint nib) {
+    canvas.rotate(-pi / 3.4);
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0)
+        ..lineTo(7, -2.3)
+        ..lineTo(7, 2.3)
+        ..close(),
+      nib,
+    );
+    final body = RRect.fromLTRBR(7, -2.6, 36, 2.6, const Radius.circular(2.6));
+    canvas.drawRRect(body, barrel);
+    if (top != null) {
+      // the lit side: the barrel's upper half a shade lighter
+      canvas.save();
+      canvas.clipRect(const Rect.fromLTRB(7, -2.6, 36, 0));
+      canvas.drawRRect(body, top);
+      canvas.restore();
+    }
+  }
+
+  canvas.save();
+  canvas.translate(tip.dx + 3, tip.dy + 4);
+  final shadow = Paint()..color = Color.fromRGBO(0, 0, 0, 0.1 * opacity);
+  shape(shadow, null, shadow);
+  canvas.restore();
+
   canvas.save();
   canvas.translate(tip.dx, tip.dy);
-  // shadow first, then the pen, pointing up and to the right
-  for (final shadow in [true, false]) {
-    canvas.save();
-    if (shadow) canvas.translate(7, 9);
-    canvas.rotate(-pi / 3.4);
-    final body = Paint()
-      ..color = shadow
-          ? Color.fromRGBO(0, 0, 0, 0.13 * opacity)
-          : Color.fromRGBO(42, 43, 50, opacity);
-    final nib = Path()
-      ..moveTo(0, 0)
-      ..lineTo(11, -3.6)
-      ..lineTo(11, 3.6)
-      ..close();
-    canvas.drawPath(
-      nib,
-      shadow ? body : (Paint()..color = const Color(0xFFD9D9DE).withValues(alpha: opacity)),
-    );
-    canvas.drawRRect(
-      RRect.fromLTRBR(11, -4.4, 58, 4.4, const Radius.circular(3)),
-      body,
-    );
-    if (!shadow) {
-      canvas.drawCircle(Offset.zero, 1.8, Paint()..color = ink.withValues(alpha: opacity));
-      canvas.drawRect(
-        const Rect.fromLTWH(13, -4.4, 4, 8.8),
-        Paint()..color = ink.withValues(alpha: opacity),
-      );
-      canvas.drawLine(
-        const Offset(20, -2.2),
-        const Offset(54, -2.2),
-        Paint()
-          ..color = Color.fromRGBO(255, 255, 255, 0.22 * opacity)
-          ..strokeWidth = 1.2,
-      );
-    }
-    canvas.restore();
-  }
+  shape(
+    Paint()..color = Color.fromRGBO(44, 49, 59, opacity),
+    Paint()..color = Color.fromRGBO(78, 85, 99, opacity),
+    Paint()..color = Color.fromRGBO(201, 205, 212, opacity),
+  );
+  canvas.drawCircle(const Offset(0.8, 0), 1.2, Paint()..color = ink.withValues(alpha: opacity));
+  canvas.drawRect(
+    const Rect.fromLTWH(8.5, -2.6, 1.8, 5.2),
+    Paint()..color = ink.withValues(alpha: opacity),
+  );
   canvas.restore();
 }
 
@@ -625,18 +727,38 @@ void drawTap(Canvas canvas, Offset at, double k, Color color) {
   );
 }
 
-/// Fades the ink in at the start of a loop and out before it restarts.
-double loopFade(double t, {double out = 0.93}) =>
-    min(span(t, 0, 0.035), 1 - span(t, out, 0.985));
+/// A tap at [at] on the stage, [k] of the way through.
+class TapPainter extends CustomPainter {
+  new(this.at, this.k, this.color);
 
-/// Paints a page: the paper, [inks] up to [t] through the camera, then
-/// [over] in page units and the stylus on top.
+  final Offset at;
+  final double k;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) => drawTap(canvas, at, k, color);
+
+  @override
+  bool shouldRepaint(TapPainter old) => old.k != k || old.at != at;
+}
+
+/// Fades the ink in at the very start of a pass. There is no fade out: the
+/// finished page is held, then crossfaded into the next pass by the stage.
+double loopFade(double t) => span(t, 0, 0.02);
+
+/// The time of the frame being painted, for ink that moves on the scene's
+/// clock rather than its own progress (shapes snapping).
+double paintingT = 0;
+
+/// Paints a page: the paper, [inks] up to [t] through the camera framed in
+/// [view], then [over] in page units and the stylus on top.
 class InkPainter extends CustomPainter {
   new({
     required this.t,
     required this.inks,
     required this.dots,
-    this.cam = Cam.still,
+    this.cam,
+    this.view = pageArea,
     this.dark = false,
     this.fade = 1,
     this.under,
@@ -644,37 +766,52 @@ class InkPainter extends CustomPainter {
     this.stylus = true,
     this.clip,
     this.drawPaper = true,
+    this.spotlight,
   });
 
   final double t, fade;
   final List<Drawn> inks;
   final Color dots;
-  final Cam cam;
+
+  /// Null: all of [inks], still.
+  final Cam? cam;
+  final Rect view;
   final bool dark, stylus, drawPaper;
   final void Function(Canvas canvas)? under, over;
 
   /// Paints only inside this (the dark mode wipe).
   final Path? clip;
 
+  /// Spotlight playback: every line shows faint at this opacity, and turns
+  /// to full ink (and stays) once [t] reaches the moment it was written.
+  final double? spotlight;
+
   @override
   void paint(Canvas canvas, Size size) {
+    paintingT = t;
     canvas.save();
     if (clip != null) canvas.clipPath(clip!);
     // the camera only for the page; the stylus is placed after it
     canvas.save();
-    final m = cam.matrix(t);
+    final m = (cam ?? fitAll(inks)).matrix(t, view);
     canvas.transform(m.storage);
     if (drawPaper) canvas.drawPicture(paper(dark, dots));
     under?.call(canvas);
     for (var layer = 0; layer <= 2; layer++) {
       for (final d in inks) {
         if (d.layer != layer) continue;
-        d.paint(canvas, d.progress(t), fade, dark);
+        if (spotlight case final ghost?) {
+          final on = d.a == d.b ? 1.0 : span(t, d.a, d.a + 0.012, Curves.easeOut);
+          if (on < 1) d.paint(canvas, 1, fade * ghost * (1 - on), dark);
+          if (on > 0) d.paint(canvas, 1, fade * on, dark);
+        } else {
+          d.paint(canvas, d.progress(t), fade, dark);
+        }
       }
     }
     over?.call(canvas);
     canvas.restore();
-    if (stylus && fade > 0) {
+    if (stylus && spotlight == null && fade > 0) {
       final pen = penAt(inks, t);
       if (pen != null) {
         final p = MatrixUtils.transformPoint(m, pen.$1);
@@ -688,22 +825,49 @@ class InkPainter extends CustomPainter {
   bool shouldRepaint(InkPainter old) => true;
 }
 
+/// How long a finished page is held before the next pass starts.
+const holdMs = 1500;
+
+/// How long the held page takes to fade out over the next pass.
+const carryMs = 900;
+
 /// A scene: what plays on the stage for one page of the tour.
 class TourScene {
   const new({
     required this.duration,
     required this.build,
-    this.rest = 0.8,
+    this.done = 0.92,
+    this.inks = const [],
+    this.cam,
+    this.view = pageArea,
   });
 
+  /// How long the scene's timeline (0 to 1) takes.
   final Duration duration;
 
-  /// The frame shown while it isn't playing (and with animations off).
-  final double rest;
+  /// When everything is written: the frame held at the end of each pass
+  /// (and shown still when animations are off).
+  final double done;
+
+  /// The page's ink, its camera and where the page shows, for the checks
+  /// that every label ends up whole and readable.
+  final List<Drawn> inks;
+  final Cam? cam;
+  final Rect view;
+
   final Widget Function(BuildContext context, double t) build;
+
+  /// One pass: written up to [done], then held.
+  Duration get period =>
+      duration * done + const Duration(milliseconds: holdMs);
 }
 
 /// Plays [scene] over and over while [playing], on a layer of its own.
+///
+/// A page always comes in from the start of its scene: a stage is made at
+/// t = 0, and is reset to it before the frame it starts playing in, so it
+/// never shows a stale or finished frame first. A page going out keeps the
+/// frame it was on.
 class TourStage extends StatefulWidget {
   const new({super.key, required this.scene, required this.playing});
 
@@ -711,24 +875,38 @@ class TourStage extends StatefulWidget {
   final bool playing;
 
   @override
-  State<TourStage> createState() => _TourStageState();
+  State<TourStage> createState() => TourStageState();
 }
 
-class _TourStageState extends State<TourStage>
+class TourStageState extends State<TourStage>
     with SingleTickerProviderStateMixin {
   late final _clock = AnimationController(
     vsync: this,
-    duration: widget.scene.duration,
+    duration: widget.scene.period,
   );
+  final _now = GlobalKey();
+  var _still = false;
+
+  /// Passes played since the page came up, and where the clock was last.
+  var _laps = 0;
+  var _last = 0.0;
+
+  double _ms(double v) => v * widget.scene.period.inMicroseconds / 1000;
+
+  /// The scene time on the stage.
+  @visibleForTesting
+  double get time => _still
+      ? widget.scene.done
+      : min(widget.scene.done, _ms(_clock.value) / widget.scene.duration.inMilliseconds);
 
   void _sync() {
-    final still = MediaQuery.disableAnimationsOf(context);
-    if (widget.playing && !still) {
+    _still = MediaQuery.disableAnimationsOf(context);
+    if (_still) {
+      _clock.stop();
+    } else if (widget.playing) {
       if (!_clock.isAnimating) _clock.repeat();
     } else {
-      _clock
-        ..stop()
-        ..value = widget.scene.rest;
+      _clock.stop();
     }
   }
 
@@ -741,10 +919,12 @@ class _TourStageState extends State<TourStage>
   @override
   void didUpdateWidget(TourStage old) {
     super.didUpdateWidget(old);
-    if (old.playing != widget.playing) {
-      if (widget.playing) _clock.value = 0;
-      _sync();
+    if (widget.playing && !old.playing) {
+      _clock.value = 0;
+      _laps = 0;
+      _last = 0;
     }
+    _sync();
   }
 
   @override
@@ -760,7 +940,24 @@ class _TourStageState extends State<TourStage>
         size: stageSize,
         child: AnimatedBuilder(
           animation: _clock,
-          builder: (context, _) => widget.scene.build(context, _clock.value),
+          builder: (context, _) {
+            final scene = widget.scene;
+            final v = _clock.value;
+            if (v < _last) _laps++;
+            _last = v;
+            // after the first pass, the held page fades out over the next
+            final carry = _still || _laps == 0
+                ? 0.0
+                : 1 - span(_ms(v), 0, carryMs.toDouble(), Curves.easeInOutSine);
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                KeyedSubtree(key: _now, child: scene.build(context, time)),
+                if (carry > 0)
+                  Opacity(opacity: carry, child: scene.build(context, scene.done)),
+              ],
+            );
+          },
         ),
       ),
     ),
@@ -887,13 +1084,35 @@ class MiniToolbar extends StatelessWidget {
   }
 }
 
-/// A page scene: paper, ink and camera, with [overlays] (screen-space
-/// UI) on top and the toolbar at the top centre.
+/// The header strip at the top of the stage, holding [child] centred.
+class StageHeader extends StatelessWidget {
+  const new({super.key, this.child});
+
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = BadNotesColors.of(context);
+    return SizedBox(
+      height: headerH,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border(bottom: BorderSide(color: colors.hairline)),
+        ),
+        child: Center(child: child),
+      ),
+    );
+  }
+}
+
+/// A page scene: the header strip with the toolbar (or [toolbar]), then
+/// paper, ink and camera under it, with [overlays] (screen-space UI) on top.
 Widget inkPage(
   BuildContext context, {
   required double t,
   required List<Drawn> inks,
-  Cam cam = Cam.still,
+  Cam? cam,
   bool? dark,
   double? fade,
   void Function(Canvas canvas)? under,
@@ -910,6 +1129,7 @@ Widget inkPage(
       pen: now?.pen ?? Pen.fountain,
       color: now?.color ?? inkDark,
       palette: paletteOf(inks),
+      docked: 1,
     );
   }
   return Stack(
@@ -927,44 +1147,51 @@ Widget inkPage(
           over: over,
         ),
       ),
-      if (bar != null)
-        Positioned(
-          top: 10,
-          left: 0,
-          right: 0,
-          child: Center(child: bar),
-        ),
       ...overlays,
+      Positioned(top: 0, left: 0, right: 0, child: StageHeader(child: bar)),
     ],
   );
 }
 
-/// A label in dark ink with a thin leader line in [color] ending in a dot
-/// on [target]. The line leaves from whichever end of the label faces it.
+/// Labels are never smaller than this. On a 1280×800 tablet the stage shows
+/// at 1.13–1.3× and pages end framed at 0.9× or more, so it reads at 15 px
+/// or more (the tests check ≥ 14 px).
+const minLabel = 16.0;
+
+/// A label in dark ink on a soft paper card, with a leader line in [color]
+/// ending in a dot on [target]. The line leaves from whichever end of the
+/// label faces it.
 List<Drawn> label(
   String text,
   Offset at,
   Offset target,
   Color color, {
-  double size = 16,
+  double size = 17,
   String font = 'PatrickHand',
   Color ink = inkDark,
 }) {
-  final words = InkText(text, at: at, color: ink, size: size, font: font);
+  final words = InkText(
+    text,
+    at: at,
+    color: ink,
+    size: max(size, minLabel),
+    font: font,
+    backing: true,
+  );
   final box = words.box;
   final fromLeft = target.dx < at.dx + box.width / 2;
   final start = Offset(
-    fromLeft ? at.dx - 5 : at.dx + box.width + 5,
+    fromLeft ? at.dx - 6 : at.dx + box.width + 6,
     at.dy + box.height * 0.55,
   );
   String p(Offset o) => '${o.dx.toStringAsFixed(1)} ${o.dy.toStringAsFixed(1)}';
   final leader = InkLine(
     'M${p(start)} L${p(target)} '
-    'M${p(target - const Offset(1, 0))} A1 1 0 1 0 ${p(target + const Offset(1, 0))} '
-    'A1 1 0 1 0 ${p(target - const Offset(1, 0))}',
+    'M${p(target - const Offset(1.2, 0))} A1.2 1.2 0 1 0 ${p(target + const Offset(1.2, 0))} '
+    'A1.2 1.2 0 1 0 ${p(target - const Offset(1.2, 0))}',
     pen: Pen.fineliner,
     color: color,
-    width: 1.4,
+    width: 1.8,
   );
   return [leader, words];
 }

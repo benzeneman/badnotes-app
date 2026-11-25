@@ -7,17 +7,13 @@ import 'package:flutter/material.dart';
 // Shapes: a free-body diagram drawn rough, held, and snapped clean
 // ---------------------------------------------------------------------------
 
-const _slate = Color(0xFF495057);
+const _slate = Color(0xFF5C677D), _rampFill = Color(0xFFEDF0F4), _hatch = Color(0xFFB4BCC8);
 const _block = Color(0xFF1C7ED6), _blockFill = Color(0xFFD0EBFF);
 const _weight = Color(0xFFE03131);
 const _normal = Color(0xFF2F9E44);
 const _friction = Color(0xFFF76707);
 const _angle = Color(0xFF7048E8);
 const _hold = Color(0xFF4C6EF5);
-
-/// The loop time being painted (shapes snap on the clock, not on their
-/// own progress).
-double _now = 0;
 
 /// A shape drawn by hand, held still, then snapped to its clean form,
 /// point for point.
@@ -31,6 +27,8 @@ class _Snap extends Drawn {
     required this.held,
     required double b,
     this.fill,
+    this.hatched = false,
+    this.width = 2.8,
   }) : rough = svgPath(rough),
        clean = svgPath(clean),
        super(Pen.shape, color) {
@@ -41,6 +39,10 @@ class _Snap extends Drawn {
   final Path rough, clean;
   final double written, held;
   final Color? fill;
+
+  /// Filled light with fine diagonal hatching once clean, as a ramp is.
+  final bool hatched;
+  final double width;
 
   late final _roughMetric = rough.computeMetrics().first;
   late final _from = _sample(rough), _to = _sample(clean);
@@ -73,20 +75,32 @@ class _Snap extends Drawn {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..color = c.withValues(alpha: fade);
-    final t = _now;
+    final t = paintingT;
     if (t >= b) {
+      final k = span(t, b, b + 0.04);
       if (fill case final f?) {
-        final k = span(t, b, b + 0.04);
         canvas.drawPath(
           clean,
           Paint()..color = pageInk(f, dark).withValues(alpha: k * fade),
         );
       }
-      canvas.drawPath(clean, line..strokeWidth = 3);
+      if (hatched) {
+        final r = clean.getBounds();
+        canvas.save();
+        canvas.clipPath(clean);
+        final hatch = Paint()
+          ..color = pageInk(_hatch, dark).withValues(alpha: k * fade)
+          ..strokeWidth = 1.2;
+        for (var x = r.left - r.height; x < r.right; x += 11) {
+          canvas.drawLine(Offset(x, r.bottom), Offset(x + r.height, r.top), hatch);
+        }
+        canvas.restore();
+      }
+      canvas.drawPath(clean, line..strokeWidth = width + 0.3);
       return;
     }
     if (t < held) {
-      line.strokeWidth = 2.6;
+      line.strokeWidth = width;
       canvas.drawPath(
         _roughMetric.extractPath(0, _roughMetric.length * p),
         line,
@@ -115,8 +129,11 @@ class _Snap extends Drawn {
       final q = Offset.lerp(_from[i], _to[i], k)!;
       path.lineTo(q.dx, q.dy);
     }
-    canvas.drawPath(path, line..strokeWidth = 2.6 + 0.4 * k.clamp(0, 1));
+    canvas.drawPath(path, line..strokeWidth = width + 0.3 * k.clamp(0, 1));
   }
+
+  @override
+  late final Rect bounds = rough.getBounds().expandToInclude(clean.getBounds()).inflate(4);
 
   @override
   Offset tipAt(double p) => _roughMetric
@@ -195,13 +212,25 @@ final _corners = [
 final _g = _base + _n * 31;
 
 final _ramp = _Snap(
-  _rough([_rampA, _rampB, _rampC], seed: 3, wobble: 7),
+  _rough([_rampA, _rampB, _rampC], seed: 3, wobble: 6),
   _poly([_rampA, _rampB, _rampC]),
   color: _slate,
   a: 0.04,
   written: 0.13,
   held: 0.17,
   b: 0.21,
+  fill: _rampFill,
+  hatched: true,
+  width: 3.2,
+);
+
+/// The ground under the ramp, with short ticks below it.
+final _ground = InkLine(
+  'M${_rampB.dx - 30} ${_rampB.dy} L${_rampC.dx + 40} ${_rampC.dy} '
+  '${[for (var x = _rampB.dx - 22; x < _rampC.dx + 40; x += 22) 'M$x ${_rampB.dy + 2} L${x - 9} ${_rampB.dy + 11}'].join(' ')}',
+  pen: Pen.fineliner,
+  color: _slate,
+  width: 1.8,
 );
 final _box = _Snap(
   _rough(_corners, seed: 11, wobble: 4),
@@ -223,7 +252,11 @@ final _mg = _Snap(
   b: 0.565,
 );
 
-final _physicsInks = () {
+const _ms = 14700;
+
+late final List<Drawn> _diagram, _working;
+
+final _physicsInks = paced(_ms, () {
   final arrows = [
     InkLine(arrowSvg(_g, _g + _n * 92), pen: Pen.shape, color: _normal, width: 3),
     InkLine(arrowSvg(_g, _g - _u * 92), pen: Pen.shape, color: _friction, width: 3),
@@ -289,8 +322,11 @@ final _physicsInks = () {
     l3b,
   ];
 
+  _diagram = [_ramp, _ground, _box, _mg, ...arrows, ...labels];
+  _working = [fma, mark, ...work];
   return <Drawn>[
     _ramp,
+    ...lay(0.212, 0.232, [_ground]),
     _box,
     _mg,
     ...lay(0.585, 0.65, arrows, gap: 20),
@@ -300,33 +336,38 @@ final _physicsInks = () {
     ...lay(0.852, 0.866, [mark]),
     ...lay(0.87, 0.92, work, gap: 12),
   ];
+});
+
+final _physicsCam = () {
+  final ramp = boundsOf([_ramp, _ground]);
+  final box = boundsOf([_box]);
+  final forces = boundsOf([_box, _mg]);
+  final diagram = boundsOf(_diagram);
+  final all = boundsOf(_physicsInks);
+  return Cam([
+    (0.0, ramp),
+    (0.21, ramp),
+    (0.25, box),
+    (0.4, box),
+    (0.45, forces),
+    (0.57, forces),
+    (0.66, diagram),
+    (0.77, all),
+    (0.86, boundsOf(_working)),
+    (0.92, boundsOf(_working)),
+    (0.96, all),
+  ]);
 }();
 
-final _physicsCam = Cam([
-  (0.0, const Offset(320, 245), 1.18),
-  (0.21, const Offset(320, 245), 1.18),
-  (0.24, _base + _n * 30, 1.6),
-  (0.4, _base + _n * 30, 1.6),
-  (0.44, _g + const Offset(0, 50), 1.5),
-  (0.57, _g + const Offset(0, 40), 1.4),
-  (0.66, const Offset(320, 200), 1),
-  (0.77, const Offset(320, 200), 1),
-  (0.86, const Offset(470, 140), 1.25),
-  (0.925, const Offset(470, 140), 1.25),
-  (0.95, const Offset(320, 200), 1),
-]);
-
 final physicsScene = TourScene(
-  duration: const Duration(milliseconds: 10500),
-  rest: 0.95,
-  build: (context, t) {
-    _now = t;
-    return inkPage(
-      context,
-      t: t,
-      inks: _physicsInks,
-      cam: _physicsCam,
-      fade: loopFade(t, out: 0.95),
-    );
-  },
+  duration: const Duration(milliseconds: _ms),
+  done: 0.97,
+  inks: _physicsInks,
+  cam: _physicsCam,
+  build: (context, t) => inkPage(
+    context,
+    t: t,
+    inks: _physicsInks,
+    cam: _physicsCam,
+  ),
 );

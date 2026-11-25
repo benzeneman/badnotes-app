@@ -23,7 +23,9 @@ double _phase(double x) => 2 * pi * (x - _x0) / _wave;
 double _y1(double x) => _midY + _amp * sin(_phase(x));
 double _y2(double x) => _midY - _amp * sin(_phase(x));
 
-final _dnaInks = () {
+const _dnaMs = 13300;
+
+final _dnaInks = paced(_dnaMs, () {
   // strand 1 left to right, strand 2 back the other way (antiparallel)
   final s1 = InkLine(
     plotSvg(_y1, _x0, _x1, step: 6),
@@ -112,7 +114,7 @@ final _dnaInks = () {
       const Offset(470, 128),
       Offset(pairX, _midY - 14),
       const Color(0xFFF59F00),
-      size: 18,
+      size: 19,
     ),
     ...label(
       'sugar-phosphate backbone',
@@ -135,11 +137,11 @@ final _dnaInks = () {
     letter('A', 44, 318),
     InkText('=', at: const Offset(66, 320), color: const Color(0xFF495057), size: 22),
     letter('T', 84, 318),
-    InkText('2 H-bonds', at: const Offset(110, 324), color: const Color(0xFF6B7280), size: 15),
+    InkText('2 H-bonds', at: const Offset(110, 323), color: const Color(0xFF6B7280), size: 17),
     letter('G', 44, 350),
     InkText('=', at: const Offset(66, 352), color: const Color(0xFF495057), size: 22),
     letter('C', 84, 350),
-    InkText('3 H-bonds', at: const Offset(110, 356), color: const Color(0xFF6B7280), size: 15),
+    InkText('3 H-bonds', at: const Offset(110, 355), color: const Color(0xFF6B7280), size: 17),
   ];
 
   return <Drawn>[
@@ -150,21 +152,28 @@ final _dnaInks = () {
     ...lay(0.695, 0.735, [highlight]),
     ...lay(0.745, 0.91, [...ends, ...notes, ...legend], gap: 18),
   ];
-}();
+});
 
-const _dnaCam = Cam([
-  (0.0, Offset(150, 246), 1.55),
-  (0.05, Offset(160, 246), 1.55),
-  (0.21, Offset(480, 246), 1.55),
-  (0.35, Offset(170, 246), 1.45),
-  (0.55, Offset(420, 240), 1.2),
-  (0.6, Offset(320, 200), 1),
-  (0.9, Offset(320, 200), 1.03),
+// the helix's left and right halves (strand 1 runs right, strand 2 back)
+const _helixLeft = Rect.fromLTRB(_x0 - 30, _midY - _amp - 10, 340, _midY + _amp + 10);
+const _helixRight = Rect.fromLTRB(312, _midY - _amp - 10, _x1 + 30, _midY + _amp + 10);
+const _helix = Rect.fromLTRB(_x0 - 30, _midY - _amp - 10, _x1 + 30, _midY + _amp + 10);
+
+final _dnaCam = Cam([
+  (0.0, _helixLeft),
+  (0.06, _helixLeft),
+  (0.21, _helixRight),
+  (0.35, _helixLeft),
+  (0.45, _helix),
+  (0.55, _helix),
+  (0.64, boundsOf(_dnaInks)),
 ]);
 
 final dnaScene = TourScene(
-  duration: const Duration(milliseconds: 9500),
-  rest: 0.92,
+  duration: const Duration(milliseconds: _dnaMs),
+  done: 0.92,
+  inks: _dnaInks,
+  cam: _dnaCam,
   build: (context, t) =>
       inkPage(context, t: t, inks: _dnaInks, cam: _dnaCam),
 );
@@ -181,7 +190,12 @@ const _knob = Color(0xFFF783AC);
 
 const _axonSvg = 'M226 232 C 300 224 380 246 520 236';
 
-final _neuronInks = () {
+const _neuronMs = 14700;
+
+/// The neuron's parts, in the order they are drawn.
+late final List<Drawn> _dendrites, _soma, _axonPart, _terminals;
+
+final _neuronInks = paced(_neuronMs, () {
   InkLine dendrite(String d, [double w = 2.6]) =>
       InkLine(d, pen: Pen.fountain, color: _nerve, width: w);
   final dendrites = [
@@ -277,6 +291,10 @@ final _neuronInks = () {
     font: 'Caveat',
   );
 
+  _dendrites = dendrites;
+  _soma = soma;
+  _axonPart = [axon, ...myelin];
+  _terminals = terminals;
   return <Drawn>[
     ...lay(0.04, 0.2, dendrites, gap: 10),
     ...lay(0.2, 0.3, soma, gap: 10),
@@ -288,25 +306,33 @@ final _neuronInks = () {
     ...lay(0.888, 0.91, [mark]),
     ...lay(0.912, 0.93, [sub]),
   ];
+});
+
+final _neuronCam = () {
+  final all = boundsOf(_neuronInks);
+  final cell = boundsOf([..._dendrites, ..._soma]);
+  final axon = boundsOf([..._soma, ..._axonPart]);
+  final end = boundsOf([..._axonPart, ..._terminals]);
+  return Cam([
+    (0.0, boundsOf(_dendrites)),
+    (0.2, boundsOf(_dendrites)),
+    (0.3, cell),
+    (0.36, axon),
+    (0.49, axon),
+    (0.58, end),
+    (0.66, all),
+  ]);
 }();
 
-const _neuronCam = Cam([
-  (0.0, Offset(150, 226), 1.6),
-  (0.2, Offset(170, 226), 1.6),
-  (0.3, Offset(230, 230), 1.5),
-  (0.49, Offset(440, 236), 1.45),
-  (0.58, Offset(500, 240), 1.35),
-  (0.62, Offset(320, 200), 1),
-]);
-
 final neuronScene = TourScene(
-  duration: const Duration(milliseconds: 10500),
-  rest: 0.95,
+  duration: const Duration(milliseconds: _neuronMs),
+  done: 0.94,
+  inks: _neuronInks,
+  cam: _neuronCam,
   build: (context, t) => inkPage(
     context,
     t: t,
     inks: _neuronInks,
     cam: _neuronCam,
-    fade: loopFade(t, out: 0.955),
   ),
 );

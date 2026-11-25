@@ -7,7 +7,7 @@ import 'package:badnotes/components/ui/bn_controls.dart';
 import 'package:flutter/material.dart';
 
 // ---------------------------------------------------------------------------
-// Recording: the nitration of benzene replays in time with the audio, then
+// Recording: the nitration of benzene plays back in Real-time reveal, then
 // in Spotlight
 // ---------------------------------------------------------------------------
 
@@ -50,157 +50,211 @@ List<Drawn> _benzene(Offset c, double r) {
   ];
 }
 
-final _inks = () {
+/// The ink's own clock is one playback: it is laid out for that long.
+const _playMs = 6400;
+
+final _inks = paced(_playMs, () {
   final heading = InkText(
     'Nitration of benzene',
-    at: const Offset(30, 56),
+    at: const Offset(28, 56),
     color: _title,
-    size: 30,
+    size: 32,
     font: 'Kalam',
     weight: FontWeight.w700,
     pen: Pen.fountain,
   );
   final hr = heading.rectOf(heading.text);
-  Drawn chem(String s, Offset at, Color c, {double size = 30}) =>
+  Drawn chem(String s, Offset at, Color c, {double size = 34}) =>
       InkText(s, at: at, color: c, size: size, font: 'Caveat', weight: FontWeight.w700);
-  const product = Offset(474, 232);
+  const reactant = Offset(108, 214), product = Offset(474, 222);
   return lay(0.0, 0.97, <Drawn>[
     heading,
     InkLine(
       'M${hr.left} ${hr.bottom - 10} L${hr.right + 4} ${hr.bottom - 12}',
       pen: Pen.highlighter,
       color: const Color(0xFF99E9F2),
-      width: 16,
+      width: 17,
     ),
-    ..._benzene(const Offset(118, 222), 46),
-    chem('+', const Offset(180, 200), _bond),
-    chem('HNO₃', const Offset(204, 202), _nitric),
-    InkLine(arrowSvg(const Offset(298, 224), const Offset(392, 224), head: 11),
-        pen: Pen.shape, color: _arrow, width: 2.6),
-    chem('H₂SO₄', const Offset(310, 182), _catalyst, size: 24),
-    chem('50 °C', const Offset(318, 230), const Color(0xFF6B7280), size: 22),
-    ..._benzene(product, 46),
-    InkLine('M${_p(product - const Offset(0, 46))} L${_p(product - const Offset(0, 74))}',
-        pen: Pen.ballpoint, color: _bond, width: 2.4),
-    chem('NO₂', product + const Offset(-22, -112), _oxygen),
-    chem('+ H₂O', const Offset(532, 214), _water, size: 28),
-    InkText('Electrophilic substitution', at: const Offset(64, 300), size: 20),
-    InkLine('M64 330 C 140 326 220 332 290 327',
-        pen: Pen.fineliner, color: _title, width: 1.6),
+    ..._benzene(reactant, 54),
+    chem('+', const Offset(176, 190), _bond),
+    chem('HNO₃', const Offset(200, 192), _nitric),
+    InkLine(arrowSvg(const Offset(300, 216), const Offset(398, 216), head: 12),
+        pen: Pen.shape, color: _arrow, width: 2.8),
+    chem('H₂SO₄', const Offset(310, 170), _catalyst, size: 27),
+    chem('50 °C', const Offset(318, 224), const Color(0xFF6B7280), size: 25),
+    ..._benzene(product, 54),
+    InkLine('M${_p(product - const Offset(0, 54))} L${_p(product - const Offset(0, 84))}',
+        pen: Pen.ballpoint, color: _bond, width: 2.6),
+    chem('NO₂', product + const Offset(-25, -124), _oxygen),
+    chem('+ H₂O', const Offset(536, 204), _water, size: 31),
+    InkText('Electrophilic substitution', at: const Offset(60, 300), size: 23),
+    InkLine('M60 334 C 150 330 240 336 322 331',
+        pen: Pen.fineliner, color: _title, width: 1.8),
   ], gap: 30);
-}();
+});
 
 String _clock(int s) => '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
 
+/// The playback bar's strip at the bottom of the stage.
+const _footerH = 58.0;
+const _view = Rect.fromLTRB(0, headerH, 640, 400 - _footerH);
+
+/// Where the Spotlight segment of the mode switch is on the stage.
+const _spotlightAt = Offset(390, headerH / 2);
+
+// The timeline: once in Real-time reveal (the page starts empty and the
+// lines write themselves with the sound), a tap on Spotlight, then once in
+// Spotlight (the whole page faint, each line turning to full ink when the
+// sound reaches it, and staying).
+const _reveal = (0.02, 0.42), _tap = 0.445, _switch = 0.47, _dim = (0.47, 0.51);
+const _spot = (0.53, 0.93);
+
 final recordingScene = TourScene(
-  duration: const Duration(milliseconds: 11000),
-  rest: 0.46,
+  duration: const Duration(milliseconds: 16000),
+  done: 0.95,
+  inks: _inks,
+  view: _view,
   build: (context, t) {
     final colors = BadNotesColors.of(context);
     final scheme = ColorScheme.of(context);
     final dark = pagesDark(context);
-    final spotlight = t >= 0.5;
-    // the ink's own clock: once through as it was written, once in Spotlight
-    final inkT = spotlight
-        ? span(t, 0.53, 0.93, Curves.linear)
-        : span(t, 0.02, 0.46, Curves.linear);
-    final played = spotlight ? span(t, 0.53, 0.93, Curves.linear) : inkT;
-    final fade = min(loopFade(t, out: 0.95), 1 - span(t, 0.47, 0.5) + span(t, 0.5, 0.53));
-    final recent = [
-      for (final d in _inks)
-        if (d.a <= inkT && d.b >= inkT - 0.06) d,
-    ];
+    final spotlight = t >= _switch;
+    final played = spotlight
+        ? span(t, _spot.$1, _spot.$2, Curves.linear)
+        : span(t, _reveal.$1, _reveal.$2, Curves.linear);
+    final cam = fitAll(_inks);
+    final painter = !spotlight
+        ? InkPainter(
+            t: played,
+            inks: _inks,
+            dots: scheme.primary,
+            cam: cam,
+            view: _view,
+            dark: dark,
+            fade: loopFade(t),
+            stylus: false,
+          )
+        : t < _dim.$2
+        // switching: the written page fades down to its faint ghost
+        ? InkPainter(
+            t: 1,
+            inks: _inks,
+            dots: scheme.primary,
+            cam: cam,
+            view: _view,
+            dark: dark,
+            fade: 1 - 0.75 * span(t, _dim.$1, _dim.$2),
+            stylus: false,
+          )
+        : InkPainter(
+            t: played,
+            inks: _inks,
+            dots: scheme.primary,
+            cam: cam,
+            view: _view,
+            dark: dark,
+            spotlight: 0.25,
+          );
+    final mode = spotlight ? 'Spotlight' : 'Real-time reveal';
     return Stack(
       fit: StackFit.expand,
       children: [
-        CustomPaint(
-          painter: spotlight
-              ? InkPainter(
-                  t: 1,
-                  inks: _inks,
-                  dots: scheme.primary,
-                  dark: dark,
-                  fade: 0.14 * fade,
-                  stylus: false,
-                )
-              : InkPainter(t: inkT, inks: _inks, dots: scheme.primary, dark: dark, fade: fade),
-        ),
-        if (spotlight)
-          CustomPaint(
-            painter: InkPainter(
-              t: inkT,
-              inks: recent,
-              dots: scheme.primary,
-              dark: dark,
-              fade: fade,
-              drawPaper: false,
-            ),
-          ),
+        CustomPaint(painter: painter),
         Positioned(
-          top: 10,
+          top: 0,
           left: 0,
           right: 0,
-          child: Center(
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(BnRadius.control)),
-                boxShadow: BnShadows.floating,
-              ),
-              child: SizedBox(
-                width: 280,
-                child: BnSegmented<String>(
-                  segments: const [
-                    BnSegment('reveal', 'Real-time reveal'),
-                    BnSegment('spotlight', 'Spotlight'),
-                  ],
-                  selected: spotlight ? 'spotlight' : 'reveal',
-                  height: 32,
-                  onChanged: (_) {},
-                ),
+          child: StageHeader(
+            child: SizedBox(
+              width: 280,
+              child: BnSegmented<String>(
+                segments: const [
+                  BnSegment('reveal', 'Real-time reveal'),
+                  BnSegment('spotlight', 'Spotlight'),
+                ],
+                selected: spotlight ? 'spotlight' : 'reveal',
+                height: 32,
+                onChanged: (_) {},
               ),
             ),
           ),
         ),
+        if (t > _tap && t < _tap + 0.05)
+          CustomPaint(
+            painter: TapPainter(
+              _spotlightAt,
+              span(t, _tap, _tap + 0.05, Curves.easeOut),
+              colors.accent,
+            ),
+          ),
         Positioned(
-          left: 90,
-          right: 90,
-          bottom: 14,
-          child: Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: _footerH,
+          child: DecoratedBox(
             decoration: BoxDecoration(
               color: colors.surface,
-              border: Border.all(color: colors.hairline),
-              borderRadius: const BorderRadius.all(Radius.circular(BnRadius.popover)),
-              boxShadow: BnShadows.floating,
+              border: Border(top: BorderSide(color: colors.hairline)),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(color: colors.text, shape: BoxShape.circle),
-                  child: Icon(Icons.pause_rounded, color: colors.surface, size: 19),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  _clock((played * 94).round()),
-                  style: BnType.caption.copyWith(
-                    color: colors.text,
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(color: colors.text, shape: BoxShape.circle),
+                    child: Icon(Icons.pause_rounded, color: colors.surface, size: 20),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomPaint(
-                    size: const Size.fromHeight(30),
-                    painter: _Wave(played, colors.accent, colors.hairline),
+                  const SizedBox(width: 10),
+                  Text(
+                    _clock((played * 94).round()),
+                    style: BnType.body.copyWith(
+                      color: colors.text,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Text(_clock(94), style: BnType.caption.copyWith(color: colors.muted)),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: CustomPaint(
+                      size: const Size.fromHeight(30),
+                      painter: _Wave(played, colors.accent, colors.hairline),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(_clock(94), style: BnType.body.copyWith(color: colors.muted)),
+                  const SizedBox(width: 12),
+                  // the mode playing, as a chip
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: (spotlight ? colors.accent : colors.text2).withValues(alpha: 0.12),
+                      borderRadius: const BorderRadius.all(Radius.circular(BnRadius.control)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          spotlight ? Icons.highlight_rounded : Icons.play_arrow_rounded,
+                          size: 16,
+                          color: spotlight ? colors.accent : colors.text2,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          mode,
+                          style: BnType.caption.copyWith(
+                            color: spotlight ? colors.accent : colors.text2,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -64,7 +64,7 @@ final _taped = <InkText>[];
 
 final heartInks = () {
   List<Drawn> tag(String text, Offset at, Offset target, Color c, {bool tape = false}) {
-    final l = label(text, at, target, c, size: 16);
+    final l = label(text, at, target, c);
     if (tape) _taped.add(l.last as InkText);
     return l;
   }
@@ -145,12 +145,35 @@ void _drawTape(Canvas canvas, Rect r, double laid, double peeked, double fade) {
   canvas.restore();
 }
 
+/// A close-up on taped label [i] and what it points at.
+Rect _near(int i) => Rect.fromCenter(
+  center: _tapedRects[i].center,
+  width: 400,
+  height: 250,
+);
+
+final _tapeCam = () {
+  final all = boundsOf(heartInks);
+  return Cam([
+    (0.0, all),
+    (0.4, all),
+    (0.46, _near(2)),
+    (0.56, _near(2)),
+    (0.62, _near(3)),
+    (0.7, _near(5)),
+    (0.76, _near(5)),
+    (0.84, all),
+  ]);
+}();
+
 final tapeScene = TourScene(
-  duration: const Duration(milliseconds: 9000),
-  rest: 0.84,
+  duration: const Duration(milliseconds: 12600),
+  done: 0.88,
+  inks: heartInks,
+  cam: _tapeCam,
   build: (context, t) {
     final colors = BadNotesColors.of(context);
-    final fade = loopFade(t, out: 0.94);
+    final fade = loopFade(t);
     final rects = _tapedRects;
     final laid = [
       for (var i = 0; i < rects.length; i++)
@@ -168,16 +191,9 @@ final tapeScene = TourScene(
         color: _tapeColor,
         palette: [_tapeColor, Color(0xFFFF8A65), Color(0xFFEF5350), Color(0xFFEC407A)],
         tape: true,
+        docked: 1,
       ),
-      cam: const Cam([
-        (0.0, Offset(320, 200), 1),
-        (0.4, Offset(320, 200), 1),
-        (0.46, Offset(250, 250), 1.2),
-        (0.56, Offset(250, 250), 1.2),
-        (0.62, Offset(370, 160), 1.2),
-        (0.7, Offset(380, 250), 1.2),
-        (0.82, Offset(320, 200), 1),
-      ]),
+      cam: _tapeCam,
       over: (canvas) {
         for (var i = 0; i < rects.length; i++) {
           final tap = taps[i];
@@ -207,7 +223,12 @@ final tapeScene = TourScene(
 final _themes = <Brightness, ThemeData>{};
 ThemeData _theme(Brightness b) => _themes.putIfAbsent(b, () => BadNotesTheme.create(b));
 
-const _toggle = Offset(586, 21);
+/// The light/dark switch in the header.
+const _toggle = Offset(585, headerH / 2);
+
+/// Where the page shows in the dark mode scene: under the header and the
+/// band the floating toolbar hovers in, so the toolbar never covers ink.
+const _darkView = Rect.fromLTRB(0, headerH + 52, 640, 400);
 
 class _CircleClip extends CustomClipper<Path> {
   new(this.radius);
@@ -233,8 +254,8 @@ Widget _editor(BuildContext context, double t, double docked, bool dark) {
           t: 1,
           inks: heartInks,
           dots: scheme.primary,
+          view: _darkView,
           dark: dark,
-          fade: loopFade(t, out: 0.95),
           stylus: false,
         ),
       ),
@@ -242,7 +263,7 @@ Widget _editor(BuildContext context, double t, double docked, bool dark) {
         left: 0,
         right: 0,
         top: 0,
-        height: 42,
+        height: headerH,
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: colors.surface,
@@ -269,9 +290,11 @@ Widget _editor(BuildContext context, double t, double docked, bool dark) {
           ),
         ),
       ),
+      // floating just under the header, over empty paper; docked, in the
+      // header between the title and the icons
       Positioned(
-        top: 52 - 48 * docked,
-        left: 0,
+        top: headerH + 6 - (headerH + 6 - 3) * docked,
+        left: 50 * docked,
         right: 0,
         child: Center(
           child: Transform.scale(
@@ -296,8 +319,10 @@ Widget _editor(BuildContext context, double t, double docked, bool dark) {
 }
 
 final darkScene = TourScene(
-  duration: const Duration(milliseconds: 9000),
-  rest: 0.62,
+  duration: const Duration(milliseconds: 12600),
+  done: 0.98,
+  inks: heartInks,
+  view: _darkView,
   build: (context, t) {
     final docked = span(t, 0.1, 0.24) - span(t, 0.7, 0.82);
     final wipe = span(t, 0.38, 0.58) - span(t, 0.86, 0.97);
@@ -316,22 +341,9 @@ final darkScene = TourScene(
           ClipPath(clipper: _CircleClip(760 * wipe), child: editor(Brightness.dark)),
         if (tap > 0 && tap < 1)
           CustomPaint(
-            painter: _Tap(tap, BadNotesColors.of(context).accent),
+            painter: TapPainter(_toggle, tap, BadNotesColors.of(context).accent),
           ),
       ],
     );
   },
 );
-
-class _Tap extends CustomPainter {
-  new(this.k, this.color);
-
-  final double k;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) => drawTap(canvas, _toggle, k, color);
-
-  @override
-  bool shouldRepaint(_Tap old) => old.k != k;
-}

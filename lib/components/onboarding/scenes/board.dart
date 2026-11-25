@@ -95,30 +95,32 @@ List<BoardItem> _items(double t) {
     return to.shift(Offset(0, -620 * (1 - k)));
   }
 
-  final move = span(t, 0.58, 0.78);
-  const from = Rect.fromLTWH(560, 300, 300, 230);
-  const to = Rect.fromLTWH(110, 330, 300, 230);
+  // the board is 1000 wide on a 640 × 400 stage: 625 tall shows. Every
+  // card stays inside that, with room for its pin or tape on top.
+  final move = span(t, 0.5, 0.68);
+  const from = Rect.fromLTWH(600, 392, 290, 190);
+  const to = Rect.fromLTWH(120, 392, 290, 190);
   return [
     note(
       'formulas',
-      drop(const Rect.fromLTWH(30, 40, 290, 250), 0.04),
+      drop(const Rect.fromLTWH(36, 80, 260, 250), 0.0),
       text: 'E = mc²\nF = ma\nPV = nRT\na² + b² = c²',
       shape: 3,
-      angle: -0.04,
+      angle: -0.03,
       decoColor: 0xFFE03131,
       labels: const ['physics'],
     ),
     note(
       'sketch',
-      drop(const Rect.fromLTWH(350, 30, 300, 270), 0.14),
+      drop(const Rect.fromLTWH(322, 62, 340, 310), 0.07),
       color: 5,
-      angle: 0.03,
+      angle: 0.02,
       deco: 2,
       ink: _sketch,
     ),
     note(
       'todo',
-      drop(const Rect.fromLTWH(690, 50, 270, 290), 0.24),
+      drop(const Rect.fromLTWH(688, 80, 284, 290), 0.14),
       text: 'This week',
       checklist: const [
         BoardCheck('Heart labels', done: true),
@@ -127,37 +129,33 @@ List<BoardItem> _items(double t) {
       ],
       color: 2,
       shape: 2,
-      angle: 0.05,
+      angle: 0.025,
       deco: 3,
     ),
     note(
       'exam',
-      Rect.lerp(drop(from, 0.36), to, move)!,
+      Rect.lerp(drop(from, 0.24), to, move)!,
       text: 'Anatomy exam\nFri 9:00, Room 204',
       color: 6,
       shape: 1,
-      angle: 0.14 - 0.17 * move,
+      angle: 0.1 - 0.13 * move,
       z: 5,
       decoColor: 0xFF4C6EF5,
     ),
   ];
 }
 
+/// The cards land one by one (the first right away, so a new pass never
+/// shows an empty board for long: the last one's cards fade out over it).
 final boardScene = TourScene(
-  duration: const Duration(milliseconds: 8000),
-  rest: 0.9,
-  build: (context, t) {
-    final fade = loopFade(t, out: 0.95);
-    return Opacity(
-      opacity: fade,
-      child: IgnorePointer(
-        child: PinBoard(
-          items: _items(t),
-          openNote: (_, _) {},
-          openPhoto: (_, _) {},
-          minHeight: stageSize.height,
-        ),
-      ),
-    );
-  },
+  duration: const Duration(milliseconds: 11200),
+  done: 0.72,
+  build: (context, t) => IgnorePointer(
+    child: PinBoard(
+      items: _items(t),
+      openNote: (_, _) {},
+      openPhoto: (_, _) {},
+      minHeight: stageSize.height,
+    ),
+  ),
 );

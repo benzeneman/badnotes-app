@@ -23,7 +23,9 @@ double _cosY(double x) => _oy - _ys * cos((x - _ox) / _xs);
 
 void _noop() {}
 
-final _graph = () {
+const _ms = 14000;
+
+final _graph = paced(_ms, () {
   final axes = [
     InkLine(arrowSvg(const Offset(50, _oy), const Offset(402, _oy), head: 9),
         pen: Pen.shape, color: _axis, width: 2),
@@ -38,9 +40,9 @@ final _graph = () {
         pen: Pen.fineliner, color: _axis, width: 1.6),
     for (final (i, s) in ['π/2', 'π', '3π/2', '2π'].indexed)
       InkText(s, at: Offset(_ox + 75 * (i + 1) - (s.length * 3.5), _oy + 6),
-          color: const Color(0xFF6B7280), size: 15),
-    InkText('1', at: const Offset(52, 155), color: const Color(0xFF6B7280), size: 15),
-    InkText('−1', at: const Offset(44, 305), color: const Color(0xFF6B7280), size: 15),
+          color: const Color(0xFF6B7280), size: 16),
+    InkText('1', at: const Offset(52, 154), color: const Color(0xFF6B7280), size: 16),
+    InkText('−1', at: const Offset(42, 304), color: const Color(0xFF6B7280), size: 16),
   ];
   final curves = [
     InkLine(plotSvg(_sinY, _ox, 370, step: 5), pen: Pen.fountain, color: _sin, width: 2.6),
@@ -64,7 +66,7 @@ final _graph = () {
     ...lay(0.335, 0.37, [shade]),
     ...lay(0.375, 0.41, names, gap: 20),
   ];
-}();
+});
 
 /// The worked integral in [ink].
 List<Drawn> _integral(Color ink) => [
@@ -76,7 +78,7 @@ List<Drawn> _integral(Color ink) => [
   InkText('= 1 + 1 = 2', at: const Offset(442, 220), color: ink, size: 25),
 ];
 
-final _work = lay(0.42, 0.55, _integral(inkDark), gap: 10);
+final _work = paced(_ms, () => lay(0.42, 0.55, _integral(inkDark), gap: 10));
 final _workBlue = _integral(_recolor);
 final _answer = () {
   final r = (_work.last as InkText).rectOf('= 2');
@@ -87,7 +89,7 @@ final _answer = () {
     width: 20,
   );
 }();
-final _highlight = lay(0.555, 0.575, [_answer]);
+final _highlight = paced(_ms, () => lay(0.555, 0.575, [_answer]));
 
 final _picked = () {
   var r = (_work.first as InkText).rectOf('∫');
@@ -117,26 +119,41 @@ final _loopMetric = _loopPath.computeMetrics().first;
 
 final _inks = <Drawn>[..._graph, ..._work, ..._highlight];
 
-const _cam = Cam([
-  (0.0, Offset(220, 236), 1.35),
-  (0.33, Offset(220, 236), 1.35),
-  (0.42, Offset(520, 175), 1.35),
-  (0.56, Offset(520, 175), 1.35),
-  (0.6, Offset(320, 200), 1),
-]);
+/// Where the integral ends up: moved down and left, grown 10%.
+const _shift = Offset(-14, 46), _grown = 1.1;
+
+final _cam = () {
+  final moved = Rect.fromLTWH(
+    _picked.left + _shift.dx,
+    _picked.top + _shift.dy,
+    _picked.width * _grown,
+    _picked.height * _grown,
+  );
+  final work = _picked.expandToInclude(_loopPath.getBounds());
+  final all = boundsOf(_inks).expandToInclude(work).expandToInclude(moved.inflate(10));
+  return Cam([
+    (0.0, boundsOf(_graph)),
+    (0.33, boundsOf(_graph)),
+    (0.42, work),
+    (0.56, work),
+    (0.62, all),
+  ]);
+}();
 
 final lassoScene = TourScene(
-  duration: const Duration(milliseconds: 10000),
-  rest: 0.93,
+  duration: const Duration(milliseconds: _ms),
+  done: 0.93,
+  inks: _inks,
+  cam: _cam,
   build: (context, t) {
     final colors = BadNotesColors.of(context);
     final accent = colors.accent;
     final drawn = span(t, 0.6, 0.68, Curves.easeInOut);
     final selected = t >= 0.68;
     final move = span(t, 0.72, 0.79);
-    final grow = 1 + 0.1 * span(t, 0.8, 0.86);
+    final grow = 1 + (_grown - 1) * span(t, 0.8, 0.86);
     final recolor = span(t, 0.88, 0.91);
-    final shift = const Offset(-14, 46) * move;
+    final shift = _shift * move;
     // scaled about the top left: the handle dragged is the bottom right
     final origin = _picked.topLeft + shift;
     final box = Rect.fromLTWH(
@@ -145,7 +162,7 @@ final lassoScene = TourScene(
       _picked.width * grow,
       _picked.height * grow,
     );
-    final fade = loopFade(t, out: 0.95);
+    final fade = loopFade(t);
     final dark = pagesDark(context);
 
     void paintPicked(Canvas canvas) {
@@ -154,7 +171,7 @@ final lassoScene = TourScene(
       canvas.translate(origin.dx, origin.dy);
       canvas.scale(grow);
       canvas.translate(-_picked.left, -_picked.top);
-      if (move > 0 && move < 1 || grow > 1 && grow < 1.1) {
+      if (move > 0 && move < 1 || grow > 1 && grow < _grown) {
         // lifted while it moves
         canvas.drawRRect(
           RRect.fromRectAndRadius(_picked.inflate(2), const Radius.circular(8)),
@@ -248,6 +265,7 @@ final lassoScene = TourScene(
               color: inkDark,
               palette: [inkDark, _sin, _cos, _recolor, Color(0xFF2F9E44)],
               lasso: true,
+              docked: 1,
             ),
       overlays: [
         if (selected)
@@ -255,7 +273,10 @@ final lassoScene = TourScene(
             child: Opacity(
               opacity: span(t, 0.69, 0.72) * fade,
               child: SelectionActionBar(
-                bounds: () => box.inflate(10),
+                bounds: () => MatrixUtils.transformRect(
+                  _cam.matrix(t, pageArea),
+                  box.inflate(10),
+                ),
                 repositioned: const AlwaysStoppedAnimation(0),
                 color: Color.lerp(inkDark, _recolor, recolor),
                 onColor: (_) {},
