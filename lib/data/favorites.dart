@@ -29,8 +29,28 @@ abstract class Favorites {
     ];
   }
 
-  static void renameFolder(String from, String to) =>
-      rename(folderKey(from), folderKey(to));
+  /// Moves the star of the folder at [from], and of any starred folder
+  /// inside it, over to [to]. Notes inside follow their own files.
+  static void renameFolder(String from, String to) {
+    final fromKey = folderKey(from), toKey = folderKey(to);
+    bool inside(String star) => star.endsWith('/') && star.startsWith(fromKey);
+    if (!stows.favoriteNotes.value.any(inside)) return;
+    stows.favoriteNotes.value = [
+      for (final path in stows.favoriteNotes.value)
+        inside(path) ? toKey + path.substring(fromKey.length) : path,
+    ];
+  }
+
+  /// Forgets the star of the folder at [path] and of any folder inside it.
+  static void removeFolder(String path) {
+    final key = folderKey(path);
+    bool inside(String star) => star.endsWith('/') && star.startsWith(key);
+    if (!stows.favoriteNotes.value.any(inside)) return;
+    stows.favoriteNotes.value = [
+      for (final path in stows.favoriteNotes.value)
+        if (!inside(path)) path,
+    ];
+  }
 
   static void remove(String path) {
     if (!contains(path)) return;

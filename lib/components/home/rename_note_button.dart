@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/ui/bn_home_dialogs.dart';
 import 'package:badnotes/components/ui/ui.dart';
@@ -85,7 +83,10 @@ class _NoteRenameDialogState extends State<_NoteRenameDialog> {
     if (name == null) return t.home.renameNote.noteNameEmpty;
     final problem = FileManager.validateFilename(name);
     if (problem != null) return problem;
-    final taken = name != _currentName && File(_folder + name).existsSync();
+    // _folder is relative to the notes folder, and notes keep an extension
+    final taken =
+        name != _currentName &&
+        FileManager.doesFileExist(_folder + name + Editor.extension);
     return taken ? t.home.renameNote.noteNameExists : null;
   }
 

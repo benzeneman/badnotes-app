@@ -316,11 +316,18 @@ class _BrowsePageState extends State<BrowsePage> {
         _visibleFiles.isEmpty &&
         _visibleFolders.isEmpty;
 
-    // back from "All folders" goes to the desk, not out of the app
+    // back from "All folders" goes to the desk, and from inside a folder up
+    // one folder, not out of the app: folders open with go, so there is no
+    // route under them to pop to
     return PopScope(
-      canPop: !_allFolders,
+      canPop: !_allFolders && isAtRoot,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) setState(() => _allFolders = false);
+        if (didPop) return;
+        if (_allFolders) {
+          setState(() => _allFolders = false);
+        } else {
+          onDirectoryTap('..');
+        }
       },
       child: Scaffold(
       backgroundColor: colors.desk,
@@ -776,7 +783,7 @@ class _BrowsePageState extends State<BrowsePage> {
               Text(
                 byName ? 'Name' : 'Recent',
                 style: BnType.caption.copyWith(
-                  color: const Color(0xFF55555A),
+                  color: colors.text2,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -803,6 +810,18 @@ class _BrowsePageState extends State<BrowsePage> {
             selectedFiles: selectedFiles,
             onNew: isAtRoot ? null : () => menu.newNotebook(context),
           ),
+          // a filter that leaves nothing would show a bare header
+          if (files.isEmpty && (_filter != .all || _tag != null))
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 60),
+                child: Text(
+                  'Nothing here for this filter.',
+                  textAlign: TextAlign.center,
+                  style: BnType.body.copyWith(color: colors.muted),
+                ),
+              ),
+            ),
         ],
       ),
     );

@@ -838,6 +838,9 @@ class FileManager {
     final newPath = parent + newName;
     await directory.rename(documentsDirectory + newPath);
     NoteLocks.move(directoryPath, newPath);
+    // the notes inside move their stars below; the folder's own star (and
+    // those of folders inside) only lives here
+    Favorites.renameFolder(directoryPath, newPath);
 
     for (final child in children) {
       final from = directoryPath + child, to = newPath + child;
@@ -881,6 +884,9 @@ class FileManager {
     }
     await directory.delete(recursive: recursive);
     NoteLocks.forgetFolder(directoryPath);
+    // Favorites listens to the stars, so this also takes the tile away when
+    // the folder was empty and no file delete was heard
+    Favorites.removeFolder(directoryPath);
   }
 
   // -----------------------------------------------------------------------

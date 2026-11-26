@@ -586,7 +586,7 @@ class BnConfirmRow extends StatelessWidget {
 
 /// The small popover-style dialog for renaming (design N25): a title, one
 /// field with a clear button, Cancel and Save.
-class BnRenameForm extends StatelessWidget {
+class BnRenameForm extends StatefulWidget {
   const new({
     super.key,
     required this.formKey,
@@ -604,11 +604,32 @@ class BnRenameForm extends StatelessWidget {
   final String? cancelLabel;
   final TextEditingController controller;
   final FormFieldValidator<String> validator;
-  final VoidCallback onSave;
+  final Future<void> Function() onSave;
+
+  @override
+  State<BnRenameForm> createState() => _BnRenameFormState();
+}
+
+class _BnRenameFormState extends State<BnRenameForm> {
+  /// While a save runs: a second tap or Enter would rename (and close the
+  /// dialog, then the page under it) twice.
+  var _saving = false;
+
+  Future<void> _save() async {
+    if (_saving) return;
+    _saving = true;
+    try {
+      await widget.onSave();
+    } finally {
+      _saving = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
+    final BnRenameForm(:formKey, :title, :label, :controller, :validator) =
+        widget;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -636,7 +657,7 @@ class BnRenameForm extends StatelessWidget {
                   controller: controller,
                   autofocus: true,
                   validator: validator,
-                  onSubmitted: (_) => onSave(),
+                  onSubmitted: (_) => _save(),
                   height: 44,
                   radius: BnRadius.control,
                   fontSize: 14,
@@ -650,11 +671,11 @@ class BnRenameForm extends StatelessWidget {
                   children: [
                     BnButton(
                       label:
-                          cancelLabel ??
+                          widget.cancelLabel ??
                           MaterialLocalizations.of(context).cancelButtonLabel,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
-                    BnButton.primary(label: saveLabel, onPressed: onSave),
+                    BnButton.primary(label: widget.saveLabel, onPressed: _save),
                   ],
                 ),
               ],

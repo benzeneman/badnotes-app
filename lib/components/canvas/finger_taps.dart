@@ -15,13 +15,35 @@ class FingerTaps {
   static const slop = 20.0;
 
   final _down = <int, Offset>{};
+
+  /// Pens on the screen now. A hand resting while one writes is no tap:
+  /// its touches came after the pen's, and undid the last thing written.
+  final _pens = <int>{};
   var _most = 0;
   var _spoilt = false;
   Duration? _start;
 
+  /// A touch the palm check threw out: no tap now, and let go of when it
+  /// lifts, or every tap after it waited for it.
+  void ignore(PointerEvent event) {
+    // a palm landing during a tap spoils it too
+    if (_down.isNotEmpty) _spoilt = true;
+    if (event is PointerUpEvent || event is PointerCancelEvent) {
+      _down.remove(event.pointer);
+    }
+  }
+
   void handle(PointerEvent event) {
     if (event.kind != PointerDeviceKind.touch) {
-      if (event is PointerDownEvent) _spoilt = true;
+      switch (event) {
+        case PointerDownEvent():
+          _pens.add(event.pointer);
+          _spoilt = true;
+        case PointerUpEvent() || PointerCancelEvent():
+          _pens.remove(event.pointer);
+        default:
+          break;
+      }
       return;
     }
     switch (event) {
@@ -29,7 +51,9 @@ class FingerTaps {
         if (_down.isEmpty) {
           _start = event.timeStamp;
           _most = 0;
-          _spoilt = false;
+          _spoilt = _pens.isNotEmpty;
+        } else if (_pens.isNotEmpty) {
+          _spoilt = true;
         }
         _down[event.pointer] = event.position;
         if (_down.length > _most) _most = _down.length;

@@ -245,18 +245,23 @@ class const HistoricTransform({
 class const HistoricPageInsert({
   required final int pageIndex,
   required final EditorPage page,
+  final bool onlyPage = false,
 }) extends Historic {
   @override
-  HistoricPageDelete reverse() => .new(pageIndex: pageIndex, page: page);
+  HistoricPageDelete reverse() =>
+      .new(pageIndex: pageIndex, page: page, onlyPage: onlyPage);
 }
 
-/// [page], page [pageIndex], was taken out.
+/// [page], page [pageIndex], was taken out. With [onlyPage] it was the
+/// note's only page, and a blank one took its place.
 class const HistoricPageDelete({
   required final int pageIndex,
   required final EditorPage page,
+  final bool onlyPage = false,
 }) extends Historic {
   @override
-  HistoricPageInsert reverse() => .new(pageIndex: pageIndex, page: page);
+  HistoricPageInsert reverse() =>
+      .new(pageIndex: pageIndex, page: page, onlyPage: onlyPage);
 }
 
 /// The text of a sticky note, text box, link or comment changed.

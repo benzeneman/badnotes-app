@@ -76,7 +76,13 @@ class _ConfirmFolderDeletionState extends State<_ConfirmFolderDeletion> {
     if (mounted) setState(() {});
   }
 
+  /// While the delete runs, so a second tap doesn't delete again and then
+  /// close the page under the dialog.
+  var _deleting = false;
+
   Future<void> _confirm() async {
+    if (_deleting) return;
+    _deleting = true;
     await widget.deleteFolder(widget.folderName);
     if (mounted) Navigator.of(context).pop();
   }

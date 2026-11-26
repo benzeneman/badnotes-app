@@ -112,7 +112,9 @@ void openHomeSearch(BuildContext context) {
     barrierLabel: 'Close search',
     barrierColor: BadNotesColors.of(context).scrim,
     transitionDuration: BnMotion.normal,
-    pageBuilder: (context, _, _) => const _SearchPanel(),
+    // on phones the keyboard covers the lower half: the results end above it
+    pageBuilder: (context, _, _) =>
+        const BnAboveKeyboard(child: _SearchPanel()),
     transitionBuilder: (context, animation, _, child) =>
         bnPopIn(context, animation, child, alignment: Alignment.topCenter),
   );

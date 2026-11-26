@@ -312,6 +312,8 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector>
   /// Zooms about the middle of the view by [step], unless that would go past
   /// [CanvasGestureDetector.kMinScale] or [CanvasGestureDetector.kMaxScale].
   void _zoomBy(double step) {
+    // the zoom is locked: a pinch went back to it right after
+    if (zoomLockedValue != null) return;
     final controller = widget._transformationController;
     final zoomed = setZoom(
       scaleDelta: step,
@@ -685,14 +687,16 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector>
   );
 
   void _listenerPointerEvent(PointerEvent event) {
-    _fingerTaps.handle(event);
     PointerPressureLog.see(event);
     PalmRejection.track(event);
     // a resting palm mustn't take over the pen's pressure or pointer kind
     if (PalmRejection.rejects(event)) {
       PalmRejection.noteIgnored(event);
+      _fingerTaps.ignore(event);
       return;
     }
+    // after the palm check: a palm's touches aren't a two-finger undo
+    _fingerTaps.handle(event);
     final isStylus = PalmRejection.isStylus(event);
     if (isStylus && event is PointerDownEvent) {
       _detectStylusButton(event);
@@ -748,9 +752,9 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector>
   }
 
   void _listenerPointerUpEvent(PointerEvent event) {
-    _fingerTaps.handle(event);
     PalmRejection.track(event);
-    if (PalmRejection.rejects(event)) return;
+    if (PalmRejection.rejects(event)) return _fingerTaps.ignore(event);
+    _fingerTaps.handle(event);
     widget.updatePointerData(event.kind, null);
     if (stylusButtonWasPressed) {
       stylusButtonWasPressed = false;

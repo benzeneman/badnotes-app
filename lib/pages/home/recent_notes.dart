@@ -65,7 +65,7 @@ class _RecentPageState extends State<RecentPage> {
     fileWriteSubscription = FileManager.fileWriteStream.stream.listen(
       fileWriteListener,
     );
-    selectedFiles.addListener(_setState);
+    selectedFiles.addListener(_onSelection);
 
     super.initState();
     moveIncorrectlyImportedFiles();
@@ -73,7 +73,8 @@ class _RecentPageState extends State<RecentPage> {
 
   @override
   void dispose() {
-    selectedFiles.removeListener(_setState);
+    selectedFiles.removeListener(_onSelection);
+    HomeChrome.selecting.value = false;
     fileWriteSubscription?.cancel();
     _refreshTimer?.cancel();
     super.dispose();
@@ -92,6 +93,12 @@ class _RecentPageState extends State<RecentPage> {
   }
 
   void _setState() => setState(() {});
+
+  /// The dock makes way for the selection bar, as on the other tabs.
+  void _onSelection() {
+    HomeChrome.selecting.value = selectedFiles.value.isNotEmpty;
+    _setState();
+  }
 
   var _period = _Period.all;
 

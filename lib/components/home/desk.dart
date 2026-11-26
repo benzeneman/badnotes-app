@@ -774,6 +774,7 @@ class HomePageFrame extends StatelessWidget {
     required this.title,
     required this.slivers,
     this.caption,
+    this.leading,
     this.trailing,
     this.selectedFiles,
     this.selectable = const [],
@@ -781,6 +782,9 @@ class HomePageFrame extends StatelessWidget {
 
   final String title;
   final String? caption;
+
+  /// Before the title, e.g. a back button.
+  final Widget? leading;
   final Widget? trailing;
   final List<Widget> slivers;
 
@@ -835,6 +839,7 @@ class HomePageFrame extends StatelessWidget {
                   child: HomeTitle(
                     title: title,
                     caption: caption,
+                    leading: leading,
                     trailing: trailing,
                   ),
                 ),
@@ -930,7 +935,6 @@ class _EditFolderState extends State<_EditFolder> {
     Navigator.of(context).pop();
     if (name != widget.name) {
       FolderStyles.moved(widget.path, path);
-      Favorites.renameFolder(widget.path, path);
       await widget.actions.rename(widget.name, name);
       FolderInfos.clear();
     }

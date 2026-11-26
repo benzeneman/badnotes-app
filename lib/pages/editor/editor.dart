@@ -1088,9 +1088,25 @@ class EditorState extends State<Editor> {
       [KeyCode.shift],
       LogicalKeyboardKey.keyZ,
     );
-    Keybinder.bind(undoKeys, undo);
-    Keybinder.bind(redoKeys, redo);
-    Keybinder.bind(redoKeysToo, redo);
+    Keybinder.bind(undoKeys, () => _unlessTyping(undo));
+    Keybinder.bind(redoKeys, () => _unlessTyping(redo));
+    Keybinder.bind(redoKeysToo, () => _unlessTyping(redo));
+  }
+
+  /// [action], unless a text field (a text box, the note's name) is being
+  /// typed in: it has its own undo, and Ctrl+Z there also undid the ink.
+  void _unlessTyping(void Function() action) {
+    if (_textBox != null) return;
+    // the focus is a node inside the field, not the field itself
+    final focused = FocusManager.instance.primaryFocus?.context;
+    if (focused != null &&
+        (focused.widget is EditableText ||
+            focused.findAncestorWidgetOfExactType<EditableText>() != null)) {
+      return;
+    }
+    // a page's own text keeps its typing history too
+    if (coreInfo.pages.any((page) => page.quill.focusNode.hasFocus)) return;
+    action();
   }
 
   void _removeKeybindings() {
@@ -1208,17 +1224,24 @@ class EditorState extends State<Editor> {
       case HistoricPageOrder(:final before):
         _applyPageOrder(before);
 
-      case HistoricPageDelete(:final page, :final pageIndex):
+      case HistoricPageDelete(:final page, :final pageIndex, :final onlyPage):
         coreInfo.trash.remove(page);
         // the pages before it have to be there for it to go back in place
         createPage(pageIndex - 1);
         pages.insert(pageIndex, page);
+        // The note's only page was deleted, and a blank one took its place:
+        // the blank goes again (unless written on), or undoing left two.
+        if (onlyPage && pages.length == 2 && pages[1].isEmpty) {
+          pages.removeAt(1).dispose();
+        }
         _renumberPagesFrom(pageIndex + 1);
 
       case HistoricPageInsert(:final pageIndex):
         final taken = pages.removeAt(pageIndex);
         // this is a page delete being redone: the page goes to the trash
         if (taken.wasTrashed) coreInfo.trash.add(taken);
+        // never no page at all
+        createPage(0);
         _renumberPagesFrom(pageIndex);
 
       case HistoricMove(:final offset, :final pageIndex, :final prevPageIndex):
@@ -1250,6 +1273,13 @@ class EditorState extends State<Editor> {
 
       case HistoricTransform():
         final back = change.reverse();
+        // the selection turns back with it only if it's what was turned
+        final select = Select.currentSelect;
+        if (select.doneSelecting &&
+            !(back.strokes.every(select.selectResult.strokes.contains) &&
+                back.images.every(select.selectResult.images.contains))) {
+          select.unselect();
+        }
         applyTransform(
           back.strokes,
           back.images,
@@ -3026,8 +3056,6 @@ class EditorState extends State<Editor> {
         final a = (position - c).direction - (previousPosition - c).direction;
         applyTransform(strokes, images, c, 1, a);
         _handleAngle += a;
-        // the box turns with it
-        if (image == null) select.angle += a;
       }
       page.redrawStrokes();
     } else if (currentTool is Select) {
@@ -3116,6 +3144,9 @@ class EditorState extends State<Editor> {
         ..scaleByDouble(scale, scale, 1, 1)
         ..translateByDouble(-center.dx, -center.dy, 0, 1);
       select.selectResult.path = select.selectResult.path.transform(m.storage);
+      // The box turns with it, here where every turn goes through: undoing
+      // one turned the ink back but left the box at its angle.
+      if (select.singleImage == null) select.angle += angle;
     }
   }
 
@@ -3149,7 +3180,6 @@ class EditorState extends State<Editor> {
     final select = currentTool as Select;
     if (!select.doneSelecting || select.selectResult.isEmpty) return;
     final center = select.boxCenter;
-    if (select.singleImage == null) select.angle += angle;
     final strokes = select.selectResult.strokes;
     final images = select.selectResult.images;
     setState(() {
@@ -3630,6 +3660,12 @@ class EditorState extends State<Editor> {
   void listenToQuillChanges(QuillStruct quill, int pageIndex) {
     quill.changeSubscription?.cancel();
     quill.changeSubscription = quill.controller.changes.listen((event) {
+      // Where the page is now: pages deleted, duplicated or put back by an
+      // undo before it moved it, and its typing was undone on another page.
+      final pageIndex = coreInfo.pages.indexWhere(
+        (page) => page.quill == quill,
+      );
+      if (pageIndex < 0) return; // a deleted page
       // the toolbar's undo/redo only need a rebuild when this flips one
       final buttonsChange = history.canRedo || !history.canUndo;
       _addQuillChangeToHistory(
@@ -3641,7 +3677,10 @@ class EditorState extends State<Editor> {
       if (buttonsChange) setState(() {});
       autosaveAfterDelay();
     });
-    quill.focusNode.addListener(_onQuillFocusChange);
+    // once: listened to again, a page's focus was told twice or more
+    quill.focusNode
+      ..removeListener(_onQuillFocusChange)
+      ..addListener(_onQuillFocusChange);
   }
 
   /// Points [quillFocus] at the page whose text now has the cursor.
@@ -8351,18 +8390,27 @@ class EditorState extends State<Editor> {
     )..backgroundPattern = page.backgroundPattern;
     coreInfo.pages.insert(at, copy);
     listenToQuillChanges(copy.quill, at);
+    // the pages after it moved down one: undo found their ink by the old
+    // numbers, and did nothing or acted on the wrong page
+    _renumberPagesFrom(at + 1);
+    Select.currentSelect.unselect();
     history.recordChange(HistoricPageInsert(pageIndex: at, page: copy));
   }
 
   /// Takes page [pageIndex] out, as one undo step. A page with anything on
   /// it goes to the trash; an empty one is simply dropped.
   void _deletePage(int pageIndex) {
+    final onlyPage = coreInfo.pages.length == 1;
     final page = coreInfo.pages.removeAt(pageIndex);
     page.wasTrashed = page.isNotEmpty;
     if (page.wasTrashed) coreInfo.trash.add(page);
     createPage(pageIndex - 1);
     _renumberPagesFrom(pageIndex);
-    history.recordChange(HistoricPageDelete(pageIndex: pageIndex, page: page));
+    // a selection on a page after it would now point at another page
+    Select.currentSelect.unselect();
+    history.recordChange(
+      HistoricPageDelete(pageIndex: pageIndex, page: page, onlyPage: onlyPage),
+    );
   }
 
   EditorPage? _pageBeside(int pageIndex) =>
@@ -8474,6 +8522,8 @@ class EditorState extends State<Editor> {
       coreInfo.pages[i].updatePageIndex(i);
       listenToQuillChanges(coreInfo.pages[i].quill, i);
     }
+    // a selection on a page after it would now point at another page
+    Select.currentSelect.unselect();
     history.recordChange(
       HistoricPageInsert(pageIndex: pageIndex + 1, page: page),
     );

@@ -201,7 +201,25 @@ class NewDocumentMenu {
         : FileManager.suffixFilePathToMakeItUnique('$folder/$name');
   }
 
+  /// Set while a new document is being set up. The paywall check comes
+  /// before the studio, so a quick double tap opened two of them.
+  static var _opening = false;
+
   Future<void> _newDocument(
+    BuildContext context, {
+    required bool whiteboard,
+    DocumentTemplate? template,
+  }) async {
+    if (_opening) return;
+    _opening = true;
+    try {
+      await _setUpDocument(context, whiteboard: whiteboard, template: template);
+    } finally {
+      _opening = false;
+    }
+  }
+
+  Future<void> _setUpDocument(
     BuildContext context, {
     required bool whiteboard,
     DocumentTemplate? template,

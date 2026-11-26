@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:badnotes/components/home/desk.dart';
 import 'package:badnotes/components/home/documents_grid.dart';
+import 'package:badnotes/components/home/folder_info.dart';
 import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/home/note_facts.dart';
@@ -92,7 +93,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
     final files = [
       if (_show == .all || _show == .notebooks)
         for (final path in favorites)
-          if (FileManager.getFile(path + Editor.extension).existsSync()) path,
+          // a starred note moved to the trash keeps its star, re-pointed
+          // into the hidden trash folder
+          if (isVisiblePath(path) &&
+              FileManager.getFile(path + Editor.extension).existsSync())
+            path,
     ];
     final folders = [
       if (_show == .all || _show == .folders)
@@ -121,7 +126,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
       selectable: files,
       slivers: [
         if (files.isEmpty && folders.isEmpty && bookmarked.isEmpty)
-          const SliverToBoxAdapter(child: _NoFavorites())
+          SliverToBoxAdapter(
+            child: _show == .all
+                ? const _NoFavorites()
+                : Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 60),
+                    child: Text(
+                      'Nothing here for this filter.',
+                      textAlign: TextAlign.center,
+                      style: BnType.body.copyWith(
+                        color: BadNotesColors.of(context).muted,
+                      ),
+                    ),
+                  ),
+          )
         else if (files.isNotEmpty || folders.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: BnSectionHeader(

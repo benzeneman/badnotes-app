@@ -419,10 +419,18 @@ class HomeTitle extends StatelessWidget {
             children: [leading!, const SizedBox(width: 14), Flexible(child: text)],
           );
     if (trailing == null) return titled;
-    if (stacked && trailing is BnSegmented) {
+    // segments get their own row below tablet width; any other trailing
+    // (a folder's buttons) only on phones, where beside a title it overflows
+    if (stacked && trailing is BnSegmented || HomeChrome.isPhone(context)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [titled, const SizedBox(height: 22), trailing!],
+        children: [
+          titled,
+          const SizedBox(height: 22),
+          trailing is BnSegmented
+              ? trailing!
+              : Align(alignment: .centerLeft, child: trailing),
+        ],
       );
     }
     return Row(
