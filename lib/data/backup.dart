@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 import 'package:meta/meta.dart';
 import 'package:logging/logging.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
@@ -31,16 +31,29 @@ abstract final class Backup {
   }
 
   /// Zips everything in the notes folder.
-  static Future<Uint8List> create() {
+  ///
+  /// The zip is put together in a file, one note at a time: made in memory,
+  /// a big library took two or three times its size there, and the app
+  /// could run out of memory (on every launch, as the backup was still due).
+  static Future<Uint8List> create() async {
     final root = FileManager.documentsDirectory;
-    return Isolate.run(() => zipFolder(root));
+    final temp = Directory.systemTemp.createTempSync('backup');
+    try {
+      final zipPath = '${temp.path}/backup.zip';
+      await Isolate.run(() => zipFolder(root, zipPath));
+      return await File(zipPath).readAsBytes();
+    } finally {
+      temp.deleteSync(recursive: true);
+    }
   }
 
+  /// Zips everything in [root] into a new file at [zipPath].
   @visibleForTesting
-  static Uint8List zipFolder(String root) {
-    final archive = Archive();
-    final dir = Directory(root);
-    if (dir.existsSync()) {
+  static void zipFolder(String root, String zipPath) {
+    final zip = ZipFileEncoder()..create(zipPath);
+    try {
+      final dir = Directory(root);
+      if (!dir.existsSync()) return;
       for (final entity in dir.listSync(recursive: true, followLinks: false)) {
         if (entity is! File) continue;
         final relative = entity.path.substring(root.length + 1);
@@ -48,11 +61,13 @@ abstract final class Backup {
         if (relative.split(Platform.pathSeparator).any((p) => p.startsWith('.'))) {
           continue;
         }
-        final bytes = entity.readAsBytesSync();
-        archive.addFile(ArchiveFile(relative.replaceAll(r'\', '/'), bytes.length, bytes));
+        // half a save, left by a kill mid-write
+        if (relative.endsWith('.part')) continue;
+        zip.addFileSync(entity, relative.replaceAll(r'\', '/'));
       }
+    } finally {
+      zip.closeSync();
     }
-    return Uint8List.fromList(ZipEncoder().encode(archive));
   }
 
   /// Puts back the files in the backup [zip] that are missing. Files already
@@ -97,6 +112,13 @@ abstract final class Backup {
       stows.lastDriveBackup.value,
     );
     if (DateTime.now().difference(last) < autoInterval) return;
+    // a backup that never finished (the app closed or ran out of memory
+    // under it) is tried again the next day, not on every launch
+    final tried = DateTime.fromMillisecondsSinceEpoch(
+      stows.lastDriveBackupTry.value,
+    );
+    if (DateTime.now().difference(tried) < const Duration(days: 1)) return;
+    stows.lastDriveBackupTry.value = DateTime.now().millisecondsSinceEpoch;
     await backUpToDrive();
   }
 

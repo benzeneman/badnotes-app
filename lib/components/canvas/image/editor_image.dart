@@ -164,6 +164,12 @@ sealed class EditorImage extends ChangeNotifier {
     return image;
   }
 
+  /// Reads the picture from where [moved] says the file it's read from
+  /// went (null: it stays): the note was renamed, and its files with it, or
+  /// a file picked from elsewhere was just saved beside the note. Left
+  /// reading the old place, every save after failed.
+  void moveFile(File? Function(File file) moved) {}
+
   @mustBeOverridden
   @mustCallSuper
   Map<String, dynamic> toJson(OrderedAssetCache assets) {

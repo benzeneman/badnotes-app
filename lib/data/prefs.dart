@@ -158,6 +158,9 @@ class Stows {
   /// When that backup last ran, in ms since the epoch.
   final lastDriveBackup = _plain('lastDriveBackup', 0);
 
+  /// When an automatic backup was last started, whether or not it finished.
+  final lastDriveBackupTry = _plain('lastDriveBackupTry', 0);
+
   /// Hold syncing back while on mobile data.
   final syncOnlyOnWifi = _plain('syncOnlyOnWifi', false);
 

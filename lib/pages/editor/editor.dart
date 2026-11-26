@@ -146,6 +146,16 @@ class Editor extends StatefulWidget {
   /// save lost what was just written.
   static final closing = <String, Future<void>>{};
 
+  /// The notes open in an editor now, by path (twice for one open in two
+  /// panes). Sync doesn't write a cloud version over one of these: the
+  /// editor's next save would put what it has back over it.
+  static final openNotes = <String>[];
+
+  /// Whether the note at [path] is open in an editor, or still saving as
+  /// one closes.
+  static bool isOpen(String path) =>
+      openNotes.contains(path) || closing.containsKey(path);
+
   /// Whether opening waits for [closing]. Off in tests, whose fake clock
   /// never lets a closed editor's save finish; a test of it turns it on.
   @visibleForTesting
@@ -403,7 +413,8 @@ class EditorState extends State<Editor> {
       _ocrDirty = false;
       unawaited(HandwritingOcr.indexNote(coreInfo.filePath, coreInfo.pages));
     }
-    if (savingState.value == .waitingToSave) {
+    // a save running now: another after it, for what came since
+    if (savingState.value != .saved) {
       saveToFile();
     } else {
       _announceQuietWrites();
@@ -553,7 +564,12 @@ class EditorState extends State<Editor> {
       loaded.dispose();
       return;
     }
+    // loaded again (the note changed on the server): still open once
+    if (!identical(coreInfo, EditorCoreInfo.placeholder)) {
+      Editor.openNotes.remove(coreInfo.filePath);
+    }
     coreInfo = loaded;
+    Editor.openNotes.add(loaded.filePath);
     unawaited(
       NoteVersions.list(filePath).then(
         (versions) => _lastKeptVersion =
@@ -957,7 +973,7 @@ class EditorState extends State<Editor> {
     name.dispose();
     if (ok != true || newName.isEmpty || !mounted) return;
     filenameTextEditingController.text = newName;
-    await _renameFileNow();
+    await _renameWhenNotSaving();
     if (mounted) setState(() {});
   }
 
@@ -3894,24 +3910,63 @@ class EditorState extends State<Editor> {
   /// screen isn't told and nothing is uploaded until [_announceQuietWrites].
   Future<void> saveToFile({bool thumbnail = true, bool quietly = false}) async {
     if (coreInfo.readOnlyReason != null) return;
-
-    final state = savingState.value;
-    if (state == SavingState.saved) return; // nothing new to write
-    if (state == SavingState.saving) {
-      // one save at a time; the one running picks up what it can
-      log.warning('saveToFile() called while already saving');
-      return;
+    // One save at a time. Asked for during one, this waits for it and then
+    // saves what came after: dropped, a stroke drawn while a save ran was
+    // lost when the note closed or the app was hidden right then.
+    for (var running = _saving; running != null; running = _saving) {
+      await running;
     }
+    if (coreInfo.readOnlyReason != null) return;
+    if (savingState.value == SavingState.saved) return; // nothing new to write
+    final done = Completer<void>();
+    _saving = done.future;
+    try {
+      // never waited on forever: everything after it, the save as the note
+      // closes too, would wait with it
+      await _save(thumbnail: thumbnail, quietly: quietly).timeout(
+        const Duration(minutes: 2),
+        onTimeout: () {
+          log.severe('Saving took over 2 minutes; letting others save');
+          savingState.value = .waitingToSave;
+        },
+      );
+    } finally {
+      _saving = null;
+      done.complete();
+    }
+  }
+
+  /// The save running now, if one is.
+  Future<void>? _saving;
+
+  /// [EditorImage.moveFile] for every picture in the note.
+  void _moveImageFiles(File? Function(File file) moved) {
+    for (final page in coreInfo.pages) {
+      for (final image in page.images) {
+        image.moveFile(moved);
+      }
+      page.backgroundImage?.moveFile(moved);
+    }
+  }
+
+  Future<void> _save({required bool thumbnail, required bool quietly}) async {
     // waiting to save: this save replaces the countdown
     _delayedSaveTimer?.cancel();
     savingState.value = .saving;
     if (history.isCurrentStateSaved) return cancelAutosaveAndMarkSaved();
 
     final saveWatch = Stopwatch()..start();
-    LagRecorder.step('save: rename');
-    await _renameFileNow();
+    try {
+      LagRecorder.step('save: rename');
+      await _renameFileNow();
+    } catch (e, st) {
+      // saved under its old name instead: a rename that threw left every
+      // save after it stuck as "saving", and the session's edits unsaved
+      log.severe('Failed to rename file: $e', e, st);
+    }
     LagRecorder.step('save: pack');
 
+    // after the rename: under the note's new name
     final sbnPath = coreInfo.filePath + Editor.extension;
     final savePoint = history.savePoint;
     // pictures mustn't be dropped from the cache while it's being packed
@@ -3919,15 +3974,46 @@ class EditorState extends State<Editor> {
     final OrderedAssetCache assets;
     coreInfo.assetCache.allowRemovingAssets = false;
     try {
-      (noteBytes, assets) = await LagRecorder.span(
-        'save (pack)',
-        () => coreInfo.saveToBinaryAsync(currentPageIndex: currentPageIndex),
-      );
+      (noteBytes, assets) = await LagRecorder.span('save (pack)', () {
+        // A text box being typed again is out of the page till it's done:
+        // it's packed as it was, not left out of the note.
+        final retyped = _textBox;
+        final image = retyped?.image;
+        final images = retyped == null
+            ? null
+            : coreInfo.pages[retyped.pageIndex].images;
+        if (image != null) images!.add(image);
+        try {
+          // the note is read into its save before this returns
+          return coreInfo.saveToBinaryAsync(currentPageIndex: currentPageIndex);
+        } finally {
+          if (image != null) images!.remove(image);
+        }
+      });
+    } catch (e, st) {
+      log.severe('Failed to pack file: $e', e, st);
+      savingState.value = .waitingToSave;
+      if (kDebugMode) rethrow;
+      return;
     } finally {
       coreInfo.assetCache.allowRemovingAssets = true;
     }
     LagRecorder.step('save: write');
     try {
+      // An asset already saved in its place is left alone. Writing each
+      // one back over itself on every save also queued it for upload
+      // again and made the home screen reload its list.
+      final changed = [
+        for (int i = 0; i < assets.length; ++i)
+          if (!assets.isFileAt(i, FileManager.getFile('$sbnPath.$i').path)) i,
+      ];
+      // All read before any is written, and the ones no longer used
+      // removed last: with a picture deleted the others move down a
+      // number, and one was read from a file being written or removed at
+      // the same moment.
+      final bytes = await Future.wait([
+        for (final i in changed) assets.getBytes(i),
+      ]);
       await Future.wait([
         FileManager.writeFile(
           sbnPath,
@@ -3935,22 +4021,27 @@ class EditorState extends State<Editor> {
           awaitWrite: true,
           quietly: quietly,
         ),
-        for (int i = 0; i < assets.length; ++i)
-          // An asset already saved in its place is left alone. Writing each
-          // one back over itself on every save also queued it for upload
-          // again and made the home screen reload its list.
-          if (!assets.isFileAt(i, FileManager.getFile('$sbnPath.$i').path))
-            assets.getBytes(i).then((bytes) {
-              if (quietly) _quietWrites.add('$sbnPath.$i');
-              return FileManager.writeFile(
-                '$sbnPath.$i',
-                bytes,
-                awaitWrite: true,
-                quietly: quietly,
-              );
-            }),
-        FileManager.removeUnusedAssets(sbnPath, numAssets: assets.length),
+        for (final (k, i) in changed.indexed)
+          () {
+            if (quietly) _quietWrites.add('$sbnPath.$i');
+            return FileManager.writeFile(
+              '$sbnPath.$i',
+              bytes[k],
+              awaitWrite: true,
+              quietly: quietly,
+            );
+          }(),
       ]);
+      await FileManager.removeUnusedAssets(sbnPath, numAssets: assets.length);
+      // pictures read from a file that isn't theirs beside the note (a
+      // PDF picked from elsewhere, or one whose number changed) are read
+      // from the copy just saved
+      final savedAt = {
+        for (final i in changed)
+          if (assets.fileAt(i) case final file?)
+            file.path: FileManager.getFile('$sbnPath.$i'),
+      };
+      if (savedAt.isNotEmpty) _moveImageFiles((file) => savedAt[file.path]);
       if (quietly) {
         _quietWrites.add(sbnPath);
       } else {
@@ -4062,12 +4153,31 @@ class EditorState extends State<Editor> {
   Timer? _renameTimer;
   void renameFile([String? _]) {
     _renameTimer?.cancel();
-    _renameTimer = Timer(const Duration(seconds: 5), _renameFileNow);
+    _renameTimer = Timer(const Duration(seconds: 5), _renameWhenNotSaving);
   }
 
   /// Gives the note the name in the title field, if it's a valid one and
   /// different. The field then shows the name the file really got, which
   /// can differ (e.g. when that name was already taken).
+  /// [_renameFileNow], once no save is running, and with none starting
+  /// till it's done: moved under a running save, the save wrote the note
+  /// back under its old name, a second copy of it.
+  Future<void> _renameWhenNotSaving() async {
+    for (var running = _saving; running != null; running = _saving) {
+      await running;
+    }
+    final done = Completer<void>();
+    _saving = done.future;
+    try {
+      await _renameFileNow();
+    } catch (e, st) {
+      log.severe('Failed to rename file: $e', e, st);
+    } finally {
+      _saving = null;
+      done.complete();
+    }
+  }
+
   Future<void> _renameFileNow() async {
     final field = filenameTextEditingController;
     final wanted = field.text.trim();
@@ -4086,7 +4196,19 @@ class EditorState extends State<Editor> {
         0,
         moved.lastIndexOf(Editor.extension),
       );
+      // its pictures went along: read from their new place
+      final from = '${FileManager.getFile(oldPath + Editor.extension).path}.';
+      final to =
+          '${FileManager.getFile(coreInfo.filePath + Editor.extension).path}.';
+      _moveImageFiles(
+        (file) => file.path.startsWith(from)
+            ? File(to + file.path.substring(from.length))
+            : null,
+      );
       NoteTabs.rename(oldPath, coreInfo.filePath);
+      if (Editor.openNotes.remove(oldPath)) {
+        Editor.openNotes.add(coreInfo.filePath);
+      }
       // the recordings, OCR and cover went along with the note
       audioNotes?.notePath = coreInfo.filePath;
       needsNaming = false;
@@ -5284,7 +5406,7 @@ class EditorState extends State<Editor> {
                 ),
                 controller: filenameTextEditingController,
                 onChanged: renameFile,
-                onFieldSubmitted: (_) => _renameFileNow(),
+                onFieldSubmitted: (_) => _renameWhenNotSaving(),
                 // a finger's tap outside doesn't unfocus a field on Android:
                 // the caret stayed on the name while writing on the page
                 onTapOutside: (_) =>
@@ -8593,6 +8715,9 @@ class EditorState extends State<Editor> {
     }
     // a note opened again before this one finished saving waits for it
     final path = coreInfo.filePath;
+    if (!identical(coreInfo, EditorCoreInfo.placeholder)) {
+      Editor.openNotes.remove(path);
+    }
     final closing = _cleanUpAsync();
     if (path.isNotEmpty) {
       Editor.closing[path] = closing;
@@ -8642,11 +8767,17 @@ class EditorState extends State<Editor> {
   /// What's left to do once the editor has gone: a rename still waiting
   /// is done now, then the last save, then the thumbnail.
   Future<void> _cleanUpAsync() async {
+    // left while a text box was being typed again: it stays as it was
+    if (_textBox case (:final pageIndex, :final image?, at: _, note: _)) {
+      coreInfo.pages[pageIndex].images.add(image);
+      _textBox = null;
+    }
     try {
       final rename = _renameTimer;
       if (rename != null && rename.isActive) {
         rename.cancel();
-        await _renameFileNow();
+        // failing, the last save still comes, under the old name
+        await _renameWhenNotSaving();
         filenameTextEditingController.dispose();
       }
       LagRecorder.step('leave: last save');

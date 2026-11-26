@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
@@ -94,7 +95,29 @@ class FileManager {
   }) async {
     FileManager.documentsDirectory =
         documentsDirectory ?? await getDocumentsDirectory();
-    if (shouldWatchRootDirectory) unawaited(watchRootDirectory());
+    if (shouldWatchRootDirectory) {
+      unawaited(watchRootDirectory());
+      unawaited(removeLeftoverParts());
+    }
+  }
+
+  /// Deletes the `.part` files of saves cut short (the app killed between
+  /// writing one and renaming it into place). Left, they were synced and
+  /// backed up like notes. Only ones a minute old: a save may be running.
+  @visibleForTesting
+  static Future<void> removeLeftoverParts() async {
+    final root = Directory(documentsDirectory);
+    if (!root.existsSync()) return;
+    final before = DateTime.now().subtract(const Duration(minutes: 1));
+    try {
+      await for (final entity in root.list(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.part')) continue;
+        if (entity.statSync().modified.isAfter(before)) continue;
+        await entity.delete().catchError((_) => entity);
+      }
+    } on FileSystemException catch (e) {
+      log.warning('Could not clear leftover .part files: $e');
+    }
   }
 
   /// The folder the user chose, or else the default one.
@@ -235,9 +258,17 @@ class FileManager {
     ),
   ];
 
+  /// The longest name a note or folder can have, in UTF-8 bytes.
+  static const maxNameBytes = 200;
+
   /// Why [filename] can't be used, or null when it's fine.
   static String? validateFilename(String filename) {
     if (filename.isEmpty) return t.home.renameNote.noteNameEmpty;
+    // a file name can be 255 bytes; a note's files add up to ~40 to it
+    // (".sbn2.12.<time>.part"), and a longer name made every save fail
+    if (utf8.encode(filename).length > maxNameBytes) {
+      return 'That name is too long';
+    }
     for (final (message, pattern) in _getForbiddenFilenamePatterns()) {
       if (pattern.hasMatch(filename)) return message;
     }
@@ -368,7 +399,11 @@ class FileManager {
     final isNote = filePath.endsWith(Editor.extension);
 
     Future<File> save() async {
-      if (!isNote) return file.writeAsBytes(toWrite);
+      // a note, and its pictures too: written whole or not at all, so a
+      // kill mid-write can't leave half a picture
+      if (!isNote && !assetFileRegex.hasMatch(filePath)) {
+        return file.writeAsBytes(toWrite);
+      }
       // its own: two saves of one note at once shared one, and one could
       // rename the other's half-written file into place
       final part = File(
@@ -724,10 +759,14 @@ class FileManager {
   /// Deletes [filePath] and, with [alsoDeleteAssets], everything that
   /// belongs to it: BadNotes' extra files, saved versions, numbered pictures
   /// and the thumbnail. Does nothing when the file isn't there.
+  ///
+  /// With [keepVersions] the saved versions stay: a note deleted on another
+  /// device can still be got back from them here.
   static Future deleteFile(
     String filePath, {
     bool alsoUpload = true,
     bool alsoDeleteAssets = true,
+    bool keepVersions = false,
   }) async {
     filePath = _clean(filePath);
 
@@ -745,7 +784,9 @@ class FileManager {
 
     if (alsoUpload) syncer.uploader.enqueueRel(filePath);
     _removeReferences(filePath);
-    if (alsoDeleteAssets && filePath.endsWith(Editor.extension)) {
+    if (alsoDeleteAssets &&
+        !keepVersions &&
+        filePath.endsWith(Editor.extension)) {
       unawaited(NoteVersions.forget(_cut(filePath, Editor.extension)));
     }
     broadcastFileWrite(FileOperationType.delete, filePath);
@@ -799,9 +840,23 @@ class FileManager {
     NoteLocks.move(directoryPath, newPath);
 
     for (final child in children) {
-      _renameReferences(directoryPath + child, newPath + child);
-      broadcastFileWrite(FileOperationType.delete, directoryPath + child);
-      broadcastFileWrite(FileOperationType.write, newPath + child);
+      final from = directoryPath + child, to = newPath + child;
+      _renameReferences(from, to);
+      // the cloud loses the old copy and gets the new one: only uploaded
+      // anew, the old folder came back down as a second one
+      syncer.uploader.enqueueRel(from);
+      syncer.uploader.enqueueRel(to);
+      // and the note's saved versions go along, as with moveFile
+      if (child.endsWith(Editor.extension)) {
+        unawaited(
+          NoteVersions.move(
+            _cut(from, Editor.extension),
+            _cut(to, Editor.extension),
+          ),
+        );
+      }
+      broadcastFileWrite(FileOperationType.delete, from);
+      broadcastFileWrite(FileOperationType.write, to);
     }
   }
 

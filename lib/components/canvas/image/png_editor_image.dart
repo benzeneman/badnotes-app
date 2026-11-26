@@ -85,6 +85,18 @@ class PngEditorImage extends EditorImage {
     return json..['a'] = assets.addImage(imageProvider);
   }
 
+  @override
+  void moveFile(File? Function(File file) moved) {
+    if (imageProvider case FileImage(:final file)) {
+      if (moved(file) case final to?) {
+        // what was decoded from that file before may be another picture
+        final next = FileImage(to);
+        unawaited(next.evict());
+        imageProvider = next;
+      }
+    }
+  }
+
   /// Works out the picture's size when the note doesn't say how it is
   /// placed yet (a picture just added), shrinking it first if it is bigger
   /// than the user's largest picture size.

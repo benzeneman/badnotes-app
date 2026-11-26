@@ -98,6 +98,12 @@ class OrderedAssetCache {
     ),
   };
 
+  /// The file the item at [index] is read from, if it is one.
+  File? fileAt(int index) => switch (_items[index]) {
+    final File file => file,
+    _ => null,
+  };
+
   /// Whether the item at [index] is the file at [path], which then needs no
   /// writing: saving read every asset and wrote it back over itself.
   bool isFileAt(int index, String path) {

@@ -99,6 +99,13 @@ class SvgEditorImage extends EditorImage {
           : assets.addString(string);
   }
 
+  @override
+  void moveFile(File? Function(File file) moved) {
+    if (svgLoader case final SvgFileLoader loader) {
+      if (moved(loader.file) case final to?) svgLoader = SvgFileLoader(to);
+    }
+  }
+
   /// The SVG as text if it is held in memory, else the file it is read from.
   ({String? string, File? file}) _extractSvg() => switch (svgLoader) {
     final SvgFileLoader loader => (string: null, file: loader.file),

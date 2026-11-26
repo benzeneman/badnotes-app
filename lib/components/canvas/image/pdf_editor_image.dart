@@ -12,7 +12,7 @@ class PdfEditorImage extends EditorImage {
   final int pdfPage;
 
   /// The PDF's file beside the note, when it is read from disk.
-  final File? pdfFile;
+  File? pdfFile;
 
   /// Whether the page is shown with its colors inverted.
   var darkMode = false;
@@ -109,6 +109,13 @@ class PdfEditorImage extends EditorImage {
       ..['pdfi'] = pdfPage;
     if (darkMode) json['dark'] = true;
     return json;
+  }
+
+  @override
+  void moveFile(File? Function(File file) moved) {
+    if (pdfFile case final file?) {
+      if (moved(file) case final to?) pdfFile = to;
+    }
   }
 
   /// The PDF this page is from, opened through the note's shared cache the

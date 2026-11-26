@@ -190,7 +190,7 @@ class EditorCoreInfo {
         imagesJson: json['i'] as List?,
         inlineAssets: inlineAssets,
         fallbackPageSize: json['w'] != null && json['h'] != null
-            ? Size(json['w'] as double, json['h'] as double)
+            ? Size((json['w'] as num).toDouble(), (json['h'] as num).toDouble())
             : null,
         onlyFirstPage: onlyFirstPage,
       )
@@ -255,7 +255,10 @@ class EditorCoreInfo {
     if (pages.first is List) {
       return [
         for (final size in wanted)
-          EditorPage(width: size[0] as double?, height: size[1] as double?),
+          EditorPage(
+            width: (size[0] as num?)?.toDouble(),
+            height: (size[1] as num?)?.toDouble(),
+          ),
       ];
     }
     return [

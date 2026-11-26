@@ -75,6 +75,8 @@ class const BadNotesSyncInterface()
     await for (final entity in everything) {
       if (entity is! File) continue;
       if (!previewsAllowed && entity.path.endsWith(previewExtension)) continue;
+      // half a save, cut short by a kill: not a note to upload
+      if (entity.path.endsWith('.part')) continue;
 
       final syncFile = await getSyncFileFromLocalFile(entity);
       final winner = await getBestFile(
@@ -156,6 +158,13 @@ class const BadNotesSyncInterface()
       onEqualFiles: .local,
     );
     if (winner == .local) return null;
+    // an open note's cloud version, already kept beside it
+    final path = syncFile.relativeLocalPath;
+    if (_keptFromCloud.containsKey(path) &&
+        _keptFromCloud[path] == syncFile.remoteFile?.lastModified &&
+        _openNoteOf(path) != null) {
+      return null;
+    }
 
     // the cloud copy is newer, or there is no local copy
     final deletedThere = syncFile.remoteFile!.size! <= 0;
@@ -266,13 +275,18 @@ class const BadNotesSyncInterface()
     // the config was already dealt with while downloading
     if (file.localFile.path == RemoteStore.configFileName) return;
 
-    await _keepConflictCopy(file);
-
     final path = file.relativeLocalPath;
+    // A note open in an editor isn't written over: the editor's next save
+    // put what it had back over it, and the other device's work was gone
+    // everywhere. Its cloud version is kept beside it instead.
+    final open = _openNoteOf(path);
+    if (open != null && encryptedBytes.isEmpty) return; // once it's closed
+
     if (encryptedBytes.isEmpty) {
+      await _keepConflictCopy(file, Uint8List(0));
       // deleted in the cloud, so delete it here too
       _recordSynced(path, null);
-      await FileManager.deleteFile(path, alsoUpload: false);
+      await FileManager.deleteFile(path, alsoUpload: false, keepVersions: true);
       stows.fileSyncAlreadyDeleted.value.add(path);
       stows.fileSyncAlreadyDeleted.notifyListeners();
       _announceCover(path);
@@ -290,8 +304,37 @@ class const BadNotesSyncInterface()
       plain.isNotEmpty,
       'Decrypted data is empty but encryptedBytes.length is ${encryptedBytes.length}',
     );
+    if (open == null) await _keepConflictCopy(file, plain);
 
     final cloudTime = file.remoteFile?.lastModified;
+    if (open != null) {
+      final suffix = path.substring(open.length + Editor.extension.length);
+      // a name of its own, picked once: never written over another note,
+      // and later cloud changes go to the same copy
+      final copy = _cloudCopies[open] ??=
+          await FileManager.suffixFilePathToMakeItUnique(
+            '$open (from cloud)${Editor.extension}',
+          );
+      if (suffix.isEmpty && !_keptFromCloud.containsKey(path)) {
+        log.info('$path is open; keeping the cloud version as $copy');
+        SyncStatus.conflicts.value = [
+          ...SyncStatus.conflicts.value,
+          (
+            note: _nameOf(open),
+            copy: _nameOf(
+              copy.substring(0, copy.length - Editor.extension.length),
+            ),
+          ),
+        ];
+      }
+      await FileManager.writeFile(
+        '$copy$suffix',
+        plain,
+        awaitWrite: awaitWrite,
+      );
+      _keptFromCloud[path] = cloudTime;
+      return;
+    }
     await FileManager.writeFile(
       path,
       plain,
@@ -303,6 +346,25 @@ class const BadNotesSyncInterface()
     _recordSynced(path, cloudTime);
     _announceCover(path);
   }
+
+  /// The note (its path without the extension) [path] is, or is a picture
+  /// or thumbnail of, if that note is open in an editor now.
+  static String? _openNoteOf(String path) {
+    final match = _noteFile.firstMatch(path);
+    if (match == null) return null;
+    final note = match[1]!;
+    return Editor.isOpen(note) ? note : null;
+  }
+
+  static final _noteFile = RegExp(r'^(.*)\.sbn2(?:\.(?:\d+|p))?$');
+
+  /// Cloud versions of open notes' files already kept beside them, with
+  /// the cloud's time for each: not downloaded again while it's the same.
+  static final _keptFromCloud = <String, DateTime?>{};
+
+  /// For each open note whose cloud version is kept beside it, that copy's
+  /// path (with the extension).
+  static final _cloudCopies = <String, String>{};
 
   /// A notebook's cover (`note.cover`, `note.covername`) came from the
   /// cloud: tell its card, which listens for the note's own path.
@@ -324,9 +386,11 @@ class const BadNotesSyncInterface()
 
   @override
   Future<Uint8List> readLocalFile(BadNotesSyncFile file) async {
-    final plain = file.localFile.existsSync()
-        ? await file.localFile.readAsBytes()
-        : Uint8List(0);
+    final exists = file.localFile.existsSync();
+    // the time of what's read, taken before reading: see uploadRemoteFile
+    if (exists)
+      _readAt[file.relativeLocalPath] = _localModifiedOrNow(file.localFile);
+    final plain = exists ? await file.localFile.readAsBytes() : Uint8List(0);
     // empty means deleted; uploadRemoteFile sends it as such
     if (plain.isEmpty) return plain;
 
@@ -345,7 +409,11 @@ class const BadNotesSyncInterface()
     // ignore: avoid_renaming_method_parameters
     Uint8List encryptedBytes,
   ) async {
-    var lastModified = _localModifiedOrNow(file.localFile);
+    // The time of the bytes being sent. The file's time after the upload
+    // was that of a save made meanwhile, so the cloud copy looked as new as
+    // it, and that save was never uploaded.
+    final readAt = _readAt.remove(file.relativeLocalPath);
+    var lastModified = readAt ?? _localModifiedOrNow(file.localFile);
     final resyncFrom = stows.fileSyncResyncEverythingDate.value;
     if (lastModified.isBefore(resyncFrom)) lastModified = resyncFrom;
 
@@ -364,9 +432,14 @@ class const BadNotesSyncInterface()
     SyncStatus._uploaded(path);
     _recordSynced(
       path,
-      file.localFile.existsSync() ? file.localFile.lastModifiedSync() : null,
+      file.localFile.existsSync()
+          ? readAt ?? file.localFile.lastModifiedSync()
+          : null,
     );
   }
+
+  /// When each file being uploaded was last modified as it was read.
+  static final _readAt = <String, DateTime>{};
 
   static DateTime _localModifiedOrNow(File file) {
     try {
@@ -444,12 +517,18 @@ class const BadNotesSyncInterface()
     stows.fileSyncLastSynced.value = jsonEncode(_lastSynced);
   }
 
-  /// True when the local file has been changed since its last sync. Files
-  /// this device has no sync record for count as unchanged.
-  static bool _hasUnsyncedEdits(BadNotesSyncFile file) {
-    final syncedAt = _lastSynced[file.relativeLocalPath];
-    if (syncedAt == null) return false;
+  /// True when the local file has been changed since its last sync. A file
+  /// this device has no sync record for counts as changed unless it's the
+  /// same as [cloud].
+  static bool _hasUnsyncedEdits(BadNotesSyncFile file, Uint8List cloud) {
     if (!file.localFile.existsSync()) return false;
+    final syncedAt = _lastSynced[file.relativeLocalPath];
+    // Never synced from here (the first sync on this device, or after
+    // logging in again): edited here unless it's just what the cloud has.
+    // Taken as not edited, a newer cloud copy replaced work done here.
+    if (syncedAt == null) {
+      return !listEquals(file.localFile.readAsBytesSync(), cloud);
+    }
     final modifiedAt = file.localFile.lastModifiedSync().millisecondsSinceEpoch;
     return (modifiedAt - syncedAt).abs() > 1000;
   }
@@ -460,13 +539,16 @@ class const BadNotesSyncInterface()
   /// The last part of a note path, as shown on its card.
   static String _nameOf(String path) => path.substring(path.lastIndexOf('/') + 1);
 
-  static Future<void> _keepConflictCopy(BadNotesSyncFile file) async {
+  static Future<void> _keepConflictCopy(
+    BadNotesSyncFile file,
+    Uint8List cloud,
+  ) async {
     final path = file.relativeLocalPath;
     final extension = [
       Editor.extension,
       Editor.extensionOldJson,
     ].firstWhereOrNull(path.endsWith);
-    if (extension == null || !_hasUnsyncedEdits(file)) return;
+    if (extension == null || !_hasUnsyncedEdits(file, cloud)) return;
 
     final stem = path.substring(0, path.length - extension.length);
     final copyPath = await FileManager.suffixFilePathToMakeItUnique(
