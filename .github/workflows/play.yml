@@ -1,0 +1,105 @@
+name: Build for Google Play
+
+# The app bundle (.aab) that goes to Google Play: a normal release build
+# (no lag recorder, shrunk, every ABI), signed with the upload key. Only run
+# by hand; pushes keep building BadNotes-lag.apk in android.yml.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
+            /usr/local/lib/node_modules /opt/hostedtoolcache/CodeQL /usr/share/swift \
+            /usr/local/share/powershell /usr/local/share/chromium /opt/microsoft /opt/google
+          (sudo docker image prune -af >/dev/null 2>&1 &)
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile2 && sudo chmod 600 /swapfile2
+          sudo mkswap /swapfile2 && sudo swapon /swapfile2
+          df -h / && free -h
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/shared_workflows/setup_flutter
+
+      # the same cache as android.yml (read only: that workflow saves it)
+      - name: Restore cache
+        uses: actions/cache/restore@v6.1.0
+        with:
+          path: |
+            .dart_tool/
+            .flutter-plugins-dependencies
+            packages/**/.dart_tool/
+            android/.gradle/
+            android/.kotlin/
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.OS }}-badnotes-${{ hashFiles('pubspec.lock', 'android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.OS }}-badnotes-
+
+      - name: Setup keystore
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          [ -n "$SIGNING_KEY" ] || { echo "SIGNING_KEY secret missing"; exit 1; }
+          echo "$SIGNING_KEY" | base64 -d > android/android.keystore
+          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ALIAS }}" >> android/key.properties
+          echo "storeFile=../android.keystore" >> android/key.properties
+
+      - name: Setup Android build tools
+        run: |
+          ANDROID_NDK=/usr/local/lib/android/sdk/ndk/29.0.14206865
+          echo "ANDROID_NDK=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK" >> $GITHUB_ENV
+          echo "JAVA_HOME=$JAVA_HOME_25_X64" >> $GITHUB_ENV
+
+      - run: flutter config --no-cli-animations
+
+      - name: Regenerate translations
+        run: flutter pub get && dart run slang
+
+      # Every upload to Play needs a bigger version code: the pubspec's build
+      # number plus this workflow's run number.
+      - name: Build app bundle
+        env:
+          ONEDRIVE_CLIENT_ID: ${{ vars.ONEDRIVE_CLIENT_ID }}
+        run: |
+          BASE=$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)
+          CODE=$((BASE + GITHUB_RUN_NUMBER))
+          echo "version code $CODE" | tee -a "$GITHUB_STEP_SUMMARY"
+          flutter build appbundle --release --build-number=$CODE \
+            --dart-define=UPDATE_CHECK=false \
+            "--dart-define=ONEDRIVE_CLIENT_ID=$ONEDRIVE_CLIENT_ID"
+
+      - name: Publish the bundle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AAB=BadNotes-play.aab
+          mv build/app/outputs/bundle/release/app-release.aab "$AAB"
+          gh release view play >/dev/null 2>&1 || \
+            gh release create play --prerelease --target "$GITHUB_SHA" \
+              --title "BadNotes for Google Play" --notes "App bundle for Play Console"
+          gh release upload play "$AAB" --clobber
+          QUICK=$(curl -s -m 300 -F "file=@$AAB" https://tmpfiles.org/api/v1/upload \
+            | sed -n 's/.*"url":"\([^"]*\)".*/\1/p' || true)
+          NOTES="Built from ${GITHUB_SHA::7} (run ${GITHUB_RUN_NUMBER})"
+          [ -n "$QUICK" ] && NOTES="$NOTES"$'\n\n'"Quick download (about an hour): $QUICK"
+          gh release edit play --notes "$NOTES"
+          echo "$NOTES" | tee -a "$GITHUB_STEP_SUMMARY"
