@@ -83,7 +83,10 @@ jobs:
           BASE=$(sed -n 's/^version: .*+\([0-9]*\)$/\1/p' pubspec.yaml)
           CODE=$((BASE + GITHUB_RUN_NUMBER))
           echo "version code $CODE" | tee -a "$GITHUB_STEP_SUMMARY"
+          # R8 is off, as in the tested lag build: with it on, the first Play
+          # build crashed natively ("BadNotes has stopped") on new notebook
           flutter build appbundle --release --build-number=$CODE \
+            --android-project-arg=shrink=false \
             --dart-define=UPDATE_CHECK=false \
             "--dart-define=ONEDRIVE_CLIENT_ID=$ONEDRIVE_CLIENT_ID"
 
