@@ -5371,7 +5371,9 @@ class EditorState extends State<Editor> {
     if (mainNote && !phone) {
       final docked = stows.toolbarDocked.value && _showsTools;
       final tabs = DecoratedBox(
-        decoration: BoxDecoration(color: colors.sunkenSoft),
+        // a shade darker than before, so the white open tab stands out of
+        // the strip as a browser's does
+        decoration: BoxDecoration(color: colors.sunken),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
           child: Row(

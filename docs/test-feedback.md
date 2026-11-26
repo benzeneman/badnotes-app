@@ -17,3 +17,4 @@ Kept for the Play production-access form.
 | 2026-11-26 | Owner | Pressing back many times quickly after writing closed the app | Leaving a note only closes the note itself; no picture of the page is taken while the app is going away; a note closed before it loaded no longer disposes the shared placeholder | 137013 |
 | 2026-11-26 | Owner | A new text box stretched to the edge of the page | It starts small and grows as you type, wrapping at the page's edge | 137013 |
 | 2026-11-26 | Owner | With the text tool, a tap on existing text opened the keyboard | A tap picks the text (move, resize, delete); a double tap types in it | 137013 |
+| 2026-11-26 | Owner | Asked for notebook tabs like Chrome's | Tablet tabs redone: the open tab is white with curved feet joining the bar, all tabs the same width with ✕ on each, and dragging a tab moves the others aside as it passes | 137014 |

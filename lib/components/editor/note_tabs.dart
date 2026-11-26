@@ -285,79 +285,105 @@ class NoteTabsBar extends StatelessWidget {
           valueListenable: NoteTabs.paths,
           builder: (context, tabs, _) => ValueListenableBuilder(
             valueListenable: NoteTabs.active,
-            builder: (context, active, _) => ListView(
-              scrollDirection: Axis.horizontal,
-              shrinkWrap: true,
-              children: [
-                for (final (i, path) in tabs.indexed)
-                  Padding(
-                    // a hairline between two tabs neither of which is open
-                    padding: const EdgeInsets.only(right: 1),
-                    child: LongPressDraggable<String>(
-                      data: path,
-                      delay: const Duration(milliseconds: 250),
-                      dragAnchorStrategy: pointerDragAnchorStrategy,
-                      feedback: Transform.translate(
-                        offset: const Offset(-40, -16),
-                        child: Material(
-                          elevation: 6,
-                          borderRadius: BorderRadius.circular(BnRadius.chip),
-                          color: colors.surface,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Text(
-                              p.basename(path),
-                              style: BnType.body.copyWith(color: colors.text),
-                            ),
-                          ),
-                        ),
+            builder: (context, active, _) => LayoutBuilder(
+              builder: (context, constraints) {
+                // all the same width, like a browser's: narrower as more
+                // open, scrolling past that
+                final room =
+                    constraints.maxWidth - _feet * 2 - _plusWidth - tabs.length;
+                final width = tabs.isEmpty
+                    ? _maxWidth
+                    : (room / tabs.length).clamp(_minWidth, _maxWidth);
+                return ListView(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  // room for the open tab's feet at either end
+                  padding: const EdgeInsets.symmetric(horizontal: _feet),
+                  children: [
+                    for (final (i, path) in tabs.indexed)
+                      _draggableTab(
+                        context,
+                        tabs: tabs,
+                        index: i,
+                        path: path,
+                        active: active,
+                        width: width,
                       ),
-                      // dropped on another tab, it takes that tab's place
-                      child: DragTarget<String>(
-                        onWillAcceptWithDetails: (d) =>
-                            d.data != path && tabs.contains(d.data),
-                        onAcceptWithDetails: (d) => NoteTabs.paths.value = [
-                          ...tabs.where((t) => t != d.data),
-                        ]..insert(i, d.data),
-                        builder: (context, _, _) => _Tab(
-                          path: path,
-                          title: path == active ? activeTitle : null,
-                          active: path == active,
-                          divider:
-                              path != active &&
-                              i + 1 < tabs.length &&
-                              tabs[i + 1] != active,
-                          onTap: () =>
-                              NoteTabActions.switchTo(path, beforeSwitching),
-                          onClose: () => NoteTabActions.close(
-                            context,
-                            path,
-                            beforeSwitching,
-                          ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: joinDepth),
+                      child: Center(
+                        child: BnIconButton(
+                          icon: BnIcons.add,
+                          size: _plusWidth,
+                          iconSize: 16,
+                          tooltip: 'Open another note',
+                          color: colors.text2,
+                          onPressed: () => Navigator.maybePop(context),
                         ),
                       ),
                     ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: joinDepth),
-                  child: Center(
-                    child: BnIconButton(
-                      icon: BnIcons.add,
-                      size: 34,
-                      iconSize: 16,
-                      tooltip: 'Open another note',
-                      color: colors.muted,
-                      onPressed: () => Navigator.maybePop(context),
-                    ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  static const _minWidth = 120.0, _maxWidth = 230.0, _plusWidth = 34.0;
+
+  /// How far the open tab's curved feet reach either side of it.
+  static const _feet = _TabPainter.radius;
+
+  /// A tab that can be held and dragged: along the strip it moves there,
+  /// the others making room as it passes them; onto the page it opens
+  /// beside the note (see the editor's drop target).
+  Widget _draggableTab(
+    BuildContext context, {
+    required List<String> tabs,
+    required int index,
+    required String path,
+    required String? active,
+    required double width,
+  }) {
+    Widget tab({bool lifted = false}) => _Tab(
+      path: path,
+      width: width,
+      title: path == active && !lifted ? activeTitle : null,
+      active: path == active,
+      lifted: lifted,
+      divider:
+          path != active &&
+          index + 1 < tabs.length &&
+          tabs[index + 1] != active,
+      onTap: () => NoteTabActions.switchTo(path, beforeSwitching),
+      onClose: () => NoteTabActions.close(context, path, beforeSwitching),
+    );
+    return LongPressDraggable<String>(
+      // keyed: the tab being dragged keeps its drag as the strip reorders
+      key: ValueKey(path),
+      data: path,
+      delay: const Duration(milliseconds: 250),
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: Transform.translate(
+        offset: Offset(-width / 2, -height / 2),
+        child: tab(lifted: true),
+      ),
+      childWhenDragging: _TabGap(width: width),
+      child: DragTarget<String>(
+        onWillAcceptWithDetails: (d) =>
+            d.data != path && NoteTabs.paths.value.contains(d.data),
+        // moved as soon as it's over another tab, not on letting go
+        onMove: (d) {
+          final now = NoteTabs.paths.value;
+          if (d.data == path || !now.contains(d.data)) return;
+          final to = now.indexOf(path);
+          NoteTabs.paths.value = [...now.where((t) => t != d.data)]
+            ..insert(to, d.data);
+        },
+        builder: (context, _, _) => tab(),
       ),
     );
   }
@@ -367,21 +393,29 @@ class NoteTabsBar extends StatelessWidget {
   static const joinDepth = 14.0;
 }
 
-/// One open note in the strip: its cover and name, ✕ when open or hovered.
+/// One open note in the strip: its cover, its name and ✕. The open one is
+/// white, its top corners round and its foot curving out into the bar
+/// under it, like a browser's tab.
 class _Tab extends StatefulWidget {
-  const _Tab({
+  const new({
     required this.path,
+    required this.width,
     required this.active,
     required this.onTap,
     required this.onClose,
     this.divider = false,
+    this.lifted = false,
     this.title,
   });
 
-  /// A hairline on its right, between it and the next tab.
+  /// A short line on its right, between it and the next tab.
   final bool divider;
 
+  /// Picked up and being dragged.
+  final bool lifted;
+
   final String path;
+  final double width;
 
   /// Instead of the note's name, e.g. a field to rename it.
   final Widget? title;
@@ -400,79 +434,181 @@ class _TabState extends State<_Tab> {
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     final active = widget.active;
+    final row = Row(
+      spacing: 8,
+      children: [
+        NoteMark(widget.path, width: 12),
+        Expanded(
+          child:
+              widget.title ??
+              Text(
+                p.basename(widget.path),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BnType.body.copyWith(
+                  color: active ? colors.text : colors.text2,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+        ),
+        BnIconButton(
+          icon: BnIcons.close,
+          size: 24,
+          iconSize: 13,
+          radius: 12,
+          tooltip: 'Close tab',
+          color: active ? colors.text2 : colors.muted,
+          onPressed: widget.onClose,
+        ),
+      ],
+    );
+    if (widget.lifted) {
+      // picked up: a card under the finger
+      return Material(
+        elevation: 8,
+        color: colors.surface,
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        child: Container(
+          width: widget.width,
+          height: NoteTabsBar.height,
+          padding: const EdgeInsets.only(left: 14, right: 6),
+          child: row,
+        ),
+      );
+    }
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: BnMotion.fast,
-          curve: BnMotion.curve,
-          height: NoteTabsBar.height + NoteTabsBar.joinDepth,
-          constraints: const BoxConstraints(minWidth: 90, maxWidth: 220),
-          padding: EdgeInsets.only(
-            left: 12,
-            right: 4,
-            bottom: NoteTabsBar.joinDepth,
+        child: CustomPaint(
+          painter: _TabPainter(
+            active: active,
+            hovered: _hovered,
+            divider: widget.divider,
+            fill: colors.surface,
+            hover: colors.surface.withValues(alpha: 0.55),
+            line: colors.hairline,
           ),
-          decoration: BoxDecoration(
-            color: active
-                ? colors.surface
-                : _hovered
-                ? colors.sunken.withValues(alpha: 0.6)
-                : colors.surface.withValues(alpha: 0),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            border: active
-                ? Border(
-                    top: BorderSide(color: colors.hairline),
-                    left: BorderSide(color: colors.hairline),
-                    right: BorderSide(color: colors.hairline),
-                  )
-                : widget.divider
-                ? Border(
-                    right: BorderSide(
-                      color: colors.hairline.withValues(alpha: 0.9),
-                    ),
-                  )
-                : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 8,
-            children: [
-              NoteMark(widget.path, width: 12),
-              Flexible(
-                child:
-                    widget.title ??
-                    Text(
-                      p.basename(widget.path),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: BnType.body.copyWith(
-                        color: active ? colors.text : colors.text2,
-                        fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                      ),
-                    ),
+          child: SizedBox(
+            width: widget.width,
+            height: NoteTabsBar.height + NoteTabsBar.joinDepth,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 14,
+                right: 6,
+                bottom: NoteTabsBar.joinDepth,
               ),
-              Opacity(
-                opacity: active || _hovered ? 1 : 0,
-                child: BnIconButton(
-                  icon: BnIcons.close,
-                  size: 24,
-                  iconSize: 13,
-                  radius: 6,
-                  tooltip: 'Close tab',
-                  color: colors.muted,
-                  onPressed: widget.onClose,
-                ),
-              ),
-            ],
+              child: row,
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// A dragged tab's place in the strip while it's away.
+class _TabGap extends StatelessWidget {
+  const new({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: width,
+    height: NoteTabsBar.height + NoteTabsBar.joinDepth,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, NoteTabsBar.joinDepth + 2),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: BadNotesColors.of(context).surface.withValues(alpha: 0.4),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
+        ),
+      ),
+    ),
+  );
+}
+
+/// A tab's background. The open tab's outline goes up from a foot curving
+/// out on the left, over its round top and down to a foot on the right,
+/// joining the bar under it; below the strip it's hidden by that bar.
+class _TabPainter extends CustomPainter {
+  const new({
+    required this.active,
+    required this.hovered,
+    required this.divider,
+    required this.fill,
+    required this.hover,
+    required this.line,
+  });
+
+  static const radius = 10.0;
+
+  final bool active, hovered, divider;
+  final Color fill, hover, line;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const r = radius;
+    final w = size.width;
+    const b = NoteTabsBar.height;
+    if (active) {
+      final outline = Path()
+        ..moveTo(-r, b)
+        ..arcToPoint(
+          const Offset(0, b - r),
+          radius: const Radius.circular(r),
+          clockwise: false,
+        )
+        ..lineTo(0, r)
+        ..arcToPoint(const Offset(r, 0), radius: const Radius.circular(r))
+        ..lineTo(w - r, 0)
+        ..arcToPoint(Offset(w, r), radius: const Radius.circular(r))
+        ..lineTo(w, b - r)
+        ..arcToPoint(
+          Offset(w + r, b),
+          radius: const Radius.circular(r),
+          clockwise: false,
+        );
+      final body = Path.from(outline)
+        ..lineTo(w + r, size.height)
+        ..lineTo(-r, size.height)
+        ..close();
+      canvas
+        ..drawPath(body, Paint()..color = fill)
+        ..drawPath(
+          outline,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..color = line,
+        );
+      return;
+    }
+    if (hovered) {
+      canvas.drawRRect(
+        RRect.fromLTRBR(2, 5, w - 2, b - 3, const Radius.circular(8)),
+        Paint()..color = hover,
+      );
+    }
+    if (divider) {
+      canvas.drawLine(
+        Offset(w - 0.5, b / 2 - 8),
+        Offset(w - 0.5, b / 2 + 8),
+        Paint()..color = line,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_TabPainter old) =>
+      old.active != active ||
+      old.hovered != hovered ||
+      old.divider != divider ||
+      old.fill != fill ||
+      old.hover != hover ||
+      old.line != line;
 }
 
 /// The note's name on a phone: its cover, the name (to rename it), ⌄ and
