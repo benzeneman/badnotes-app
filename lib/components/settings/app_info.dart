@@ -17,7 +17,7 @@ class const AppInfo({super.key}) extends StatelessWidget {
   );
 
   /// Who makes BadNotes, as shown in the app.
-  static const author = 'Karan Adhikari and Shivam Saini';
+  static const author = 'Karan Adhikari';
 
   static String get info => [
     // Tests use static values to improve reducibility

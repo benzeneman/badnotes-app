@@ -1,10 +1,10 @@
 # BadNotes Terms of Use
 
-Owners: Karan Adhikari and Shivam Saini
+Owner: Karan Adhikari
 
 ## Agreement
 
-BadNotes is made and owned by Karan Adhikari and Shivam Saini. By using the app you agree to these terms. If you do not, please do not use it. Last updated 26 November 2026.
+BadNotes is made and owned by Karan Adhikari. By using the app you agree to these terms. If you do not, please do not use it. Last updated 26 November 2026.
 
 ## Your content
 
