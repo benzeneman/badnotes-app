@@ -1,6 +1,6 @@
 # BadNotes licence
 
-Copyright © 2026 Shivam Saini. All rights reserved.
+Copyright © 2026 Karan Adhikari and Shivam Saini. All rights reserved.
 
 This software, including its source code, assets and documentation, is
 proprietary and confidential. No part of it may be copied, modified,

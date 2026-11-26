@@ -1,10 +1,10 @@
 # BadNotes Terms of Use
 
-Owner: Shivam Saini
+Owners: Karan Adhikari and Shivam Saini
 
 ## Agreement
 
-BadNotes is made and owned by Shivam Saini. By using the app you agree to these terms. If you do not, please do not use it. Last updated 25 November 2026.
+BadNotes is made and owned by Karan Adhikari and Shivam Saini. By using the app you agree to these terms. If you do not, please do not use it. Last updated 26 November 2026.
 
 ## Your content
 
@@ -30,11 +30,11 @@ Cloud sync, voice typing and handwriting models are provided by others (Google o
 
 ## No warranty
 
-BadNotes is provided "as is", without any promise that it will be always available, error-free or fit for a particular purpose. To the fullest extent the law allows, Shivam Saini is not liable for any loss or damage, including lost notes, that comes from using it.
+BadNotes is provided "as is", without any promise that it will be always available, error-free or fit for a particular purpose. To the fullest extent the law allows, BadNotes and its owners are not liable for any loss or damage, including lost notes, that comes from using it.
 
 ## Licence
 
-BadNotes is proprietary software owned by Shivam Saini. You may not copy, modify or redistribute it. It uses third-party open-source components, each under its own licence; they are listed under Open-source licenses in the app's About page.
+BadNotes is proprietary software. You may not copy, modify or redistribute it. It uses third-party open-source components, each under its own licence; they are listed under Open-source licenses in the app's About page.
 
 ## Changes
 

@@ -1,10 +1,10 @@
 # BadNotes Privacy Policy
 
-Owner: Shivam Saini
+Owners: Karan Adhikari and Shivam Saini
 
 ## Who we are
 
-BadNotes is made and owned by Shivam Saini. This policy says what the app does with your data. Last updated 25 November 2026.
+BadNotes is made and owned by Karan Adhikari and Shivam Saini. This policy says what the app does with your data. Last updated 26 November 2026.
 
 ## Your notes
 
@@ -40,4 +40,4 @@ BadNotes does not knowingly collect anything from anyone, children included.
 
 ## Changes and questions
 
-If this policy changes, the new version is shown here with its date. Questions: write to Shivam Saini at badnotes.co@gmail.com or see badnotes.space.
+If this policy changes, the new version is shown here with its date. Questions: write to badnotes.co@gmail.com or see badnotes.space.

@@ -17,7 +17,7 @@ class const AppInfo({super.key}) extends StatelessWidget {
   );
 
   /// Who makes BadNotes, as shown in the app.
-  static const author = 'Shivam Saini';
+  static const author = 'Karan Adhikari and Shivam Saini';
 
   static String get info => [
     // Tests use static values to improve reducibility
@@ -43,7 +43,7 @@ class const AppInfo({super.key}) extends StatelessWidget {
   }
 
   /// When the privacy policy and terms were last changed.
-  static const policiesUpdated = '24 November 2026';
+  static const policiesUpdated = '26 November 2026';
 
   /// Shows BadNotes's privacy policy, in the app.
   static void showPrivacyPolicy(BuildContext context) => _showPolicy(
@@ -58,8 +58,9 @@ class const AppInfo({super.key}) extends StatelessWidget {
       (
         'Your notes',
         'Your notes, pictures, recordings and settings are stored on this '
-            'device. BadNotes has no servers of its own, does not collect '
-            'them and cannot see them.',
+            'device. BadNotes does not collect them and cannot see them. Its '
+            'only server is the one that records BadNotes Pro purchases '
+            '(below), and your notes never go there.',
       ),
       (
         'Cloud sync (optional)',
@@ -75,6 +76,20 @@ class const AppInfo({super.key}) extends StatelessWidget {
             'including its Limited Use requirements: the data is used only '
             'to sync your notes, is never sold or used for advertising, and '
             'is never shared with anyone.',
+      ),
+      (
+        'BadNotes Pro purchases',
+        'When you buy BadNotes Pro, or the app checks whether you have it, '
+            'the app sends the Google purchase token and a sign-in token from '
+            'your Google account to the BadNotes server at '
+            'api.badnotes.space. The server reads only your account\'s email '
+            'address from Google, checks the purchase with Google Play, and '
+            'stores your email address, the purchase token, the order number '
+            'and the purchase date, so that Pro works on every device where '
+            'you sign in with that account. Payments are made through Google '
+            'Play; BadNotes never sees your card, UPI or bank details. '
+            'Nothing about your notes is sent. To have this record deleted, '
+            'write to the address below.',
       ),
       (
         'Microphone',
@@ -106,7 +121,7 @@ class const AppInfo({super.key}) extends StatelessWidget {
       (
         'Changes and questions',
         'If this policy changes, the new version is shown here with its '
-            'date. Questions: write to $author at badnotes.co@gmail.com '
+            'date. Questions: write to badnotes.co@gmail.com '
             'or see badnotes.space.',
       ),
     ],
@@ -132,9 +147,23 @@ class const AppInfo({super.key}) extends StatelessWidget {
       ),
       (
         'Using the app',
-        'BadNotes is free to use. Please do not use it to break the law, '
-            'to harm others, or to try to damage, copy or reverse-engineer '
-            'it.',
+        'BadNotes has a free version and a paid one, BadNotes Pro. Please '
+            'do not use it to break the law, to harm others, or to try to '
+            'damage, copy or reverse-engineer it.',
+      ),
+      (
+        'BadNotes Pro',
+        'BadNotes Pro is a one-time purchase made through Google Play. It '
+            'belongs to the Google account you are signed in with in '
+            'BadNotes when you buy it, and works on every device where you '
+            'sign in with that account, for as long as BadNotes is offered. '
+            'If you change or close that Google account, Pro does not move '
+            'to another one. Refunds follow Google Play\'s refund policy: you '
+            'can ask Google Play for a refund within 48 hours of buying, and '
+            'after that you can write to badnotes.co@gmail.com. If a purchase '
+            'is refunded or charged back, Pro is turned off. Everything you '
+            'made stays yours and keeps opening, editing and exporting; only '
+            'the Pro features stop.',
       ),
       (
         'Backups',
@@ -153,13 +182,14 @@ class const AppInfo({super.key}) extends StatelessWidget {
         'No warranty',
         'BadNotes is provided "as is", without any promise that it will be '
             'always available, error-free or fit for a particular purpose. '
-            'To the fullest extent the law allows, $author is not liable for '
+            'To the fullest extent the law allows, BadNotes and its owners '
+            'are not liable for '
             'any loss or damage, including lost notes, that comes from '
             'using it.',
       ),
       (
         'Licence',
-        'BadNotes is proprietary software owned by $author. You may not '
+        'BadNotes is proprietary software. You may not '
             'copy, modify or redistribute it. It uses third-party '
             'open-source components, each under its own licence; they are '
             'listed under Open-source licenses in this About page.',
