@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:badnotes/components/home/trash.dart';
+import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/components/ui/covered_snapshot.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:flutter/material.dart';
@@ -102,9 +103,9 @@ class _HomePageState extends State<HomePage> {
   /// stutter on slow phones, since both are painted during the change.
   Widget _fadingSection() {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 150),
-      switchInCurve: Curves.easeOut,
-      switchOutCurve: Curves.easeIn,
+      duration: BnMotion.fast,
+      switchInCurve: BnMotion.curve,
+      switchOutCurve: BnMotion.curve,
       transitionBuilder: (child, animation) =>
           FadeTransition(opacity: animation, child: child),
       child: KeyedSubtree(key: ValueKey(widget.subpage), child: _section()),

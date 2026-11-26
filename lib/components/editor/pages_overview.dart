@@ -6,6 +6,7 @@ import 'package:badnotes/components/home/documents_widgets.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/editor/page.dart';
+import 'package:badnotes/components/ui/ui.dart';
 
 /// Every page of a note at a glance. Tapping one goes there, and selecting
 /// pages lets them be copied, moved, cleared or deleted.
@@ -310,8 +311,8 @@ class _PagesOverviewState extends State<_PagesOverview> {
               ),
             ),
             AnimatedSize(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
+              duration: BnMotion.normal,
+              curve: BnMotion.curve,
               child: _selecting
                   ? Row(
                       children: [
@@ -416,8 +417,8 @@ class _PagesOverviewState extends State<_PagesOverview> {
                             builder: (context, candidates, _) => LayoutBuilder(
                               builder: (context, constraints) => AnimatedScale(
                                 scale: candidates.isEmpty ? 1 : 0.92,
-                                duration: const Duration(milliseconds: 160),
-                                curve: Curves.easeOut,
+                                duration: BnMotion.fast,
+                                curve: BnMotion.curve,
                                 child: LongPressDraggable<int>(
                                   data: index,
                                   delay: const Duration(milliseconds: 280),
@@ -491,7 +492,7 @@ class _PageCell extends StatelessWidget {
             onLongPress: onLongPress,
             child: Center(
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
+                duration: BnMotion.fast,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: selected || isCurrent

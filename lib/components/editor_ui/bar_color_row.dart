@@ -248,7 +248,8 @@ class _BarColorRowState extends State<BarColorRow> {
           offset: _vertical ? Offset(0, shift) : Offset(shift, 0),
           child: AnimatedScale(
             scale: lifted ? 1.3 : 1,
-            duration: const Duration(milliseconds: 120),
+            duration: BnMotion.fast,
+            curve: BnMotion.curve,
             child: BnColorDot(
               color: color.withInversion(widget.invert),
               selected: chosen,

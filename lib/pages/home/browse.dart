@@ -71,6 +71,10 @@ class _BrowsePageState extends State<BrowsePage> {
 
   String? path;
 
+  /// The folder [children] were listed from: the content fades in when it
+  /// changes, once the new folder's notes are there.
+  String? _listedPath;
+
   final ValueNotifier<List<String>> selectedFiles = ValueNotifier([]);
 
   var _filter = DeskFilter.all;
@@ -85,6 +89,7 @@ class _BrowsePageState extends State<BrowsePage> {
   @override
   void initState() {
     path = widget.initialPath;
+    _listedPath = path;
 
     findChildrenOfPath();
     fileWriteSubscription = FileManager.fileWriteStream.stream.listen(
@@ -143,6 +148,7 @@ class _BrowsePageState extends State<BrowsePage> {
     if (children == null && (path == null || path == '/')) {
       children = DirectoryChildren([], []);
     }
+    _listedPath = path;
 
     if (mounted) setState(() {});
   }
@@ -266,6 +272,21 @@ class _BrowsePageState extends State<BrowsePage> {
     final tag = tags.colors.containsKey(_tag) ? _tag : null;
     useOnListenableChange(stows.browseSortMetric, findChildrenOfPath);
     useListenable(NoteLocks.changes);
+    // Entering or leaving a folder fades the new content in. Slivers can't
+    // go in an AnimatedSwitcher, so they fade together on one controller.
+    final fade = useAnimationController(
+      duration: BnMotion.fast,
+      initialValue: 1,
+    );
+    final fadeIn = useMemoized(
+      () => CurvedAnimation(parent: fade, curve: BnMotion.curve),
+    );
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    useValueChanged<String?, void>(_listedPath, (_, _) {
+      if (!reduceMotion) fade.forward(from: 0);
+    });
+    Widget faded(Widget sliver) =>
+        SliverFadeTransition(opacity: fadeIn, sliver: sliver);
     // a locked folder: its password first
     if (path case final folder? when NoteLocks.needsUnlock(folder)) {
       void leave() => onPathComponentTap(p.dirname(folder));
@@ -362,12 +383,14 @@ class _BrowsePageState extends State<BrowsePage> {
                     ),
                   ),
                 ),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(margin, 0, margin, 0),
-                sliver: SliverToBoxAdapter(
-                  child: empty
-                      ? const SizedBox()
-                      : _title(context, isAtRoot, files, folders),
+              faded(
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(margin, 0, margin, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: empty
+                        ? const SizedBox()
+                        : _title(context, isAtRoot, files, folders),
+                  ),
                 ),
               ),
               if (empty)
@@ -390,7 +413,7 @@ class _BrowsePageState extends State<BrowsePage> {
                   sliver: const PhotosGrid(),
                 )
               else if (children != null)
-                ..._sections(
+                for (final section in _sections(
                   context,
                   folders: folders,
                   // inside a folder, PDFs have a section of their own
@@ -411,22 +434,26 @@ class _BrowsePageState extends State<BrowsePage> {
                   menu: menu,
                   showFolders: showFolders,
                   showNotebooks: showNotebooks,
-                ),
+                ))
+                  faded(section),
               SliverToBoxAdapter(
                 child: SizedBox(height: HomeChrome.bottomRoom(context)),
               ),
             ],
           ),
           const SyncErrorBanner(),
-          if (selecting)
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: MediaQuery.paddingOf(context).bottom + 18,
-              child: Center(
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: HomeChrome.safeBottom(context) + 18,
+            child: Center(
+              // kept built while hidden, so it can slide away
+              child: BnSlideFade(
+                visible: selecting,
                 child: NotebookSelectionBar(selectedFiles: selectedFiles),
               ),
             ),
+          ),
         ],
       ),
       ),

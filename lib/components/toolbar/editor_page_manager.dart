@@ -34,6 +34,7 @@ class _PageListState extends State<EditorPageManager> {
     pages: widget.coreInfo.pages,
     screenWidth: MediaQuery.sizeOf(context).width,
     transformationController: widget.transformationController,
+    glide: true,
   );
 
   /// Runs [change] on page [index], then shows page [thenShow].

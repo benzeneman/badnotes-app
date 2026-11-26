@@ -165,7 +165,18 @@ class _PaywallState extends State<Paywall> {
         (Pro.isPro.value && ProBilling.step.value != ProBuyStep.idle);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-      child: done ? _welcome(context, colors) : _offer(context, colors),
+      // the offer gives way to the welcome with a short cross-fade
+      child: AnimatedSwitcher(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : BnMotion.normal,
+        switchInCurve: BnMotion.curve,
+        switchOutCurve: BnMotion.curve,
+        child: KeyedSubtree(
+          key: ValueKey(done),
+          child: done ? _welcome(context, colors) : _offer(context, colors),
+        ),
+      ),
     );
   }
 
@@ -368,23 +379,29 @@ class _PaywallState extends State<Paywall> {
           spacing: 4,
           children: [
             if (canBuy)
-              TextButton(
+              BnButton(
+                label: 'Restore purchase',
+                kind: .quiet,
+                height: 36,
                 onPressed: _busy || email == null ? null : ProBilling.restore,
-                child: const Text('Restore purchase'),
               ),
-            TextButton(
+            BnButton(
+              label: 'Terms',
+              kind: .quiet,
+              height: 36,
               onPressed: () => launchUrl(
                 Uri.parse('https://badnotes.space/tos'),
                 mode: LaunchMode.externalApplication,
               ),
-              child: const Text('Terms'),
             ),
-            TextButton(
+            BnButton(
+              label: 'Privacy',
+              kind: .quiet,
+              height: 36,
               onPressed: () => launchUrl(
                 Uri.parse('https://badnotes.space/policy'),
                 mode: LaunchMode.externalApplication,
               ),
-              child: const Text('Privacy'),
             ),
           ],
         ),

@@ -53,6 +53,42 @@ Widget bnPopIn(
   );
 }
 
+/// A bar at the bottom of the screen that slides down a little and fades
+/// out while it isn't [visible], and back while it is: the dock and the
+/// selection bar trade places this way. It stays laid out, so nothing
+/// around it jumps, but takes no taps or focus while hidden. Instant with
+/// "reduce motion".
+class BnSlideFade extends StatelessWidget {
+  const new({super.key, required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : BnMotion.normal;
+    return IgnorePointer(
+      ignoring: !visible,
+      child: ExcludeFocus(
+        excluding: !visible,
+        child: AnimatedSlide(
+          offset: visible ? Offset.zero : const Offset(0, 0.6),
+          duration: duration,
+          curve: BnMotion.curve,
+          child: AnimatedOpacity(
+            opacity: visible ? 1 : 0,
+            duration: duration,
+            curve: BnMotion.curve,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Opens [builder]'s content as a popover anchored to [anchor]'s widget:
 /// under it if there is room, otherwise above, kept on screen. Tapping
 /// outside closes it.

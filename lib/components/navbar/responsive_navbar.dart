@@ -70,15 +70,17 @@ class ResponsiveNavbar extends HookWidget {
     // no dock while the keyboard is up or notes are being selected
     final selecting = useValueListenable(HomeChrome.selecting);
     final media = MediaQuery.of(context);
-    final showDock = media.viewInsets.bottom == 0 && !selecting;
+    final keyboardUp = media.viewInsets.bottom != 0;
+    final showDock = !keyboardUp && !selecting;
     final dockRoom = HomeChrome.bottomRoom(context);
 
     // The page is told the dock is part of its bottom safe area, so it can
-    // scroll under the dock and still end above it.
+    // scroll under the dock and still end above it. The selection bar takes
+    // the same room, so starting a selection doesn't move the page.
     final page = MediaQuery(
       data: media.copyWith(
         padding: media.padding.copyWith(
-          bottom: showDock ? dockRoom : media.padding.bottom,
+          bottom: keyboardUp ? media.padding.bottom : dockRoom,
         ),
       ),
       child: body,
@@ -90,12 +92,13 @@ class ResponsiveNavbar extends HookWidget {
         fit: StackFit.expand,
         children: [
           page,
-          if (showDock)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: media.padding.bottom + _dockLift,
-              child: Center(
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: media.padding.bottom + _dockLift,
+            child: Center(
+              child: BnSlideFade(
+                visible: showDock,
                 child: Material(
                   type: MaterialType.transparency,
                   child: Builder(
@@ -113,6 +116,7 @@ class ResponsiveNavbar extends HookWidget {
                 ),
               ),
             ),
+          ),
         ],
       ),
     );

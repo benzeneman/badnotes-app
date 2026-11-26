@@ -1,4 +1,3 @@
-import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/bn_home_dialogs.dart';
 import 'package:badnotes/components/ui/ui.dart';
@@ -23,9 +22,12 @@ class DeleteFolderButton extends StatelessWidget {
 
   /// Shows the confirmation, exactly as a tap on the button does, so menus
   /// can offer the same action.
-  Future<void> open(BuildContext context) => showAppleDialog(
+  Future<void> open(BuildContext context) => showBnDialog<void>(
     context: context,
-    builder: (_) => _ConfirmFolderDeletion(
+    title: '${t.home.deleteFolder.deleteName(f: '“$folderName”')}?',
+    width: 420,
+    // its own buttons: Delete waits for the tick and for the delete itself
+    content: _ConfirmFolderDeletion(
       folderName: folderName,
       deleteFolder: deleteFolder,
       isFolderEmpty: isFolderEmpty,
@@ -95,94 +97,43 @@ class _ConfirmFolderDeletionState extends State<_ConfirmFolderDeletion> {
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
-    return BnDialogCard(
-      width: 440,
-      padding: const EdgeInsets.all(28),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          _explanation,
+          style: BnType.body.copyWith(
+            color: colors.muted,
+            fontWeight: FontWeight.w400,
+            height: 1.45,
+          ),
+        ),
+        if (!_empty) ...[
+          const SizedBox(height: 14),
+          BnConfirmRow(
+            label: t.home.deleteFolder.alsoDeleteContents,
+            value: _notesToo,
+            onChanged: (value) => setState(() => _notesToo = value),
+          ),
+        ],
+        const SizedBox(height: 20),
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            _DangerBadge(colors: colors),
-            const SizedBox(height: 18),
-            Text(
-              '${t.home.deleteFolder.deleteName(f: '“${widget.folderName}”')}?',
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.4,
-                height: 1.2,
-                color: colors.text,
-              ),
+            BnButton(
+              label: t.common.cancel,
+              onPressed: () => Navigator.of(context).pop(),
             ),
-            const SizedBox(height: 10),
-            Text(
-              _explanation,
-              textAlign: TextAlign.center,
-              style: BnType.bodyLarge.copyWith(
-                fontWeight: FontWeight.w400,
-                height: 1.5,
-                color: colors.muted,
-              ),
-            ),
-            if (!_empty) ...[
-              const SizedBox(height: 16),
-              BnConfirmRow(
-                label: t.home.deleteFolder.alsoDeleteContents,
-                value: _notesToo,
-                onChanged: (value) => setState(() => _notesToo = value),
-              ),
-            ],
-            const SizedBox(height: 20),
-            Row(
-              spacing: 10,
-              children: [
-                Expanded(
-                  child: BnPillButton(
-                    label: t.common.cancel,
-                    height: 50,
-                    expand: true,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ),
-                Expanded(
-                  child: BnPillButton(
-                    label: t.home.deleteFolder.delete,
-                    kind: BnPillKind.danger,
-                    height: 50,
-                    expand: true,
-                    onPressed: _canDelete ? _confirm : null,
-                  ),
-                ),
-              ],
+            BnButton.destructive(
+              label: t.home.deleteFolder.delete,
+              onPressed: _canDelete ? _confirm : null,
             ),
           ],
         ),
-      ),
+      ],
     );
   }
-}
-
-/// A round trash badge tinted with the danger colour.
-class _DangerBadge extends StatelessWidget {
-  const new({required this.colors});
-
-  final BadNotesColors colors;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 52,
-    height: 52,
-    decoration: BoxDecoration(
-      color: Color.alphaBlend(
-        colors.danger.withValues(alpha: 0.14),
-        colors.surface,
-      ),
-      shape: BoxShape.circle,
-      border: Border.all(color: colors.hairline),
-    ),
-    child: Icon(BnIcons.trash, size: 24, color: colors.danger),
-  );
 }

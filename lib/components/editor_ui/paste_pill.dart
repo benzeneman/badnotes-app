@@ -1,5 +1,6 @@
 import 'package:badnotes/components/editor/note_clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:badnotes/components/ui/ui.dart';
 
 /// After a copy, a dark pill at the top of the page (design 16): what was
 /// copied and Paste, in this note or any other opened next; × closes it.
@@ -14,7 +15,7 @@ class PastePill extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: NoteClipboard.offered,
       builder: (context, offered, _) => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 180),
+        duration: BnMotion.normal,
         transitionBuilder: (child, animation) => FadeTransition(
           opacity: animation,
           child: SlideTransition(

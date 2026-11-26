@@ -2075,18 +2075,25 @@ class EditorState extends State<Editor> {
   }) {
     final page = coreInfo.pages[pageIndex];
     final pageBox = page.renderBox, stackBox = _canvasStackBox;
+    // where the view goes back to once the box is done, if it was lifted
+    _viewBeforeTextBox = null;
+    _viewLiftedForTextBox = null;
     if (pageBox != null && stackBox != null) {
-      // above where the keyboard is about to come up
+      // above where the keyboard is about to come up, gliding there: the
+      // page jumped up under the finger
       final y = stackBox.globalToLocal(pageBox.localToGlobal(at)).dy;
       final target = max(stackBox.size.height * 0.2, 90.0);
       if (y > target) {
         final translation = _transformationController.value.getTranslation();
-        _transformationController.value =
-            _transformationController.value.clone()..setTranslationRaw(
-              translation.x,
-              translation.y - (y - target),
-              translation.z,
-            );
+        _viewBeforeTextBox = _transformationController.value.clone();
+        final lifted = _viewLiftedForTextBox = _transformationController.value
+            .clone()
+          ..setTranslationRaw(
+            translation.x,
+            translation.y - (y - target),
+            translation.z,
+          );
+        CanvasGestureDetector.glideTo(_transformationController, lifted);
       }
     }
     setState(() {
@@ -2132,14 +2139,26 @@ class EditorState extends State<Editor> {
       liftBy: (dy) {
         final matrix = _transformationController.value.clone();
         final translation = matrix.getTranslation();
-        _transformationController.value = matrix
+        _viewBeforeTextBox ??= _transformationController.value.clone();
+        _transformationController.value = _viewLiftedForTextBox = matrix
           ..setTranslationRaw(translation.x, translation.y - dy, translation.z);
       },
     );
   }
 
+  /// The view as it was before a text box lifted the page above the
+  /// keyboard, and as the lifting left it.
+  Matrix4? _viewBeforeTextBox, _viewLiftedForTextBox;
+
   Future<void> _closeTextBox(String text, TextFormat format) async {
     final box = _textBox!;
+    // The page comes back down: lifted for the keyboard, it stayed up. Not
+    // if the view was moved meanwhile: that would yank it away.
+    final before = _viewBeforeTextBox, lifted = _viewLiftedForTextBox;
+    _viewBeforeTextBox = _viewLiftedForTextBox = null;
+    if (before != null && _transformationController.value == lifted) {
+      CanvasGestureDetector.glideTo(_transformationController, before);
+    }
     final page = coreInfo.pages[box.pageIndex];
     final image = box.image;
     final maxWidth = image == null
@@ -2662,6 +2681,7 @@ class EditorState extends State<Editor> {
       pages: coreInfo.pages,
       screenWidth: _canvasWidth,
       transformationController: _transformationController,
+      glide: true,
     );
   }
 
@@ -3764,6 +3784,7 @@ class EditorState extends State<Editor> {
         pages: coreInfo.pages,
         screenWidth: _canvasWidth,
         transformationController: _transformationController,
+        glide: true,
       ),
       insertPageAfter: _choosePageAfter,
       duplicatePage: manager.duplicatePage,
@@ -3823,6 +3844,7 @@ class EditorState extends State<Editor> {
           pages: coreInfo.pages,
           screenWidth: _canvasWidth,
           transformationController: _transformationController,
+          glide: true,
         );
         // the sidebar stays open beside the note; full screen, it goes
         setState(() {
@@ -3838,6 +3860,7 @@ class EditorState extends State<Editor> {
                 pages: coreInfo.pages,
                 screenWidth: _canvasWidth,
                 transformationController: _transformationController,
+                glide: true,
               );
             },
       audio: audioNotes == null
@@ -5953,6 +5976,7 @@ class EditorState extends State<Editor> {
                 pages: coreInfo.pages,
                 screenWidth: _canvasWidth,
                 transformationController: _transformationController,
+                glide: true,
               );
             },
       pageBookmarked:
@@ -7642,69 +7666,85 @@ class EditorState extends State<Editor> {
               ),
             ),
           ),
-        if (_placing != null ||
-            _stickyColor != null ||
-            (currentTool == Tool.textEditing &&
-                _textBox == null &&
-                !_readingMode &&
-                !coreInfo.readOnly))
-          Align(
+        // comes and goes with a fade, looking like the other bars
+        AnimatedSwitcher(
+          duration: BnMotion.fast,
+          transitionBuilder: (child, animation) => bnPopIn(
+            context,
+            animation,
+            child,
             alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
-              child: Material(
-                color: EditorUi.of(context).bar,
-                elevation: 3,
-                shadowColor: Colors.black38,
-                borderRadius: BorderRadius.circular(20),
-                child: Row(
-                  mainAxisSize: .min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Icon(
-                        Icons.info_outline,
-                        size: 18,
-                        color: EditorUi.of(context).iconDim,
-                      ),
-                    ),
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 9,
-                        ),
-                        child: Text(
-                          _stickyColor != null
-                              ? 'Tap to add a sticky note.'
-                              : _placing != null
-                              ? 'Tap where you want it.'
-                              : 'Tap to add a text box.',
-                          style: TextStyle(
-                            color: EditorUi.of(context).text,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Cancel',
-                      visualDensity: VisualDensity.compact,
-                      color: EditorUi.of(context).iconDim,
-                      icon: const Icon(Icons.close, size: 18),
-                      onPressed: () => setState(() {
-                        _placing = null;
-                        _stickyColor = null;
-                        if (currentTool == Tool.textEditing) {
-                          _toggleTextEditing();
-                        }
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
+          child:
+              !(_placing != null ||
+                  _stickyColor != null ||
+                  (currentTool == Tool.textEditing &&
+                      _textBox == null &&
+                      !_readingMode &&
+                      !coreInfo.readOnly))
+              ? const SizedBox.shrink()
+              : Align(
+                  key: const ValueKey('hint'),
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 24,
+                      left: 16,
+                      right: 16,
+                    ),
+                    child: Material(
+                      color: EditorUi.of(context).bar,
+                      elevation: 4,
+                      shadowColor: Colors.black38,
+                      borderRadius: BorderRadius.circular(EditorUi.barRadius),
+                      child: Row(
+                        mainAxisSize: .min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 18,
+                              color: EditorUi.of(context).iconDim,
+                            ),
+                          ),
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 9,
+                              ),
+                              child: Text(
+                                _stickyColor != null
+                                    ? 'Tap to add a sticky note.'
+                                    : _placing != null
+                                    ? 'Tap where you want it.'
+                                    : 'Tap to add a text box.',
+                                style: BnType.body.copyWith(
+                                  color: EditorUi.of(context).text,
+                                ),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Cancel',
+                            visualDensity: VisualDensity.compact,
+                            color: EditorUi.of(context).iconDim,
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => setState(() {
+                              _placing = null;
+                              _stickyColor = null;
+                              if (currentTool == Tool.textEditing) {
+                                _toggleTextEditing();
+                              }
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+        ),
         if (!_readingMode &&
             !_toolsHidden &&
             !coreInfo.readOnly &&
@@ -7718,10 +7758,21 @@ class EditorState extends State<Editor> {
             Positioned.fill(
               child: IgnorePointer(
                 ignoring: _selectionBusy,
-                child: AnimatedOpacity(
-                  opacity: _selectionBusy ? 0 : 1,
-                  duration: const Duration(milliseconds: 150),
-                  child: _selectionActionBar(),
+                // fades in as the lasso closes: it popped up all at once
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : BnMotion.fast,
+                  curve: BnMotion.curve,
+                  builder: (context, shown, child) =>
+                      Opacity(opacity: shown, child: child),
+                  child: AnimatedOpacity(
+                    opacity: _selectionBusy ? 0 : 1,
+                    duration: BnMotion.fast,
+                    curve: BnMotion.curve,
+                    child: _selectionActionBar(),
+                  ),
                 ),
               ),
             ),

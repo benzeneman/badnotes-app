@@ -172,10 +172,9 @@ class _CanvasImageState extends State<CanvasImage> {
         child: RotatedBox(quarterTurns: backgroundTurns, child: body),
       );
     }
-    return AnimatedPositioned(
-      // no sliding while the picture is being moved
-      duration: widget.selected ? Duration.zero : slide,
-      curve: Curves.fastLinearToSlowEaseIn,
+    // Straight there, as the ink is: an undone move or resize slid the
+    // picture while ink moved with it jumped, and the two came apart.
+    return Positioned(
       left: dst.left,
       top: dst.top,
       width: max(dst.width, CanvasImage.minInteractiveSize),

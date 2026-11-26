@@ -13,6 +13,7 @@ import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/components/ui/bn_controls.dart';
 import 'package:badnotes/components/ui/bn_icons.dart';
+import 'package:badnotes/components/ui/bn_overlays.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:flutter/material.dart';
@@ -102,18 +103,10 @@ Future<void> showFeatureTour(BuildContext context) => showGeneralDialog<void>(
   useRootNavigator: true,
   barrierDismissible: false,
   barrierColor: const Color(0x8C0E0E12),
-  transitionDuration: const Duration(milliseconds: 380),
+  transitionDuration: BnMotion.normal,
   pageBuilder: (_, _, _) => const FeatureTour(),
-  transitionBuilder: (_, animation, _, child) {
-    final eased = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-    return FadeTransition(
-      opacity: eased,
-      child: ScaleTransition(
-        scale: Tween(begin: 0.96, end: 1.0).animate(eased),
-        child: child,
-      ),
-    );
-  },
+  transitionBuilder: (context, animation, _, child) =>
+      bnPopIn(context, animation, child),
 );
 
 var _checked = false;

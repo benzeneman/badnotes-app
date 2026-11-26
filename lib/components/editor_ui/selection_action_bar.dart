@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:badnotes/components/editor_ui/editor_ui_colors.dart';
 import 'package:badnotes/components/editor_ui/tool_chips.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
+import 'package:badnotes/components/ui/ui.dart';
 
 /// The dark bar under a selection: its color, stroke settings and shape
 /// corners, then cut, copy, duplicate, delete and a menu of the rest.
@@ -212,7 +213,7 @@ Future<void> showSelectionMenu(
   barrierDismissible: true,
   barrierLabel: 'Close',
   barrierColor: Colors.transparent,
-  transitionDuration: const Duration(milliseconds: 120),
+  transitionDuration: BnMotion.fast,
   pageBuilder: (context, animation, _) {
     void run(VoidCallback? onTap) {
       Navigator.pop(context);

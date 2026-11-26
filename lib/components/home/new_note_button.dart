@@ -96,11 +96,7 @@ class NewDocumentMenu {
             children: [
               Text(
                 'Create something',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: colors.text,
-                ),
+                style: BnType.title.copyWith(color: colors.text),
               ),
               const SizedBox(height: 12),
               for (var i = 0; i < tiles.length; i += 2) ...[

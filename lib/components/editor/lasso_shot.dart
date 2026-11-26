@@ -25,7 +25,7 @@ Future<void> showLassoShot(
   barrierDismissible: true,
   barrierLabel: 'Close',
   barrierColor: Colors.transparent,
-  transitionDuration: const Duration(milliseconds: 160),
+  transitionDuration: BnMotion.fast,
   pageBuilder: (context, _, _) =>
       _LassoShotCard(near: near, fileName: fileName, make: make),
   transitionBuilder: (context, animation, _, child) => FadeTransition(

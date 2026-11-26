@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:badnotes/data/lag_recorder.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:keybinder/keybinder.dart';
 import 'package:badnotes/components/canvas/hud/canvas_hud.dart';
@@ -225,22 +226,89 @@ class CanvasGestureDetector extends StatefulWidget {
   }
 
   /// Moves the view, at 100%, to the start of page [pageIndex].
+  ///
+  /// With [glide] (a page picked from a list, a search result) the view
+  /// glides there and keeps its zoom: it jumped, and came back at 100%.
   static void scrollToPage({
     required int pageIndex,
     required List<EditorPage> pages,
     required double screenWidth,
     required TransformationController transformationController,
+    bool glide = false,
   }) {
     final offset = -getTopOfPage(
       pageIndex: pageIndex,
       pages: pages,
       screenWidth: screenWidth,
     );
-    transformationController.value = horizontal
-        ? Matrix4.translationValues(offset, 0, 0)
-        // 50 px of the page before shows above it, so it isn't jammed
-        // against the top of the screen
-        : Matrix4.translationValues(0, offset + 50, 0);
+    if (!glide) {
+      transformationController.value = horizontal
+          ? Matrix4.translationValues(offset, 0, 0)
+          // 50 px of the page before shows above it, so it isn't jammed
+          // against the top of the screen
+          : Matrix4.translationValues(0, offset + 50, 0);
+      return;
+    }
+    final now = transformationController.value;
+    final scale = now.approxScale;
+    final at = now.getTranslation();
+    glideTo(
+      transformationController,
+      horizontal
+          ? _view(offset * scale, at.y, scale)
+          : _view(at.x, offset * scale + 50, scale),
+    );
+  }
+
+  /// A view moved by [x], [y] on screen and zoomed to [scale].
+  static Matrix4 _view(double x, double y, double scale) =>
+      Matrix4.translationValues(x, y, 0)..scaleByDouble(scale, scale, 1, 1);
+
+  /// Which [glideTo] is running: a newer one stops the one before.
+  static var _glideRun = 0;
+
+  /// Moves [controller] to [to] over [BnMotion.normal], frame by frame. It
+  /// stops as soon as anything else moves the view (a finger, a newer
+  /// glide), and is a jump with the system's reduce motion on. Far away,
+  /// it jumps to near the place first: gliding past dozens of pages drew
+  /// each of them on the way.
+  static void glideTo(TransformationController controller, Matrix4 to) {
+    final run = ++_glideRun;
+    final reduced = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
+    if (reduced) {
+      controller.value = to;
+      return;
+    }
+    final from = controller.value;
+    final f = from.getTranslation(), t = to.getTranslation();
+    const reach = 1200.0;
+    final fx = t.x + (f.x - t.x).clamp(-reach, reach);
+    final fy = t.y + (f.y - t.y).clamp(-reach, reach);
+    final s0 = from.approxScale, s1 = to.approxScale;
+    Duration? start;
+    // a finger before the first frame stops it too
+    Matrix4? last = from;
+    void frame(Duration time) {
+      if (run != _glideRun) return;
+      if (last != null && controller.value != last) return;
+      start ??= time;
+      final x =
+          ((time - start!).inMicroseconds / BnMotion.normal.inMicroseconds)
+              .clamp(0.0, 1.0);
+      final k = BnMotion.curve.transform(x);
+      controller.value = last = _view(
+        fx + (t.x - fx) * k,
+        fy + (t.y - fy) * k,
+        s0 + (s1 - s0) * k,
+      );
+      if (x < 1) SchedulerBinding.instance.scheduleFrameCallback(frame);
+    }
+
+    SchedulerBinding.instance.scheduleFrameCallback(frame);
   }
 
   /// The page at [scrollY] down the note, in unzoomed note units: the last

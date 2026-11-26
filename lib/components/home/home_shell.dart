@@ -43,6 +43,13 @@ abstract final class HomeChrome {
     return 16;
   }
 
+  /// The screen's own bottom safe area. The page's padding also counts the
+  /// dock's room, so bars that sit where the dock does start from this.
+  static double safeBottom(BuildContext context) =>
+      (MediaQuery.viewPaddingOf(context).bottom -
+              MediaQuery.viewInsetsOf(context).bottom)
+          .clamp(0, double.infinity);
+
   /// Room to leave under the content for the floating dock.
   static double bottomRoom(BuildContext context) =>
       MediaQuery.paddingOf(context).bottom + 22 + 58 + 24;

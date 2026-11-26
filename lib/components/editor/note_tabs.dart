@@ -138,8 +138,8 @@ class _TabbedEditorState extends State<TabbedEditor> {
         // another tab: the note fades over the last one instead of the
         // page going blank while it loads
         main: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOutCubic,
+          duration: BnMotion.normal,
+          switchInCurve: BnMotion.curve,
           switchOutCurve: Curves.easeInCubic,
           layoutBuilder: (current, previous) =>
               Stack(fit: StackFit.expand, children: [...previous, ?current]),

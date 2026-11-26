@@ -692,9 +692,16 @@ class NotebookSelectionBar extends StatelessWidget {
 
   final ValueNotifier<List<String>> selectedFiles;
 
+  /// The last selection that wasn't empty, for each list: the bar fades out
+  /// after the selection is cleared, and showed no notes' actions meanwhile.
+  static final _last = Expando<List<String>>();
+
   @override
   Widget build(BuildContext context) {
-    final selected = selectedFiles.value;
+    final now = selectedFiles.value;
+    final selected = now.isNotEmpty
+        ? _last[selectedFiles] = now
+        : _last[selectedFiles] ?? now;
     void unselect() => selectedFiles.value = [];
     final allStarred = selected.every(Favorites.contains);
     return SelectionActionBar(
@@ -855,13 +862,17 @@ class HomePageFrame extends StatelessWidget {
             ],
           ),
           const SyncErrorBanner(),
-          if (selecting)
+          if (selectedFiles != null)
             Positioned(
               left: 12,
               right: 12,
-              bottom: MediaQuery.paddingOf(context).bottom + 18,
+              bottom: HomeChrome.safeBottom(context) + 18,
               child: Center(
-                child: NotebookSelectionBar(selectedFiles: selectedFiles!),
+                // kept built while hidden, so it can slide away
+                child: BnSlideFade(
+                  visible: selecting,
+                  child: NotebookSelectionBar(selectedFiles: selectedFiles!),
+                ),
               ),
             ),
         ],
