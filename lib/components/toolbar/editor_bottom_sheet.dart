@@ -2,6 +2,7 @@ import 'package:badnotes/components/canvas/canvas_background_preview.dart';
 import 'package:badnotes/components/canvas/canvas_image_dialog.dart';
 import 'package:badnotes/components/canvas/image/editor_image.dart';
 import 'package:badnotes/components/canvas/inner_canvas.dart';
+import 'package:badnotes/components/editor_ui/tool_panel.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
@@ -196,14 +197,14 @@ class _EditorBottomSheetState extends State<EditorBottomSheet> {
           ),
       ],
     ),
-    if (!_showAllPatterns)
-      Align(
-        alignment: .centerLeft,
-        child: TextButton(
-          onPressed: () => setState(() => _showAllPatterns = true),
-          child: const Text('More papers: music, Cornell, and others'),
-        ),
-      ),
+    // a row like the tape panel's "More patterns": as plain text it didn't
+    // look like something to tap
+    PanelNavRow(
+      title: _showAllPatterns ? 'Fewer papers' : 'More papers',
+      trailing: _showAllPatterns ? null : 'Music, Cornell, and others',
+      chevron: false,
+      onTap: () => setState(() => _showAllPatterns = !_showAllPatterns),
+    ),
   ];
 
   List<Widget> _lineSliders() => [

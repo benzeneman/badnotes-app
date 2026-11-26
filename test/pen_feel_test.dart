@@ -177,4 +177,30 @@ void main() {
       expect(spread(1), greaterThan(spread(0) + 1));
     });
   });
+
+  test('a line drawn in pieces has no break where they join', () {
+    // slow loops at full stabilization: the steadied line runs far behind
+    // the pen, and a piece that steadied afresh from the pen jumped ahead
+    for (final pen in [Pen.fountainPen(), Pen.brushPen()]) {
+      pen.options.streamline = 0.95;
+      pen.onDragStart(const Offset(200, 200), EditorPage(), 0, null);
+      for (int i = 1; i <= 300; i++) {
+        final t = i / 40;
+        pen.onDragUpdate(
+          Offset(200 + i * 0.5 + 60 * cos(t), 200 + 60 * sin(t)),
+          null,
+        );
+      }
+      final stroke = pen.onDragEnd()!;
+      final whole = stroke.highQualityPolygon;
+      final near = max(stroke.options.size * 2, 4.0);
+      for (final from in [100, 200]) {
+        for (final p
+            in stroke.livePiece(from - 6, from + 60).highQualityPolygon) {
+          final miss = whole.map((q) => (q - p).distance).reduce(min);
+          expect(miss, lessThan(near), reason: '${pen.toolId} from $from');
+        }
+      }
+    }
+  });
 }

@@ -99,8 +99,11 @@ class _DocumentStudioState extends State<_DocumentStudio> {
       : ProLimits.freeDefaultCover;
 
   // a notebook
-  PaperKind _paper = PaperKind.essentials.first;
-  var _paperSection = PaperKind.sections.keys.first;
+  PaperKind _paper = PaperKind.all.firstWhere(
+    (kind) => kind.name == stows.lastPaperName.value,
+    orElse: () => PaperKind.essentials[1],
+  );
+  late var _paperSection = _sectionOf(_paper);
 
   /// One of the user's own templates, under Mine: it wins over the paper,
   /// size and colour.
@@ -108,7 +111,10 @@ class _DocumentStudioState extends State<_DocumentStudio> {
   static const _mineSection = 'Mine';
   var _sizeName = 'A4';
   var _landscape = false;
-  var _colorName = 'Ivory';
+  var _colorName =
+      PageTemplate.colors.containsKey(stows.lastPageColorName.value)
+      ? stows.lastPageColorName.value
+      : 'White';
 
   // a whiteboard
   BoardPaper _boardPaper = BoardPaper.all[1];
@@ -142,9 +148,7 @@ class _DocumentStudioState extends State<_DocumentStudio> {
     if (widget.template case final template?) {
       _name.text = template.title;
       _paper = template.paper;
-      _paperSection = PaperKind.sections.entries
-          .firstWhere((section) => section.value.contains(_paper))
-          .key;
+      _paperSection = _sectionOf(_paper);
       if (template.colorName != null) _colorName = template.colorName!;
     } else if (!_whiteboard) {
       // a notebook starts from the default template, if one was chosen
@@ -164,6 +168,10 @@ class _DocumentStudioState extends State<_DocumentStudio> {
   }
 
   Color get _color => PageTemplate.colors[_colorName]!;
+
+  static String _sectionOf(PaperKind paper) => PaperKind.sections.entries
+      .firstWhere((section) => section.value.contains(paper))
+      .key;
   Color get _boardColor => BoardPaper.colors[_boardColorName]!;
 
   @override
@@ -176,6 +184,10 @@ class _DocumentStudioState extends State<_DocumentStudio> {
     final name = _name.text.trim().replaceAll('/', '-');
     final imported = _importedPath;
     final isPdf = imported?.toLowerCase().endsWith('.pdf') ?? false;
+    if (!_whiteboard && _mine == null && _importedRow == null) {
+      stows.lastPaperName.value = _paper.name;
+      stows.lastPageColorName.value = _colorName;
+    }
     Navigator.pop<NewDocument>(
       context,
       _whiteboard

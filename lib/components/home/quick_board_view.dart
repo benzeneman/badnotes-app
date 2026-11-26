@@ -9,6 +9,7 @@ import 'package:badnotes/components/home/quick_ink.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
+import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/components/ui/covered_snapshot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -329,6 +330,15 @@ class _FullBoardState extends State<_FullBoard> {
     final wide = MediaQuery.sizeOf(context).width >= 760;
     // a still picture under the composer and other dialogs
     return CoveredSnapshot(
+      // a note's colour, pin or shape, and the background, change live
+      // under the popover they're chosen in
+      refresh: Listenable.merge([
+        QuickBoard.items,
+        stows.boardPattern,
+        stows.boardColor,
+        stows.boardPhotoFade,
+        QuickBoard.backgroundChanged,
+      ]),
       child: Scaffold(
         backgroundColor: colors.surface,
         body: ValueListenableBuilder(

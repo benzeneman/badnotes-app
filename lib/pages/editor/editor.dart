@@ -4017,6 +4017,7 @@ class EditorState extends State<Editor> {
     page.backgroundColor ?? coreInfo.backgroundColor,
     page.backgroundPattern ?? coreInfo.backgroundPattern,
     page.lineHeight ?? coreInfo.lineHeight,
+    coreInfo.lineThickness,
     page.backgroundImage,
     Object.hashAll([for (final layer in page.layers) layer.visible]),
     Object.hashAll([
@@ -4272,6 +4273,8 @@ class EditorState extends State<Editor> {
         },
         minWidth: ShapePen.currentShapePen.sizeMin,
         maxWidth: ShapePen.currentShapePen.sizeMax,
+        // the preview in the shape's own colour, not always black
+        color: shapes.first.color,
       ),
     ).whenComplete(_endStyleEdit);
   }
@@ -5260,6 +5263,11 @@ class EditorState extends State<Editor> {
                 ),
                 controller: filenameTextEditingController,
                 onChanged: renameFile,
+                onFieldSubmitted: (_) => _renameFileNow(),
+                // a finger's tap outside doesn't unfocus a field on Android:
+                // the caret stayed on the name while writing on the page
+                onTapOutside: (_) =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
                 autofocus: needsNaming,
                 validator: _validateFilenameTextField,
               ),
@@ -8006,6 +8014,9 @@ class EditorState extends State<Editor> {
           ),
       setLineHeight: (lineHeight) => saveUnlessReadOnly(() {
         coreInfo.lineHeight = lineHeight;
+        // a page with its own spacing (from one of my templates) didn't
+        // move with the slider, while the papers in the sheet did
+        coreInfo.pages.getOrNull(pageIndex)?.lineHeight = null;
         stows.lastLineHeight.value = lineHeight;
       }),
       setLineThickness: (lineThickness) => saveUnlessReadOnly(() {
@@ -8043,6 +8054,16 @@ class EditorState extends State<Editor> {
     bool allPages,
   ) {
     stows.lastBackgroundPattern.value = pattern;
+    // the next new notebook starts on this paper too
+    final last = PaperKind.all
+        .where((kind) => kind.name == stows.lastPaperName.value)
+        .firstOrNull;
+    if (last?.pattern != pattern) {
+      final papers = PaperKind.all.where((kind) => kind.pattern == pattern);
+      if (papers.firstOrNull case final paper?) {
+        stows.lastPaperName.value = paper.name;
+      }
+    }
     final pages = coreInfo.pages;
     if (!allPages) {
       final page = pages[pageIndex];

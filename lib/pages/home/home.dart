@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:badnotes/components/home/trash.dart';
 import 'package:badnotes/components/ui/covered_snapshot.dart';
+import 'package:badnotes/data/prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:badnotes/components/navbar/responsive_navbar.dart';
 import 'package:badnotes/components/onboarding/tour.dart';
@@ -119,6 +120,8 @@ class _HomePageState extends State<HomePage> {
     // a fullscreen whiteboard gets the whole screen, without tabs
     if (whiteboardFullscreen) return content;
     return CoveredSnapshot(
+      // the layout panel's choices show while it's open
+      refresh: Listenable.merge([stows.homeLayout, stows.homeCoverSize]),
       child: ResponsiveNavbar(
         selectedIndex: HomePage.subpages.indexOf(widget.subpage),
         body: content,

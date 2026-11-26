@@ -293,6 +293,11 @@ class Stows {
     volatile: _volatile,
   );
   final lastLineHeight = _plain('lastLineHeight', defaultLineHeight);
+
+  /// The paper ([PaperKind.name]) and page colour ([PageTemplate.colors])
+  /// the last notebook was made with: the next one starts with them.
+  final lastPaperName = _plain('lastPaperName', 'Dot grid');
+  final lastPageColorName = _plain('lastPageColorName', 'White');
   final lastLineThickness = _plain('lastLineThickness', defaultLineThickness);
 
   final lastZoomLock = _plain('lastZoomLock', false),

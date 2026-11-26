@@ -119,6 +119,7 @@ class CanvasBackgroundPainter extends CustomPainter {
       oldDelegate.backgroundColor != backgroundColor ||
       oldDelegate.backgroundPattern != backgroundPattern ||
       oldDelegate.lineHeight != lineHeight ||
+      oldDelegate.lineThickness != lineThickness ||
       oldDelegate.primaryColor != primaryColor ||
       oldDelegate.secondaryColor != secondaryColor;
 

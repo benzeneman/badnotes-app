@@ -217,6 +217,9 @@ class _ColorPanelState extends State<ColorPanel> {
       _draft = null;
       _view = _View.presets;
     });
+    // the pen takes the colour just added, as it shows it chosen. Only once
+    // added: picked live, a free user could draw in colours past the limit.
+    widget.onChanged(c);
   }
 
   Future<void> _removeCustom(BuildContext dot, Color c) async {

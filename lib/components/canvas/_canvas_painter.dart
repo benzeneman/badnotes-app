@@ -1071,7 +1071,13 @@ class CanvasPainter extends CustomPainter {
   /// [stroke]'s line, its corners rounded if its style says so.
   static Path _shapeOutline(Stroke stroke) {
     final line = stroke.polylinePath;
-    if (!(stroke.shapeStyle ?? ShapeStyle.plain).rounded) return line;
+    if (!(stroke.shapeStyle ?? ShapeStyle.plain).rounded) {
+      // Closed, so its last corner is joined like the others: drawn as an
+      // open line with flat ends, a square was missing where it starts.
+      return stroke.isClosedShape
+          ? (Path()..addPolygon(stroke.editablePoints, true))
+          : line;
+    }
     final size = stroke.options.size;
     if (_roundedOutlines[line] case (final s, final path) when s == size) {
       return path;

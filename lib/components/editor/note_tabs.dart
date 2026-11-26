@@ -315,20 +315,28 @@ class NoteTabsBar extends StatelessWidget {
                           ),
                         ),
                       ),
-                      child: _Tab(
-                        path: path,
-                        title: path == active ? activeTitle : null,
-                        active: path == active,
-                        divider:
-                            path != active &&
-                            i + 1 < tabs.length &&
-                            tabs[i + 1] != active,
-                        onTap: () =>
-                            NoteTabActions.switchTo(path, beforeSwitching),
-                        onClose: () => NoteTabActions.close(
-                          context,
-                          path,
-                          beforeSwitching,
+                      // dropped on another tab, it takes that tab's place
+                      child: DragTarget<String>(
+                        onWillAcceptWithDetails: (d) =>
+                            d.data != path && tabs.contains(d.data),
+                        onAcceptWithDetails: (d) => NoteTabs.paths.value = [
+                          ...tabs.where((t) => t != d.data),
+                        ]..insert(i, d.data),
+                        builder: (context, _, _) => _Tab(
+                          path: path,
+                          title: path == active ? activeTitle : null,
+                          active: path == active,
+                          divider:
+                              path != active &&
+                              i + 1 < tabs.length &&
+                              tabs[i + 1] != active,
+                          onTap: () =>
+                              NoteTabActions.switchTo(path, beforeSwitching),
+                          onClose: () => NoteTabActions.close(
+                            context,
+                            path,
+                            beforeSwitching,
+                          ),
                         ),
                       ),
                     ),

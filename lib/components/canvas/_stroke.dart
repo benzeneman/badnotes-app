@@ -595,8 +595,10 @@ class Stroke {
       out.add(PointVector(p.dx, p.dy, points[i].pressure));
       src?.add(i);
     }
-    out.add(PointVector(points.last.x, points.last.y, points.last.pressure));
-    src?.add(points.length - 1);
+    if (!_openEnd) {
+      out.add(PointVector(points.last.x, points.last.y, points.last.pressure));
+      src?.add(points.length - 1);
+    }
     return out;
   }
 
@@ -626,7 +628,7 @@ class Stroke {
         : setting;
     final fastMove = max(options.size * 1.5, 2.0);
     final n = points.length;
-    var prev = Offset(points.first.x, points.first.y);
+    var prev = _steadyFrom ?? Offset(points.first.x, points.first.y);
     final out = <Offset?>[prev];
     for (int i = 1; i < n; i++) {
       final p = Offset(points[i].x, points[i].y);
@@ -673,9 +675,11 @@ class Stroke {
       steadied.add(PointVector(p.dx, p.dy, pressures[i]));
       steadiedSrc.add(i);
     }
-    // finish where the pen is
-    steadied.add(PointVector(points.last.x, points.last.y, pressures.last));
-    steadiedSrc.add(points.length - 1);
+    // finish where the pen is, unless the line goes on in another piece
+    if (!_openEnd) {
+      steadied.add(PointVector(points.last.x, points.last.y, pressures.last));
+      steadiedSrc.add(points.length - 1);
+    }
 
     final spacing = max(options.size, 3.0);
     final out = <PointVector>[steadied.first];
@@ -837,6 +841,10 @@ class Stroke {
 
   /// The widths of [livePiece]'s points in the line it is a piece of.
   List<double>? _widthsGiven;
+
+  /// Where the line [livePiece] is a piece of is steadied to at its first
+  /// point.
+  Offset? _steadyFrom;
 
   /// A fountain pen's ends narrow over a fixed distance, set by
   /// [StrokeOptions.thinning], its tip sharpness. The outline is the same while
@@ -1021,7 +1029,7 @@ class Stroke {
     final pts = _steadiedOffsets(bySpeed: toolId == .ballpointPen).nonNulls
         .toList();
     // finish where the pen actually lifted
-    pts.add(Offset(points.last.x, points.last.y));
+    if (!_openEnd) pts.add(Offset(points.last.x, points.last.y));
     if (toolId == .tape) {
       final smooth = smoothTapeLine(pts, options.size);
       pts
@@ -2391,6 +2399,14 @@ class Stroke {
     piece._openEnd = to < points.length;
     if (nib2 && toolId == .fountainPen && (from > 0 || to < points.length)) {
       piece._widthsGiven = nibPressures.sublist(from, to);
+    }
+    if (from > 0 && points.length >= 3) {
+      // steadied on from where the whole line's steadying is there: started
+      // afresh at the pen's own point, each piece jumped ahead of the line
+      // before it, a break at every join at high stabilization
+      // ponytail: O(points) per piece; cache by [_version] if it shows up
+      final bySpeed = toolId != .highlighter && toolId != .tape;
+      piece._steadyFrom = _steadiedOffsets(bySpeed: bySpeed)[from];
     }
     if (to == points.length) piece._predictedPoint = _predictedPoint;
     return piece;

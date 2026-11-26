@@ -10,10 +10,13 @@ import 'package:flutter/material.dart';
 /// 2560x1600 tablet that alone took 20-40 ms a frame. The picture isn't
 /// taken again when [child] repaints, so while the theme changes (light and
 /// dark from the profile popover) it is drawn live, to change with the rest.
+/// It is taken again whenever [refresh] notifies: what a popover on top
+/// changes (a note's colour, the layout) shows while it's chosen.
 class CoveredSnapshot extends StatefulWidget {
-  const CoveredSnapshot({super.key, required this.child});
+  const CoveredSnapshot({super.key, required this.child, this.refresh});
 
   final Widget child;
+  final Listenable? refresh;
 
   @override
   State<CoveredSnapshot> createState() => _CoveredSnapshotState();
@@ -23,6 +26,20 @@ class _CoveredSnapshotState extends State<CoveredSnapshot> {
   final _controller = SnapshotController();
   ColorScheme? _scheme;
   Timer? _live;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.refresh?.addListener(_controller.clear);
+  }
+
+  @override
+  void didUpdateWidget(CoveredSnapshot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refresh == widget.refresh) return;
+    oldWidget.refresh?.removeListener(_controller.clear);
+    widget.refresh?.addListener(_controller.clear);
+  }
 
   @override
   void didChangeDependencies() {
@@ -50,6 +67,7 @@ class _CoveredSnapshotState extends State<CoveredSnapshot> {
   @override
   void dispose() {
     _live?.cancel();
+    widget.refresh?.removeListener(_controller.clear);
     _controller.dispose();
     super.dispose();
   }
