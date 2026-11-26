@@ -22,6 +22,7 @@ import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/has_size.dart';
 import 'package:sbn/read_only_reason.dart';
 import 'package:worker_manager/worker_manager.dart';
+import 'package:badnotes/data/extensions/json_int.dart';
 
 /// A note as a whole: its pages (and trashed pages), its paper, and where
 /// it was left open. Read from and saved to the note file.
@@ -135,7 +136,7 @@ class EditorCoreInfo {
     required bool onlyFirstPage,
   }) {
     ReadOnlyReason? readOnlyReason;
-    final fileVersion = json['v'] as int? ?? 0;
+    final fileVersion = jsonInt(json['v']) ?? 0;
     if (fileVersion > sbnVersion) {
       readOnlyReason ??= .versionTooNew;
       log.warning(
@@ -153,13 +154,13 @@ class EditorCoreInfo {
     return EditorCoreInfo._(
         filePath: filePath,
         readOnlyReason: readOnlyReason,
-        nextImageId: json['ni'] as int? ?? 0,
+        nextImageId: jsonInt(json['ni']) ?? 0,
         backgroundColor: backgroundColor,
         backgroundPattern: CanvasBackgroundPattern.fromName(
           json['p'] as String?,
         ),
-        lineHeight: json['l'] as int? ?? stows.lastLineHeight.value,
-        lineThickness: json['lt'] as int? ?? stows.lastLineThickness.value,
+        lineHeight: jsonInt(json['l']) ?? stows.lastLineHeight.value,
+        lineThickness: jsonInt(json['lt']) ?? stows.lastLineThickness.value,
         pages: _parsePagesJson(
           json['z'] as List?,
           inlineAssets: inlineAssets,
@@ -169,7 +170,7 @@ class EditorCoreInfo {
           sbnPath: filePath,
           assetCache: assetCache,
         ),
-        initialPageIndex: json['c'] as int?,
+        initialPageIndex: jsonInt(json['c']),
         assetCache: assetCache,
       )
       ..trash = onlyFirstPage

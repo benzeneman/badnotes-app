@@ -21,6 +21,7 @@ import 'package:badnotes/components/editor/sticky_note_dialog.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/pages/editor/editor.dart';
+import 'package:badnotes/data/extensions/json_int.dart';
 
 part 'png_editor_image.dart';
 part 'pdf_editor_image.dart';
@@ -158,7 +159,7 @@ sealed class EditorImage extends ChangeNotifier {
     image
       ..rotation = (json['r'] as num?)?.toDouble() ?? 0
       ..inFront = json['fr'] == true
-      ..order = json['io'] as int? ?? 0
+      ..order = jsonInt(json['io']) ?? 0
       ..onTape = json['ot'] == true;
     return image;
   }

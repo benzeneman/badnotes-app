@@ -336,9 +336,9 @@ class FileManager {
 
   /// Saves [toWrite] at [filePath], creating its folder if needed.
   ///
-  /// A `.sbn2` note is first written to `<path>.part` and then renamed over
-  /// the note, so it is never seen half written (say, when a note is closed
-  /// and opened again straight away). Saving one also deletes any old
+  /// A `.sbn2` note is first written to `<path>.<time>.part` and then
+  /// renamed over the note, so it is never seen half written (say, when a
+  /// note is closed and opened again straight away). Saving one also deletes any old
   /// `.sbn` copy of it.
   ///
   /// [lastModified], if given, becomes the file's modified time, so a
@@ -369,7 +369,11 @@ class FileManager {
 
     Future<File> save() async {
       if (!isNote) return file.writeAsBytes(toWrite);
-      final part = File('${file.path}.part');
+      // its own: two saves of one note at once shared one, and one could
+      // rename the other's half-written file into place
+      final part = File(
+        '${file.path}.${DateTime.now().microsecondsSinceEpoch}.part',
+      );
       await part.writeAsBytes(toWrite, flush: true);
       return part.rename(file.path);
     }

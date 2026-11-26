@@ -17,6 +17,7 @@ import 'package:badnotes/data/extensions/point_extensions.dart';
 import 'package:badnotes/data/tools/tape_pattern.dart';
 import 'package:sbn/has_size.dart';
 import 'package:sbn/tool_id.dart';
+import 'package:badnotes/data/extensions/json_int.dart';
 
 class Stroke {
   static final log = Logger('Stroke');
@@ -1434,7 +1435,7 @@ class Stroke {
       ..holes = holesFromJson(json['eh'])
       ..clips = clipsFromJson(json['cl'])
       ..onFrontImage = json['of'] as bool?
-      ..afterImage = json['ai'] as int?
+      ..afterImage = jsonInt(json['ai'])
       ..nib2 = json['n2'] == true
       ..steadyLine = json['sl'] == true
       ..steady2 = json['st2'] == true

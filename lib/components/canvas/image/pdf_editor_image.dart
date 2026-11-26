@@ -71,7 +71,7 @@ class PdfEditorImage extends EditorImage {
       bytes = Uint8List(0);
     }
 
-    final pdfPage = json['pdfi'] as int?;
+    final pdfPage = jsonInt(json['pdfi']);
     if (pdfPage == null) {
       log.warning('fromJson: the page of the pdf is missing, using the first');
     }

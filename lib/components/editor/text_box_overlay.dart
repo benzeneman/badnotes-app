@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:badnotes/components/editor/sticky_note_dialog.dart';
@@ -307,38 +309,49 @@ class _TextBoxOverlayState extends State<TextBoxOverlay>
               Positioned(
                 left: at.dx,
                 top: at.dy,
-                width: widget.maxWidth * scale,
-                child: Container(
-                  key: _boxKey,
-                  decoration: BoxDecoration(
-                    color: f.boxFill,
-                    borderRadius: BorderRadius.circular(f.boxRadius * scale),
-                    border: f.boxBorder != null && f.boxBorderWidth > 0
-                        ? Border.all(
-                            color: f.boxBorder!,
-                            width: f.boxBorderWidth * scale,
-                          )
-                        : null,
+                // starts small and grows with the text, wrapping at the
+                // page's edge: as wide as the page, an empty box looked huge
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: min(size * scale * 4, widget.maxWidth * scale),
+                    maxWidth: widget.maxWidth * scale,
                   ),
-                  padding: EdgeInsets.all(padding * scale),
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focus,
-                    autofocus: true,
-                    maxLines: null,
-                    textAlign: f.align,
-                    cursorColor: colorScheme.primary,
-                    style: style.copyWith(
-                      fontSize: size * scale,
-                      color: widget.inverted
-                          ? const Color(0xFFECEDEF)
-                          : f.textColor ?? _ink,
-                    ),
-                    decoration: InputDecoration.collapsed(
-                      hintText: 'Type something here',
-                      hintStyle: style.copyWith(
-                        fontSize: size * scale,
-                        color: const Color(0x88000000),
+                  child: IntrinsicWidth(
+                    child: Container(
+                      key: _boxKey,
+                      decoration: BoxDecoration(
+                        color: f.boxFill,
+                        borderRadius: BorderRadius.circular(
+                          f.boxRadius * scale,
+                        ),
+                        border: f.boxBorder != null && f.boxBorderWidth > 0
+                            ? Border.all(
+                                color: f.boxBorder!,
+                                width: f.boxBorderWidth * scale,
+                              )
+                            : null,
+                      ),
+                      padding: EdgeInsets.all(padding * scale),
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focus,
+                        autofocus: true,
+                        maxLines: null,
+                        textAlign: f.align,
+                        cursorColor: colorScheme.primary,
+                        style: style.copyWith(
+                          fontSize: size * scale,
+                          color: widget.inverted
+                              ? const Color(0xFFECEDEF)
+                              : f.textColor ?? _ink,
+                        ),
+                        decoration: InputDecoration.collapsed(
+                          hintText: 'Type something here',
+                          hintStyle: style.copyWith(
+                            fontSize: size * scale,
+                            color: const Color(0x88000000),
+                          ),
+                        ),
                       ),
                     ),
                   ),

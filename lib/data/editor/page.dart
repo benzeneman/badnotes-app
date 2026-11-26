@@ -15,6 +15,7 @@ import 'package:badnotes/data/editor/editor_exporter.dart';
 import 'package:badnotes/data/tools/laser_pointer.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/has_size.dart';
+import 'package:badnotes/data/extensions/json_int.dart';
 
 typedef CanvasKey = GlobalKey<State<InnerCanvas>>;
 
@@ -213,9 +214,9 @@ class EditorPage extends ChangeNotifier implements HasSize {
       backgroundImage: background,
     );
     page.layers = _readLayers(json['la']);
-    page.activeLayer = json['lac'] as int? ?? 0;
+    page.activeLayer = jsonInt(json['lac']) ?? 0;
     page.backgroundColor = _readColor(json['bc']);
-    page.lineHeight = json['lh'] as int?;
+    page.lineHeight = jsonInt(json['lh']);
     page.bookmarked = json['fav'] == true;
     page.backgroundPattern = json['bp'] is String
         ? CanvasBackgroundPattern.fromName(json['bp'] as String)
@@ -290,7 +291,7 @@ class EditorPage extends ChangeNotifier implements HasSize {
         fileVersion: fileVersion,
         pageIndex: pageIndex,
         page: page,
-      )..layer = map['ly'] as int? ?? 0;
+      )..layer = jsonInt(map['ly']) ?? 0;
       // An older eraser punched holes right across strokes; those become
       // separate pieces here, since tracing hundreds of holes froze opening.
       result.addAll(stroke.withoutWideHoles());
@@ -317,7 +318,7 @@ class EditorPage extends ChangeNotifier implements HasSize {
           isThumbnail: isThumbnail,
           sbnPath: sbnPath,
           assetCache: assetCache,
-        )..layer = json['ly'] as int? ?? 0,
+        )..layer = jsonInt(json['ly']) ?? 0,
       );
     }
     return result;
@@ -733,7 +734,7 @@ class PageLayer {
   /// Reads `id`, `n` (name), `v` (false when hidden) and `lk` (true when
   /// locked).
   factory PageLayer.fromJson(Map<String, dynamic> json) => PageLayer(
-    json['id'] as int,
+    jsonInt(json['id'])!,
     json['n'] as String,
     visible: json['v'] != false,
     locked: json['lk'] == true,

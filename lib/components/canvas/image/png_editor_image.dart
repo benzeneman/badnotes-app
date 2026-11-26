@@ -224,7 +224,7 @@ class PngEditorImage extends EditorImage {
   List<Uint8List>? inlineAssets,
   String sbnPath,
 ) {
-  final index = json['a'] as int?;
+  final index = jsonInt(json['a']);
   if (index == null) return null;
   if (inlineAssets != null) return (file: null, inline: inlineAssets[index]);
   return (

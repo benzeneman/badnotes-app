@@ -547,7 +547,13 @@ class EditorState extends State<Editor> {
       },
     );
     await _openAnimationDone();
-    coreInfo = await loading;
+    final loaded = await loading;
+    // left before it loaded
+    if (!mounted) {
+      loaded.dispose();
+      return;
+    }
+    coreInfo = loaded;
     unawaited(
       NoteVersions.list(filePath).then(
         (versions) => _lastKeptVersion =
@@ -1984,8 +1990,10 @@ class EditorState extends State<Editor> {
     ),
   );
 
-  /// With the text tool a tap on a note edits it. Otherwise a new text box
-  /// starts right there, unless the page has older typed text to tap into.
+  /// With the text tool a tap on typed text picks it, as the lasso does
+  /// (move, size, delete it); a second tap types in it, see [_onCanvasTap].
+  /// A tap on a sticky note edits it. Otherwise a new text box starts right
+  /// there, unless the page has older typed text to tap into.
   Future<void> _onTextToolTap(
     EditorPage page,
     int pageIndex,
@@ -1999,6 +2007,14 @@ class EditorState extends State<Editor> {
       final pin = pinFromSvg(svg);
       if (pin != null) return _openPin(under, pin, editable: true);
       final note = stickyNoteFromSvg(svg);
+      if (note != null && note.color == null) {
+        // a tap opening the keyboard made text hard to move
+        return setState(() {
+          _toolBeforeTapEdit = currentTool;
+          currentTool = Select.currentSelect;
+          _selectImage(under, pageIndex);
+        });
+      }
       if (note != null) return _editNote(under, note, pageIndex);
     }
     if (!page.quill.controller.document.isEmpty()) return;
@@ -2368,6 +2384,9 @@ class EditorState extends State<Editor> {
 
     final readOnly = coreInfo.readOnly || _readingMode;
     if (!readOnly && tool == Tool.textEditing) {
+      // so a second tap on text it picked types in it
+      _lastTapTime = DateTime.now();
+      _lastTapPosition = globalPosition;
       return _onTextToolTap(page, pageIndex, position);
     }
 
@@ -3811,6 +3830,8 @@ class EditorState extends State<Editor> {
   Timer? _ocrTimer;
 
   void autosaveAfterDelay() {
+    // gone: its last save was made as it closed
+    if (!mounted) return;
     _ocrDirty = true;
     _ocrTimer?.cancel();
     // Reading the handwriting for search took the main thread a moment after
@@ -7973,7 +7994,13 @@ class EditorState extends State<Editor> {
         // a second; it's made once the home screen shows
         final navigator = Navigator.of(context);
         saveToFile(thumbnail: false).then((_) {
-          if (mounted && savingState.value == .saved) navigator.maybePop();
+          // only while the note is still on top: pressed again meanwhile,
+          // back had already left it, and this popped the page under it
+          if (mounted &&
+              savingState.value == .saved &&
+              (ModalRoute.of(this.context)?.isCurrent ?? false)) {
+            navigator.maybePop();
+          }
         });
     }
   }
@@ -8502,7 +8529,11 @@ class EditorState extends State<Editor> {
         EditorSignals.drawing.value ||
         DateTime.now().difference(EditorSignals.lastLift) <
             const Duration(seconds: 1);
+    // nor while the app is going away: drawing then raced the screen's end
+    final shown =
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     if (!justDrew &&
+        shown &&
         coreInfo.readOnlyReason != .placeholder &&
         coreInfo.filePath.isNotEmpty &&
         !NoteLocks.isProtected(coreInfo.filePath) &&
@@ -8636,7 +8667,9 @@ class EditorState extends State<Editor> {
         PdfCopies.noteChanged(coreInfo.filePath);
       }
     } finally {
-      coreInfo.dispose();
+      // closed before its note had loaded: the placeholder every editor
+      // shares isn't this one's to dispose
+      if (!identical(coreInfo, EditorCoreInfo.placeholder)) coreInfo.dispose();
     }
   }
 }
