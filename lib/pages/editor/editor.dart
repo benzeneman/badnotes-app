@@ -3983,15 +3983,20 @@ class EditorState extends State<Editor> {
     final done = Completer<void>();
     _saving = done.future;
     try {
-      // never waited on forever: everything after it, the save as the note
-      // closes too, would wait with it
-      await _save(thumbnail: thumbnail, quietly: quietly).timeout(
-        const Duration(minutes: 2),
-        onTimeout: () {
-          log.severe('Saving took over 2 minutes; letting others save');
-          savingState.value = .waitingToSave;
-        },
-      );
+      final saving = _save(thumbnail: thumbnail, quietly: quietly);
+      // Never waited on forever: everything after it, the save as the note
+      // closes too, would wait with it. Not in tests: their fake clock
+      // never lets a closed editor's save finish, and the timer outlived
+      // the test.
+      await (isThisATest
+          ? saving
+          : saving.timeout(
+              const Duration(minutes: 2),
+              onTimeout: () {
+                log.severe('Saving took over 2 minutes; letting others save');
+                savingState.value = .waitingToSave;
+              },
+            ));
     } finally {
       _saving = null;
       done.complete();
