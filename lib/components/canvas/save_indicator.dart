@@ -72,12 +72,23 @@ class SaveIndicator extends StatelessWidget {
   /// Saves if needed, waits for a save already running, and leaves only once
   /// the note is saved.
   Future<void> _leave(BuildContext context) async {
-    if (savingState.value == .waitingToSave) await triggerSave();
-    if (savingState.value == .saving) await _whileSaving();
-    if (!context.mounted) return;
-    if (savingState.value != .saved) return;
-    _goBack(context);
+    // pressed again while the first press is still saving: that one leaves
+    final route = ModalRoute.of(context);
+    if (route != null && _leaving.contains(route)) return;
+    if (route != null) _leaving.add(route);
+    try {
+      if (savingState.value == .waitingToSave) await triggerSave();
+      if (savingState.value == .saving) await _whileSaving();
+      if (!context.mounted) return;
+      if (savingState.value != .saved) return;
+      _goBack(context);
+    } finally {
+      if (route != null) _leaving.remove(route);
+    }
   }
+
+  /// Editors whose back button is already leaving them.
+  static final _leaving = <ModalRoute<Object?>>{};
 
   /// Completes soon after [savingState] stops being [SavingState.saving]
   /// (it is checked every 50 ms), or after [_saveTimeout] at the latest.
@@ -100,6 +111,11 @@ class SaveIndicator extends StatelessWidget {
   /// Pops the editor, or, when it is the whiteboard and there is nothing to
   /// pop, goes to the first home tab (recent notes).
   void _goBack(BuildContext context) {
+    // Android's back (gesture or button) may have left the note already,
+    // while this one was saving: popping now would pop the home screen
+    // under it, and with nothing left the app closed.
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return;
     final navigator = Navigator.of(context);
     if (navigator.canPop()) {
       navigator.pop();
