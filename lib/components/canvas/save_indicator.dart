@@ -22,10 +22,19 @@ enum SavingState {
 /// Tapping it with unsaved changes saves first and then leaves, so getting
 /// out is always one tap.
 class SaveIndicator extends StatelessWidget {
-  const new({super.key, required this.savingState, required this.triggerSave});
+  const new({
+    super.key,
+    required this.savingState,
+    required this.triggerSave,
+    this.onLeave,
+  });
 
   final ValueNotifier<SavingState> savingState;
   final Future<void> Function() triggerSave;
+
+  /// Leaves the note instead of this button doing it itself: the editor
+  /// passes the same leave Android's back uses, so the two can't both pop.
+  final Future<void> Function()? onLeave;
 
   static const _savedColor = Color(0xFF2FB36A);
   static const _unsavedColor = Color(0xFFF39C12);
@@ -46,7 +55,7 @@ class SaveIndicator extends StatelessWidget {
       valueListenable: savingState,
       builder: (context, state, _) => IconButton(
         tooltip: _tooltipFor(state),
-        onPressed: () => _leave(context),
+        onPressed: () => onLeave != null ? onLeave!() : _leave(context),
         icon: Stack(
           clipBehavior: Clip.none,
           children: [

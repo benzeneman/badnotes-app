@@ -50,6 +50,8 @@ import 'package:badnotes/components/canvas/canvas_image.dart';
 import 'package:badnotes/components/canvas/image/editor_image.dart';
 import 'package:badnotes/components/canvas/inner_canvas.dart';
 import 'package:badnotes/components/canvas/save_indicator.dart';
+import 'package:badnotes/data/routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:badnotes/components/editor/audio_notes.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/editor/canvas_tools_overlay.dart';
@@ -5532,6 +5534,7 @@ class EditorState extends State<Editor> {
               child: SaveIndicator(
                 savingState: savingState,
                 triggerSave: saveToFile,
+                onLeave: _leaveNote,
               ),
             ),
     );
@@ -8201,26 +8204,54 @@ class EditorState extends State<Editor> {
     LagRecorder.step('leave pressed');
     LagRecorder.doing('leaving note', lasts: const Duration(seconds: 3));
     LagRecorder.note('leave pressed', {'saving': state.name});
-    switch (state) {
-      case .saved:
-        break;
-      case .saving:
-        assert(!didPop);
-        snackBarNeedsToSaveBeforeExiting();
-      case .waitingToSave:
-        assert(!didPop);
-        // no thumbnail yet: drawing it first held up leaving by up to half
-        // a second; it's made once the home screen shows
-        final navigator = Navigator.of(context);
-        saveToFile(thumbnail: false).then((_) {
-          // only while the note is still on top: pressed again meanwhile,
-          // back had already left it, and this popped the page under it
-          if (mounted &&
-              savingState.value == .saved &&
-              (ModalRoute.of(this.context)?.isCurrent ?? false)) {
-            navigator.maybePop();
-          }
-        });
+    if (didPop) {
+      // left straight away: the note was saved
+      _left = true;
+      return;
+    }
+    unawaited(_leaveNote());
+  }
+
+  /// Set once the note has been left (popped), so nothing pops again.
+  var _left = false;
+
+  /// A leave is saving the note right now; more presses wait for it.
+  Future<void>? _leaving;
+
+  /// Saves the note if needed and leaves it, once. Android's back (gesture
+  /// or button) and the header's back both come here.
+  ///
+  /// It pops the route itself rather than calling maybePop: [PopScope]'s
+  /// canPop is only updated on the next frame, so right after a save
+  /// maybePop still saw "can't pop", asked to leave again, saved (nothing
+  /// to do) and called maybePop again, round and round in microtasks
+  /// without a frame in between, until Android closed the app as not
+  /// responding. Pressing both backs together also popped twice, the
+  /// second time the home screen.
+  Future<void> _leaveNote() async {
+    if (_left) return;
+    if (_leaving case final running?) return running;
+    final done = Completer<void>();
+    _leaving = done.future;
+    try {
+      // waits for a save already running, then writes what's left; no
+      // thumbnail yet: drawing it first held up leaving by up to half a
+      // second, and it's made once the home screen shows
+      if (savingState.value != .saved) await saveToFile(thumbnail: false);
+      if (!mounted || _left || savingState.value != .saved) return;
+      final route = ModalRoute.of(context);
+      if (route != null && !route.isCurrent) return;
+      _left = true;
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.pop();
+      } else {
+        // the home screen's whiteboard, with nothing under it
+        context.go(HomeRoutes.routes[0].path);
+      }
+    } finally {
+      _leaving = null;
+      done.complete();
     }
   }
 
