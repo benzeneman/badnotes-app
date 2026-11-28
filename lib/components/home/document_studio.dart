@@ -714,6 +714,7 @@ class _DocumentStudioState extends State<_DocumentStudio> {
           children: [
             AnimatedContainer(
               duration: BnMotion.fast,
+              curve: BnMotion.curve,
               decoration: _ring(chosen, BorderRadius.circular(6)),
               child: BnDashedBox(
                 width: 72,

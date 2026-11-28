@@ -293,11 +293,13 @@ class BnPillButton extends StatelessWidget {
     final enabled = onPressed != null;
     return AnimatedOpacity(
       duration: BnMotion.fast,
+      curve: BnMotion.curve,
       opacity: enabled ? 1 : 0.45,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(999)),
-          boxShadow: main && enabled ? BnShadows.floating : null,
+          // kept when disabled: the fading carries it, it doesn't pop
+          boxShadow: main ? BnShadows.floating : null,
         ),
         child: Material(
           color: bg,
@@ -556,6 +558,7 @@ class BnConfirmRow extends StatelessWidget {
             children: [
               AnimatedContainer(
                 duration: BnMotion.fast,
+                curve: BnMotion.curve,
                 width: 20,
                 height: 20,
                 decoration: BoxDecoration(

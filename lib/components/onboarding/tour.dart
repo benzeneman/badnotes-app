@@ -236,7 +236,7 @@ class _FeatureTourState extends State<FeatureTour> {
                   color: colors.surface,
                   borderRadius: const BorderRadius.all(Radius.circular(28)),
                   boxShadow: const [
-                    BoxShadow(color: Color(0x2E000000), blurRadius: 60, offset: Offset(0, 24)),
+                    BoxShadow(color: Color(0x2E000000), blurRadius: 16, offset: Offset(0, 10)),
                     BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2)),
                   ],
                 ),
@@ -343,7 +343,12 @@ class _Crossfade extends StatelessWidget {
           offset: Offset(delta * c.maxWidth, 0),
           child: Opacity(
             opacity: Curves.easeInOut.transform(1 - d),
-            child: Transform.scale(scale: 1 - 0.04 * d, child: child),
+            // the page as one layer: sliding and fading it only moves
+            // that layer, nothing on it is drawn again
+            child: Transform.scale(
+              scale: 1 - 0.04 * d,
+              child: RepaintBoundary(child: child),
+            ),
           ),
         ),
       );

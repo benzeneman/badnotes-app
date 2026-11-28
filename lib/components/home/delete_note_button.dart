@@ -67,6 +67,41 @@ class _ConfirmNoteDeletion extends StatelessWidget {
             'anytime in the next 30 days.';
 
   @override
+  Widget build(BuildContext context) => ArtConfirmDialog(
+    art: const TrashArt(),
+    title: _title,
+    text: _explanation,
+    actionLabel: 'Move to Trash',
+    onAction: () => _toss(context),
+  );
+}
+
+/// A confirmation with artwork over a big title (design N07): the style of
+/// every delete. Open it with [showAppleDialog]; the cancel button closes it.
+class ArtConfirmDialog extends StatelessWidget {
+  const new({
+    super.key,
+    required this.art,
+    required this.title,
+    required this.text,
+    this.cancelLabel = 'Keep it',
+    required this.actionLabel,
+    required this.onAction,
+    this.extra,
+    this.enabled = true,
+  });
+
+  final Widget art;
+  final String title, text, cancelLabel, actionLabel;
+  final VoidCallback onAction;
+
+  /// Shown under [text], e.g. a tick to agree to.
+  final Widget? extra;
+
+  /// Whether the action can be taken yet.
+  final bool enabled;
+
+  @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
     return BnDialogCard(
@@ -76,10 +111,10 @@ class _ConfirmNoteDeletion extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const _NotebookIntoBin(),
+            art,
             const SizedBox(height: 18),
             Text(
-              _title,
+              title,
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -93,7 +128,7 @@ class _ConfirmNoteDeletion extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              _explanation,
+              text,
               textAlign: TextAlign.center,
               style: BnType.bodyLarge.copyWith(
                 fontWeight: FontWeight.w400,
@@ -101,13 +136,14 @@ class _ConfirmNoteDeletion extends StatelessWidget {
                 color: colors.muted,
               ),
             ),
+            if (extra != null) ...[const SizedBox(height: 16), extra!],
             const SizedBox(height: 20),
             Row(
               spacing: 10,
               children: [
                 Expanded(
                   child: BnPillButton(
-                    label: 'Keep it',
+                    label: cancelLabel,
                     height: 50,
                     expand: true,
                     onPressed: () => Navigator.of(context).pop(),
@@ -115,11 +151,11 @@ class _ConfirmNoteDeletion extends StatelessWidget {
                 ),
                 Expanded(
                   child: BnPillButton(
-                    label: 'Move to Trash',
+                    label: actionLabel,
                     kind: BnPillKind.danger,
                     height: 50,
                     expand: true,
-                    onPressed: () => _toss(context),
+                    onPressed: enabled ? onAction : null,
                   ),
                 ),
               ],
@@ -131,30 +167,56 @@ class _ConfirmNoteDeletion extends StatelessWidget {
   }
 }
 
-/// Artwork: a notebook leaning back with a red bin in front of it.
-class _NotebookIntoBin extends StatelessWidget {
-  const new();
+/// Artwork: [item] (a notebook unless given) leaning back with a red bin in
+/// front of it.
+class TrashArt extends StatelessWidget {
+  const new({super.key, this.item});
+
+  /// e.g. a folder, or [TrashArt.notebooks] for several things.
+  final Widget? item;
 
   static const _spine = Radius.circular(4);
   static const _edge = Radius.circular(10);
 
+  /// A notebook as the art draws it, [scale] times its size.
+  static Widget notebook(BuildContext context, {double scale = 1}) =>
+      Container(
+        width: 74 * scale,
+        height: 100 * scale,
+        decoration: BoxDecoration(
+          color: BnColors.lavender,
+          border: Border.all(color: BadNotesColors.of(context).hairline),
+          borderRadius: BorderRadius.only(
+            topLeft: _spine * scale,
+            bottomLeft: _spine * scale,
+            topRight: _edge * scale,
+            bottomRight: _edge * scale,
+          ),
+        ),
+      );
+
+  /// A few smaller notebooks fanned out, for several things at once.
+  static Widget notebooks(BuildContext context) => SizedBox(
+    width: 90,
+    height: 100,
+    child: Stack(
+      children: [
+        for (final (x, y, turn) in const [(0.0, 12.0, -0.2), (24.0, 0.0, 0.1)])
+          Positioned(
+            left: x,
+            top: y,
+            child: Transform.rotate(
+              angle: turn,
+              child: notebook(context, scale: 0.75),
+            ),
+          ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
-    final notebook = Container(
-      width: 74,
-      height: 100,
-      decoration: BoxDecoration(
-        color: BnColors.lavender,
-        border: Border.all(color: colors.hairline),
-        borderRadius: const BorderRadius.only(
-          topLeft: _spine,
-          bottomLeft: _spine,
-          topRight: _edge,
-          bottomRight: _edge,
-        ),
-      ),
-    );
     final bin = Container(
       width: 52,
       height: 52,
@@ -176,7 +238,10 @@ class _NotebookIntoBin extends StatelessWidget {
           Positioned(
             left: 22,
             top: 0,
-            child: Transform.rotate(angle: -0.21, child: notebook),
+            child: Transform.rotate(
+              angle: -0.21,
+              child: item ?? notebook(context),
+            ),
           ),
           Positioned(right: 6, bottom: 0, child: bin),
         ],

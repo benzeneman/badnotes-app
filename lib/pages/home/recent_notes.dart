@@ -140,6 +140,20 @@ class _RecentPageState extends State<RecentPage> {
     final colors = BadNotesColors.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    // another period fades its notes in, as the desk does between folders
+    final fade = useAnimationController(
+      duration: BnMotion.fast,
+      initialValue: 1,
+    );
+    final fadeIn = useMemoized(
+      () => CurvedAnimation(parent: fade, curve: BnMotion.curve),
+    );
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    useValueChanged<_Period, void>(_period, (_, _) {
+      if (!reduceMotion) fade.forward(from: 0);
+    });
+    Widget faded(Widget sliver) =>
+        SliverFadeTransition(opacity: fadeIn, sliver: sliver);
 
     // newest first, grouped by day
     final shown = [
@@ -175,6 +189,7 @@ class _RecentPageState extends State<RecentPage> {
       selectable: shown,
       slivers: _withPagesCard(context, shown, [
         const SliverToBoxAdapter(child: RevisionDueCard()),
+        for (final sliver in <Widget>[
         if (shown.isEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -219,6 +234,8 @@ class _RecentPageState extends State<RecentPage> {
             ),
           ),
         ],
+        ])
+          faded(sliver),
       ]),
     );
   }

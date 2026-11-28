@@ -618,6 +618,13 @@ class Stows {
   /// Notebook cover size on the home screen: 0 small, 1 medium, 2 large.
   final homeCoverSize = _plain('homeCoverSize', 1);
 
+  /// The quick notes board shows on the desk.
+  final homeShowBoard = _plain('homeShowBoard', true);
+
+  /// Folders and notebooks in sections of their own on the desk; off, they
+  /// share one grid.
+  final homeSeparateFolders = _plain('homeSeparateFolders', true);
+
   /// Up to 8 recent searches across all notes, newest first.
   final recentSearches = _plain('recentSearches', <String>[]);
 

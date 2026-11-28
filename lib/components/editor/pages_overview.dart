@@ -493,6 +493,7 @@ class _PageCell extends StatelessWidget {
             child: Center(
               child: AnimatedContainer(
                 duration: BnMotion.fast,
+                curve: BnMotion.curve,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: selected || isCurrent
@@ -500,11 +501,12 @@ class _PageCell extends StatelessWidget {
                         : Colors.transparent,
                     width: 2,
                   ),
+                  // a hard 1px edge: a blurred one on every page was blurred
+                  // again on each frame of a scroll or a selection
                   boxShadow: [
                     BoxShadow(
                       color: BadNotesColors.of(context).pageShadow,
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),

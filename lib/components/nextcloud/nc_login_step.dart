@@ -38,7 +38,11 @@ class NcLoginStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 24,
         children: [
-          SizedBox(width: size.width * 0.4, child: const _BrandPanel()),
+          // its own layer: the spinner beside it doesn't repaint the art
+          SizedBox(
+            width: size.width * 0.4,
+            child: const RepaintBoundary(child: _BrandPanel()),
+          ),
           Expanded(child: choices),
         ],
       ),

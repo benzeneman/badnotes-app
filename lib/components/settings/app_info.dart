@@ -27,7 +27,7 @@ class const AppInfo({super.key}) extends StatelessWidget {
     if (isThisATest) '(135010)' else '($buildNumber)',
   ].join(' ');
 
-  /// The copyright line under the about card and on the licenses page.
+  /// The copyright line under the about card.
   static String get copyright => '© $buildYear $author';
 
   @override
@@ -191,8 +191,7 @@ class const AppInfo({super.key}) extends StatelessWidget {
         'Licence',
         'BadNotes is proprietary software. You may not '
             'copy, modify or redistribute it. It uses third-party '
-            'open-source components, each under its own licence; they are '
-            'listed under Open-source licenses in this About page.',
+            'open-source components, each under its own licence.',
       ),
       (
         'Changes',
@@ -254,21 +253,8 @@ class const AppInfo({super.key}) extends StatelessWidget {
     },
   );
 
-  /// The third-party packages BadNotes is built with and their licenses.
-  static void showLicenses(BuildContext context) => showLicensePage(
-    context: context,
-    applicationName: 'BadNotes',
-    applicationVersion: info,
-    applicationIcon: SvgPicture.asset(
-      'assets/icon/icon.svg',
-      width: 50,
-      height: 50,
-    ),
-    applicationLegalese: '$copyright. All rights reserved.',
-  );
-
   /// The about card (design 17): the app's icon and name side by side, the
-  /// privacy policy and licenses, and the © line with Done. One white card:
+  /// privacy policy and terms, and the © line with Done. One white card:
   /// a tinted block at its top had square corners poking out of it.
   static void show(BuildContext context) => showBnSettingsDialog<void>(
     context: context,
@@ -348,11 +334,6 @@ class const AppInfo({super.key}) extends StatelessWidget {
               icon: BnIcons.file,
               label: 'Terms of use',
               onTap: () => showTerms(context),
-            ),
-            BnMenuRow(
-              icon: BnIcons.file,
-              label: 'Open-source licenses',
-              onTap: () => showLicenses(context),
             ),
             const SizedBox(height: 12),
             Row(

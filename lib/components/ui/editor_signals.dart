@@ -14,6 +14,12 @@ abstract final class EditorSignals {
   /// popover's animation and scrolling.
   static final covered = ValueNotifier(0);
 
+  /// Opens a popup with [open], counted in [covered] until it closes.
+  static Future<T> cover<T>(Future<T> Function() open) {
+    covered.value++;
+    return open().whenComplete(() => covered.value--);
+  }
+
   static Timer? _afterLift;
 
   /// A stroke starts.

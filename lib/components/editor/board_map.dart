@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
+import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/data/editor/page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -135,7 +136,8 @@ class _BoardMapState extends State<BoardMap> {
       ignoring: _near,
       child: AnimatedOpacity(
         opacity: _near ? 0.15 : 1,
-        duration: const Duration(milliseconds: 150),
+        duration: BnMotion.fast,
+        curve: BnMotion.curve,
         child: Material(
         color: colors.surface,
         elevation: 6,

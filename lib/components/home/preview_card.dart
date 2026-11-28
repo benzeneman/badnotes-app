@@ -88,7 +88,8 @@ class _PreviewCardState extends State<PreviewCard> {
   }
 
   /// When the note was last changed, as shown under its name.
-  var _editedAt = DateTime.fromMillisecondsSinceEpoch(0);
+  /// Null until read, off the first frame.
+  DateTime? _editedAt;
 
   /// Reads what the card shows from disk. Done once and on changes: it was in
   /// build and didChangeDependencies, so every card read its files again on
@@ -96,7 +97,7 @@ class _PreviewCardState extends State<PreviewCard> {
   void _load() {
     cover = NotebookCovers.read(widget.filePath);
     _showName = NotebookCovers.showsName(widget.filePath);
-    _editedAt = FileManager.lastModified(widget.filePath + Editor.extension);
+    unawaited(_readEdited());
 
     final imageFile = FileManager.getFile(
       '${widget.filePath}${Editor.extension}.p',
@@ -125,15 +126,31 @@ class _PreviewCardState extends State<PreviewCard> {
       thumbnail.image = null;
     } else if (event.type == .write) {
       if (!mounted) return;
+      // read again, whichever listener heard of the change first
+      NotebookCovers.forget();
       setState(() {
         cover = NotebookCovers.read(widget.filePath);
         _showName = NotebookCovers.showsName(widget.filePath);
-        _editedAt = FileManager.lastModified(widget.filePath + Editor.extension);
       });
+      unawaited(_readEdited());
       thumbnail.refresh();
     } else {
       throw Exception('Unknown file operation type: ${event.type}');
     }
+  }
+
+  Future<void> _readEdited() async {
+    final path = widget.filePath;
+    if (isThisATest) {
+      // widget tests' fake clock never finishes real file reads
+      _editedAt = FileManager.lastModified(path + Editor.extension);
+      return;
+    }
+    final file = FileManager.getFile(path + Editor.extension);
+    final at = await file.exists()
+        ? await file.lastModified()
+        : DateTime(2023);
+    if (mounted && path == widget.filePath) setState(() => _editedAt = at);
   }
 
   void _toggleSelection() =>
@@ -323,7 +340,9 @@ class _PreviewCardState extends State<PreviewCard> {
                       const SizedBox(height: 2),
                       Text(
                         widget.rowCaption ??
-                            'Edited ${homeMeta(_edited, withTime: true)}',
+                            (_editedAt == null
+                                ? ''
+                                : 'Edited ${homeMeta(_edited, withTime: true)}'),
                         maxLines: 1,
                         style: BnType.caption.copyWith(color: colors.muted),
                       ),
@@ -378,7 +397,7 @@ class _PreviewCardState extends State<PreviewCard> {
             ],
           ),
           Text(
-            homeMeta(_edited),
+            _editedAt == null ? '' : homeMeta(_edited),
             maxLines: 1,
             overflow: .ellipsis,
             style: BnType.caption.copyWith(color: colors.muted),
@@ -389,7 +408,7 @@ class _PreviewCardState extends State<PreviewCard> {
   }
 
   /// When the note was last changed.
-  DateTime get _edited => _editedAt;
+  DateTime get _edited => _editedAt ?? DateTime(2023);
 
   @override
   void dispose() {

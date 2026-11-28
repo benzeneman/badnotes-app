@@ -1170,6 +1170,7 @@ class _Pill extends StatelessWidget {
       onPanUpdate: onDrag,
       child: AnimatedContainer(
         duration: BnMotion.normal,
+        curve: BnMotion.curve,
         height: 34,
         padding: const EdgeInsets.only(left: 12, right: 2),
         decoration: ShapeDecoration(

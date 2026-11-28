@@ -15,18 +15,41 @@ import 'package:flutter/material.dart';
 /// a [CoverDesign.id]. No file = show the first page instead.
 /// Whether the notebook's name is written on it is in `<note>.covername`
 /// (`1` or `0`); no file = the design's own default ([CoverDesign.label]).
+///
+/// Both are kept in memory once read, so the desk doesn't read two files per
+/// card on every build; any file written (a cover set here, synced in or
+/// moved with its note) forgets them.
 abstract class NotebookCovers {
+  static final _covers = <String, CoverDesign?>{};
+  static final _names = <String, bool?>{};
+  static StreamSubscription<void>? _listening;
+
+  static void _listen() => _listening ??= FileManager.fileWriteStream.stream
+      .listen((_) => forget());
+
+  /// Forgets what was read, so the files are read again.
+  static void forget() {
+    _covers.clear();
+    _names.clear();
+  }
+
   static CoverDesign? read(String notePath) {
+    _listen();
+    if (_covers.containsKey(notePath)) return _covers[notePath];
     final f = FileManager.getFile('$notePath.cover');
-    if (!f.existsSync()) return null;
-    return CoverDesign.fromId(f.readAsStringSync().trim());
+    return _covers[notePath] = f.existsSync()
+        ? CoverDesign.fromId(f.readAsStringSync().trim())
+        : null;
   }
 
   /// Whether the name goes on the cover; null for the design's default.
   static bool? showsName(String notePath) {
+    _listen();
+    if (_names.containsKey(notePath)) return _names[notePath];
     final f = FileManager.getFile('$notePath.covername');
-    if (!f.existsSync()) return null;
-    return f.readAsStringSync().trim() != '0';
+    return _names[notePath] = f.existsSync()
+        ? f.readAsStringSync().trim() != '0'
+        : null;
   }
 
   static Future<void> write(
@@ -47,6 +70,7 @@ abstract class NotebookCovers {
     } else {
       await name.writeAsString(showName ? '1' : '0');
     }
+    forget();
     // ignore: invalid_use_of_visible_for_testing_member
     FileManager.broadcastFileWrite(.write, notePath);
     // so the other devices get the cover too (a deleted file uploads as

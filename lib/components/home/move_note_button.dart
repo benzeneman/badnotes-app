@@ -1,4 +1,5 @@
 import 'package:badnotes/components/home/grid_folders.dart';
+import 'package:badnotes/components/home/trash.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/bn_home_dialogs.dart';
@@ -176,7 +177,7 @@ class _MoveNotesDialogState extends State<_MoveNotesDialog> {
   }
 
   Future<void> _deleteFolder(String name) async {
-    await FileManager.deleteDirectory('$_destination$name');
+    await Trash.moveFolderToTrash('$_destination$name');
     _reload();
   }
 

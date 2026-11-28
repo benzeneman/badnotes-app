@@ -18,6 +18,7 @@ import 'package:badnotes/components/toolbar/pen_modal.dart';
 import 'package:badnotes/components/ui/bn_tool_panels.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
+import 'package:badnotes/data/is_this_a_test.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/data/tools/_tool.dart';
 import 'package:badnotes/data/tools/eraser.dart';
@@ -215,12 +216,16 @@ extension on ToolFloatingBar {
                   valueListenable: EditorSignals.drawing,
                   builder: (context, drawing, _) => IgnorePointer(
                     ignoring: drawing,
+                    // the fade is an opacity layer over a picture of the
+                    // bars, kept, rather than their blurred shadows drawn
+                    // again each frame
                     child: AnimatedOpacity(
                       opacity: drawing ? 0 : 1,
                       duration: drawing
                           ? const Duration(milliseconds: 120)
                           : BnMotion.normal,
-                      child: bar,
+                      curve: BnMotion.curve,
+                      child: RepaintBoundary(child: bar),
                     ),
                   ),
                 ),
@@ -383,8 +388,10 @@ class _ToolSubBarState extends State<ToolSubBar> {
   );
 
   Widget _bar(List<Widget> children) {
-    if (widget.framed) return BnSubBar(vertical: _vertical, children: children);
-    return RepaintBoundary(
+    // another tool's options: the bar grows or shrinks to them, not jumps
+    final items = AnimatedSize(
+      duration: isThisATest ? Duration.zero : BnMotion.normal,
+      curve: BnMotion.curve,
       child: Flex(
         direction: axis,
         mainAxisSize: MainAxisSize.min,
@@ -392,6 +399,8 @@ class _ToolSubBarState extends State<ToolSubBar> {
         children: children,
       ),
     );
+    if (widget.framed) return BnSubBar(vertical: _vertical, children: [items]);
+    return RepaintBoundary(child: items);
   }
 
   @override

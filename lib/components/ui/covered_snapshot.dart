@@ -26,6 +26,7 @@ class _CoveredSnapshotState extends State<CoveredSnapshot> {
   final _controller = SnapshotController();
   ColorScheme? _scheme;
   Timer? _live;
+  var _still = false;
 
   @override
   void initState() {
@@ -60,8 +61,16 @@ class _CoveredSnapshotState extends State<CoveredSnapshot> {
   }
 
   void _update() {
-    _controller.allowSnapshotting =
-        _live == null && !(ModalRoute.isCurrentOf(context) ?? true);
+    _still = _live == null && !(ModalRoute.isCurrentOf(context) ?? true);
+    if (!_still) {
+      _controller.allowSnapshotting = false;
+      return;
+    }
+    // a frame later: the frame a dialog opens on already builds and draws
+    // it, taking the picture then as well made that frame stutter
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _still) _controller.allowSnapshotting = true;
+    });
   }
 
   @override

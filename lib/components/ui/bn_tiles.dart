@@ -317,6 +317,9 @@ class BnCoverFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
+    final motion = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : BnMotion.fast;
     return RepaintBoundary(
       child: AnimatedContainer(
         duration: BnMotion.fast,
@@ -384,33 +387,49 @@ class BnCoverFrame extends StatelessWidget {
                     color: dark ? const Color(0xFFF2C94C) : BnColors.accent,
                   ),
                 ),
-              if (selecting || selected)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: AnimatedContainer(
-                    duration: BnMotion.fast,
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? colors.accent
-                          : Colors.white.withValues(alpha: 0.85),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: selected ? Colors.white : colors.faint,
-                        width: selected ? 2 : 1.5,
-                      ),
-                    ),
-                    child: selected
-                        ? const Icon(
+              Positioned(
+                right: 8,
+                top: 8,
+                child: IgnorePointer(
+                  // grows in as selecting starts instead of popping in
+                  child: AnimatedScale(
+                    scale: selecting || selected ? 1 : 0.6,
+                    duration: motion,
+                    curve: BnMotion.curve,
+                    child: AnimatedOpacity(
+                      opacity: selecting || selected ? 1 : 0,
+                      duration: motion,
+                      curve: BnMotion.curve,
+                      child: AnimatedContainer(
+                        duration: motion,
+                        curve: BnMotion.curve,
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? colors.accent
+                              : Colors.white.withValues(alpha: 0.85),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: selected ? Colors.white : colors.faint,
+                            width: selected ? 2 : 1.5,
+                          ),
+                        ),
+                        child: AnimatedScale(
+                          scale: selected ? 1 : 0,
+                          duration: motion,
+                          curve: BnMotion.curve,
+                          child: const Icon(
                             BnIcons.check,
                             size: 13,
                             color: Colors.white,
-                          )
-                        : null,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

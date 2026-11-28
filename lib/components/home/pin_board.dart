@@ -292,9 +292,18 @@ class _PinBoardState extends State<PinBoard> {
     Widget card = RepaintBoundary(
       child: _PinnedCard(item: item, scale: scale),
     );
-    if (!shown) {
-      card = IgnorePointer(child: Opacity(opacity: 0.2, child: card));
-    }
+    // filtered out: fades back rather than switching at once
+    card = IgnorePointer(
+      ignoring: !shown,
+      child: AnimatedOpacity(
+        opacity: shown ? 1 : 0.2,
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : BnMotion.normal,
+        curve: BnMotion.curve,
+        child: card,
+      ),
+    );
     return Positioned(
       key: ValueKey(item.id),
       left: box.left * scale,
@@ -679,8 +688,10 @@ class _PinnedCard extends StatelessWidget {
 
   Widget _photo() {
     // decoded no bigger than it's shown (at 2x for zooming in), not at the
-    // photo's full size
-    final decode = (item.box!.width * scale * 2).clamp(200.0, 900.0).round();
+    // photo's full size; in steps of 256 px, so resizing it doesn't decode
+    // it again every frame
+    final decode =
+        ((item.box!.width * scale * 2).clamp(200.0, 900.0) / 256).ceil() * 256;
     final image = Image(
       image: ResizeImage(
         FileImage(FileManager.getFile(item.photo!)),

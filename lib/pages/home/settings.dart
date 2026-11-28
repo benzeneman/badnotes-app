@@ -20,7 +20,6 @@ import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/data/routes.dart';
 import 'package:badnotes/i18n/strings.g.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/note_tags.dart';
@@ -137,7 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void _open(BuildContext context, _Part part) {
     if (part == .about) return AppInfo.show(context);
     Navigator.of(context).push(
-      CupertinoPageRoute<void>(
+      MaterialPageRoute<void>(
         builder: (context) => BnSettingsScaffold(
           title: part.title,
           caption: part.caption,
@@ -406,6 +405,17 @@ class _GeneralSettings extends StatelessWidget {
               subtitle: t.settings.prefDescriptions.hyperlegibleFont,
               pref: stows.hyperlegibleFont,
             ),
+            BnPrefSwitchRow(
+              title: 'Quick notes board on Home',
+              subtitle: 'Show the board beside your notebooks on the desk.',
+              pref: stows.homeShowBoard,
+            ),
+            BnPrefSwitchRow(
+              title: 'Separate folders and notebooks',
+              subtitle:
+                  'Off: folders and notebooks share one grid, folders first.',
+              pref: stows.homeSeparateFolders,
+            ),
           ],
         ),
         BnSettingsGroup(
@@ -451,7 +461,7 @@ class _GeneralSettings extends StatelessWidget {
                     : localeNames[locale] ?? locale,
                 chevron: true,
                 onTap: () => Navigator.of(context).push(
-                  CupertinoPageRoute<void>(
+                  MaterialPageRoute<void>(
                     builder: (context) => const _LanguagePage(),
                   ),
                 ),
@@ -836,7 +846,7 @@ class _AboutSettings extends StatelessWidget {
       children: [
         BnSettingsRow(
           title: 'BadNotes',
-          subtitle: 'Version, license and privacy policy',
+          subtitle: 'Version and privacy policy',
           value: AppInfo.info,
           chevron: true,
           onTap: () => AppInfo.show(context),

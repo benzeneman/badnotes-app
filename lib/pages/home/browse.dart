@@ -13,6 +13,7 @@ import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/home/photos_view.dart';
 import 'package:badnotes/components/home/quick_board_view.dart';
+import 'package:badnotes/components/home/trash.dart';
 import 'package:badnotes/components/lock/lock_ui.dart';
 import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
@@ -216,7 +217,7 @@ class _BrowsePageState extends State<BrowsePage> {
     },
     delete: (String folderName) async {
       final folderPath = '${path ?? ''}/$folderName';
-      await FileManager.deleteDirectory(folderPath);
+      await Trash.moveFolderToTrash(folderPath);
       findChildrenOfPath();
     },
   );
@@ -237,7 +238,7 @@ class _BrowsePageState extends State<BrowsePage> {
         return children?.isEmpty ?? true;
       },
       delete: (_) async {
-        await FileManager.deleteDirectory(path!);
+        await Trash.moveFolderToTrash(path!);
         onPathComponentTap(parent);
       },
     );
@@ -257,6 +258,8 @@ class _BrowsePageState extends State<BrowsePage> {
   Widget build(BuildContext context) {
     useListenable(stows.homeLayout);
     useListenable(stows.homeCoverSize);
+    useListenable(stows.homeShowBoard);
+    useListenable(stows.homeSeparateFolders);
     final favorites = useValueListenable(stows.favoriteNotes);
     useEffect(() {
       NoteFactsCache.scan();
@@ -356,7 +359,10 @@ class _BrowsePageState extends State<BrowsePage> {
         children: [
           CustomScrollView(
             slivers: [
-              SliverPadding(
+              // the insets are read in small builders, so a keyboard
+              // opening (a rename) doesn't rebuild the grid each frame
+              Builder(
+                builder: (context) => SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   margin,
                   MediaQuery.paddingOf(context).top + (selecting ? 14 : 26),
@@ -371,6 +377,7 @@ class _BrowsePageState extends State<BrowsePage> {
                           onSelectAll: () => selectedFiles.value = files,
                         )
                       : const HomeHeader(),
+                ),
                 ),
               ),
               if (selecting)
@@ -437,20 +444,25 @@ class _BrowsePageState extends State<BrowsePage> {
                 ))
                   faded(section),
               SliverToBoxAdapter(
-                child: SizedBox(height: HomeChrome.bottomRoom(context)),
+                child: Builder(
+                  builder: (context) =>
+                      SizedBox(height: HomeChrome.bottomRoom(context)),
+                ),
               ),
             ],
           ),
           const SyncErrorBanner(),
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: HomeChrome.safeBottom(context) + 18,
-            child: Center(
-              // kept built while hidden, so it can slide away
-              child: BnSlideFade(
-                visible: selecting,
-                child: NotebookSelectionBar(selectedFiles: selectedFiles),
+          Builder(
+            builder: (context) => Positioned(
+              left: 12,
+              right: 12,
+              bottom: HomeChrome.safeBottom(context) + 18,
+              child: Center(
+                // kept built while hidden, so it can slide away
+                child: BnSlideFade(
+                  visible: selecting,
+                  child: NotebookSelectionBar(selectedFiles: selectedFiles),
+                ),
               ),
             ),
           ),
@@ -458,6 +470,17 @@ class _BrowsePageState extends State<BrowsePage> {
       ),
       ),
     );
+  }
+
+  /// [folders] in the notebooks' order, when they share their grid.
+  List<String> _foldersBySort(List<String> folders) {
+    final sort = stows.browseSortMetric.value;
+    // listed by name already, either way round
+    if (sort == .nameAToZ || sort == .nameZToA) return folders;
+    DateTime at(String f) =>
+        FolderInfos.of('${path ?? ''}/$f').value?.modified ?? DateTime(0);
+    final sorted = [...folders]..sort((a, b) => at(b).compareTo(at(a)));
+    return sort == .lastModifiedNewToOld ? sorted : sorted.reversed.toList();
   }
 
   List<String> _sortedFolders(List<String> folders) {
@@ -667,13 +690,32 @@ class _BrowsePageState extends State<BrowsePage> {
     required bool showFolders,
     required bool showNotebooks,
   }) {
-    final board = isAtRoot && !_allFolders && _filter == .all;
+    final board =
+        stows.homeShowBoard.value &&
+        isAtRoot &&
+        !_allFolders &&
+        _filter == .all;
     final wide = HomeChrome.isWide(context);
     final right = board && wide ? 0.0 : margin;
+    // folders and notebooks in one grid, when that's chosen
+    final together =
+        !stows.homeSeparateFolders.value &&
+        showFolders &&
+        showNotebooks &&
+        stows.homeLayout.value != HomeLayout.list;
     final main = [
-      if (showFolders) _foldersSection(context, folders, isAtRoot, margin, right),
+      if (showFolders && !together)
+        _foldersSection(context, folders, isAtRoot, margin, right),
       if (showNotebooks)
-        _notebooksSection(context, files, isAtRoot, margin, right, menu),
+        _notebooksSection(
+          context,
+          files,
+          isAtRoot,
+          margin,
+          right,
+          menu,
+          folders: together ? _foldersBySort(folders) : null,
+        ),
       if (showNotebooks && pdfs.isNotEmpty)
         SliverPadding(
           padding: EdgeInsets.fromLTRB(margin, 32, right, 0),
@@ -794,13 +836,14 @@ class _BrowsePageState extends State<BrowsePage> {
     bool isAtRoot,
     double margin,
     double right,
-    NewDocumentMenu menu,
-  ) {
+    NewDocumentMenu menu, {
+    List<String>? folders,
+  }) {
     final sort = stows.browseSortMetric.value;
     final byName = sort == .nameAToZ || sort == .nameZToA;
     final colors = BadNotesColors.of(context);
     final header = BnSectionHeader(
-      title: 'Notebooks',
+      title: folders == null ? 'Notebooks' : 'Notebooks and folders',
       trailing: Builder(
         builder: (context) => GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -836,9 +879,20 @@ class _BrowsePageState extends State<BrowsePage> {
             files: files,
             selectedFiles: selectedFiles,
             onNew: isAtRoot ? null : () => menu.newNotebook(context),
+            folders: [
+              for (final folder in folders ?? const <String>[])
+                DeskFolderCard(
+                  key: ValueKey('folder $folder'),
+                  name: folder,
+                  path: '${path ?? ''}/$folder',
+                  actions: folderActions,
+                ),
+            ],
           ),
           // a filter that leaves nothing would show a bare header
-          if (files.isEmpty && (_filter != .all || _tag != null))
+          if (files.isEmpty &&
+              (folders?.isEmpty ?? true) &&
+              (_filter != .all || _tag != null))
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 60),

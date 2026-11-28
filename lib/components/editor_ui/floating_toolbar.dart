@@ -322,27 +322,34 @@ class _FloatingToolbarState extends State<FloatingToolbar>
                         child: widget.builder(context, axis),
                       ),
                     )
-                  : Material(
+                  // lifted, it grows a little; a growing shadow (its
+                  // elevation) was blurred again on every frame
+                  : AnimatedScale(
                       key: ValueKey(axis),
-                      color: ui.bar,
-                      elevation: lifted ? 12 : 4,
-                      shadowColor: Colors.black45,
-                      borderRadius: BorderRadius.circular(EditorUi.barRadius),
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            // at the top, clear of the undo pill at the right
-                            maxWidth:
-                                _area.width -
-                                (edge == ToolbarEdge.top
-                                    ? _BarLayout.pillRoom + 24
-                                    : 24),
-                            maxHeight: _area.height - 16,
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: axis,
-                            child: widget.builder(context, axis),
+                      scale: lifted ? 1.04 : 1,
+                      duration: BnMotion.fast,
+                      curve: BnMotion.curve,
+                      child: Material(
+                        color: ui.bar,
+                        elevation: 4,
+                        shadowColor: Colors.black45,
+                        borderRadius: BorderRadius.circular(EditorUi.barRadius),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              // at the top, clear of the undo pill at the right
+                              maxWidth:
+                                  _area.width -
+                                  (edge == ToolbarEdge.top
+                                      ? _BarLayout.pillRoom + 24
+                                      : 24),
+                              maxHeight: _area.height - 16,
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: axis,
+                              child: widget.builder(context, axis),
+                            ),
                           ),
                         ),
                       ),

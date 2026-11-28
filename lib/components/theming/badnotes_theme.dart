@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:sbn/font_fallbacks.dart';
@@ -153,6 +154,8 @@ class BadNotesColors extends ThemeExtension<BadNotesColors> {
   @override
   BadNotesColors copyWith() => this;
 
+  /// Themes switch at once (the app has no theme animation; see
+  /// ThemeReveal), so there is nothing in between to blend.
   @override
   BadNotesColors lerp(covariant BadNotesColors? other, double t) =>
       t < 0.5 ? this : (other ?? this);
@@ -627,13 +630,14 @@ abstract class BadNotesTheme {
   }
 }
 
-/// A short fade with a small rise. Only opacity and position change, so nothing
-/// has to be redrawn while it runs.
+/// A short fade with a small rise. Only opacity and position change, and
+/// while it runs the page is a still picture: a fade of the live page (a
+/// note's pages, say) drew it all again offscreen on every frame.
 class QuietPageTransitionsBuilder extends PageTransitionsBuilder {
   const QuietPageTransitionsBuilder();
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 220);
+  Duration get transitionDuration => BnMotion.normal;
 
   @override
   Widget buildTransitions<T>(
@@ -645,7 +649,7 @@ class QuietPageTransitionsBuilder extends PageTransitionsBuilder {
   ) {
     final curved = CurvedAnimation(
       parent: animation,
-      curve: Curves.easeOutCubic,
+      curve: BnMotion.curve,
       reverseCurve: Curves.easeInCubic,
     );
     return FadeTransition(
@@ -655,10 +659,69 @@ class QuietPageTransitionsBuilder extends PageTransitionsBuilder {
           begin: const Offset(0, 0.015),
           end: Offset.zero,
         ).animate(curved),
-        child: child,
+        child: _StillWhileMoving(
+          animation: animation,
+          enabled: route.allowSnapshotting,
+          child: child,
+        ),
       ),
     );
   }
+}
+
+/// [child] as a picture while [animation] runs, live again once it stops.
+/// A platform view inside is drawn live instead (permissive mode).
+class _StillWhileMoving extends StatefulWidget {
+  const new({
+    required this.animation,
+    required this.enabled,
+    required this.child,
+  });
+
+  final Animation<double> animation;
+  final bool enabled;
+  final Widget child;
+
+  @override
+  State<_StillWhileMoving> createState() => _StillWhileMovingState();
+}
+
+class _StillWhileMovingState extends State<_StillWhileMoving> {
+  final _controller = SnapshotController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addStatusListener(_status);
+    _status(widget.animation.status);
+  }
+
+  @override
+  void didUpdateWidget(_StillWhileMoving oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animation == widget.animation) return;
+    oldWidget.animation.removeStatusListener(_status);
+    widget.animation.addStatusListener(_status);
+    _status(widget.animation.status);
+  }
+
+  void _status(AnimationStatus status) => _controller.allowSnapshotting =
+      !kIsWeb && widget.enabled && status.isAnimating;
+
+  @override
+  void dispose() {
+    widget.animation.removeStatusListener(_status);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SnapshotWidget(
+    controller: _controller,
+    mode: SnapshotMode.permissive,
+    autoresize: true,
+    child: widget.child,
+  );
 }
 
 extension BadNotesThemePlatform on TargetPlatform {

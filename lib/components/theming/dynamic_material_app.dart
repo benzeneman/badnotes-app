@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:badnotes/components/theming/badnotes_theme.dart';
+import 'package:badnotes/components/theming/theme_reveal.dart';
 import 'package:badnotes/data/prefs.dart';
 import 'package:badnotes/i18n/extensions/redirecting_localization_delegate.dart';
 import 'package:badnotes/i18n/strings.g.dart';
@@ -102,12 +103,20 @@ class DynamicMaterialAppState extends State<DynamicMaterialApp>
     final themes = useValueListenable(stows.hyperlegibleFont)
         ? _readable
         : _plain;
-    return ExplicitlyThemedApp(
-      title: widget.title,
-      router: widget.router,
-      themeMode: mode,
-      theme: themes.light,
-      darkTheme: themes.dark,
+    final brightness = switch (mode) {
+      .light => Brightness.light,
+      .dark => Brightness.dark,
+      .system => MediaQuery.platformBrightnessOf(context),
+    };
+    return ThemeReveal(
+      brightness: brightness,
+      builder: (context, shown) => ExplicitlyThemedApp(
+        title: widget.title,
+        router: widget.router,
+        themeMode: shown == .dark ? .dark : .light,
+        theme: themes.light,
+        darkTheme: themes.dark,
+      ),
     );
   }
 }
@@ -192,8 +201,14 @@ class ExplicitlyThemedApp extends StatelessWidget {
     ),
   ];
 
-  static ThemeData? _sharper(ThemeData? base) =>
-      base?.copyWith(colorScheme: base.colorScheme._sharper());
+  /// Made once per theme: building a scheme from a seed is slow.
+  static final _sharperOf = Expando<ThemeData>();
+
+  static ThemeData? _sharper(ThemeData? base) => base == null
+      ? null
+      : _sharperOf[base] ??= base.copyWith(
+          colorScheme: base.colorScheme._sharper(),
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -209,6 +224,9 @@ class ExplicitlyThemedApp extends StatelessWidget {
       themeMode: themeMode,
       theme: theme,
       darkTheme: darkTheme,
+      // no 200 ms blend rebuilding everything each frame: [ThemeReveal]
+      // shows the change
+      themeAnimationDuration: Duration.zero,
       highContrastTheme: highContrastTheme ?? _sharper(theme),
       highContrastDarkTheme: highContrastDarkTheme ?? _sharper(darkTheme),
       debugShowCheckedModeBanner: false,

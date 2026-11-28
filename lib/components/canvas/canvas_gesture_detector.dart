@@ -836,6 +836,10 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector>
   /// Cleared when the editor rebuilds and once a gesture ends.
   final _pageCache = <int, Widget>{};
 
+  /// Whether pages a screen away are built too, from the frame after the
+  /// pages first showed.
+  var _readAhead = false;
+
   /// Finger travel needed past the bottom before releasing adds a page.
   static const _pullThreshold = 180.0;
 
@@ -1059,8 +1063,19 @@ class CanvasGestureDetectorState extends State<CanvasGestureDetector>
                         child: _pageCache[0] ??= widget.pageBuilder(context, 0),
                       );
                     }
+                    // the pages in view come first; those a screen away
+                    // a frame later, so opening doesn't build them all in
+                    // one frame
+                    if (!_readAhead && widget.pages.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && !_readAhead) {
+                          setState(() => _readAhead = true);
+                        }
+                      });
+                    }
                     return _PagesBuilder(
                       pages: widget.pages,
+                      readAhead: _readAhead,
                       pageBuilder: (context, i) =>
                           _pageCache[i] ??= widget.pageBuilder(context, i),
                       placeholderPageBuilder: widget.placeholderPageBuilder,
@@ -1197,6 +1212,7 @@ class _PagesBuilder extends StatelessWidget {
     required this.placeholderPageBuilder,
     required this.boundingBox,
     required this.containerWidth,
+    required this.readAhead,
   });
 
   final List<EditorPage> pages;
@@ -1207,6 +1223,9 @@ class _PagesBuilder extends StatelessWidget {
   /// The part of the note in view, in its own units.
   final Rect boundingBox;
   final double containerWidth;
+
+  /// Pages a screen away are built too, not only those in view.
+  final bool readAhead;
 
   @override
   Widget build(BuildContext context) {
@@ -1224,7 +1243,7 @@ class _PagesBuilder extends StatelessWidget {
       for (int first = 0; first < pages.length; first += 2) {
         final rowHeight = CanvasGestureDetector._rowHeight(pages, first, cell);
         final bottom = topOfPage + rowHeight;
-        final ahead = boundingBox.height;
+        final ahead = readAhead ? boundingBox.height : 0.0;
         final inView =
             boundingBox.bottom + ahead >= topOfPage &&
             boundingBox.top - ahead <= bottom;
@@ -1311,7 +1330,11 @@ class _PagesBuilder extends StatelessWidget {
       final isFocused = page.quill.focusNode.hasFocus;
       // Pages a screen away are built already, so a scroll doesn't have to
       // build and draw each page in the frame it comes into view.
-      final ahead = horizontal ? boundingBox.width : boundingBox.height;
+      final ahead = !readAhead
+          ? 0.0
+          : horizontal
+          ? boundingBox.width
+          : boundingBox.height;
       final isInViewport = horizontal
           ? boundingBox.right + ahead >= topOfPage &&
                 boundingBox.left - ahead <= bottomOfPage

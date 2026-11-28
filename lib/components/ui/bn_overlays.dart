@@ -6,17 +6,22 @@ import 'package:badnotes/components/ui/editor_signals.dart';
 import 'package:flutter/material.dart';
 
 /// Keeps [child] (a popup, dialog or sheet) above the on-screen keyboard:
-/// pads it by the keyboard's height. Android changes that height on every
-/// frame while the keyboard slides, so the popup moves up with it. Without
+/// pads it by the keyboard's height. Android changes that height in uneven
+/// steps while the keyboard slides, so the padding glides after it instead
+/// of jumping with each step, and ends where the keyboard does. Without
 /// this, a popup's text field stayed under the keyboard.
 class BnAboveKeyboard extends StatelessWidget {
   const BnAboveKeyboard({super.key, required this.child});
 
   final Widget child;
 
+  static const glide = Duration(milliseconds: 250);
+
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => AnimatedPadding(
     padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : glide,
+    curve: BnMotion.curve,
     // counted once: what's inside sees no keyboard left to avoid
     child: MediaQuery.removeViewInsets(
       context: context,
@@ -106,38 +111,39 @@ Future<T?> showBnPopover<T>({
     box.localToGlobal(Offset.zero, ancestor: overlay),
     box.localToGlobal(box.size.bottomRight(Offset.zero), ancestor: overlay),
   );
-  EditorSignals.covered.value++;
-  return showGeneralDialog<T>(
-    context: anchor,
-    barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(anchor).modalBarrierDismissLabel,
-    barrierColor: Colors.transparent,
-    transitionDuration: BnMotion.normal,
-    pageBuilder: (context, _, _) => BnAboveKeyboard(
-      child: CustomSingleChildLayout(
-        delegate: _PopoverLayout(rect, gap, preferAbove, width),
-        child: BnPopover(
-          width: width,
-          child: Builder(builder: builder),
+  return EditorSignals.cover(
+    () => showGeneralDialog<T>(
+      context: anchor,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(anchor).modalBarrierDismissLabel,
+      barrierColor: Colors.transparent,
+      transitionDuration: BnMotion.normal,
+      pageBuilder: (context, _, _) => BnAboveKeyboard(
+        child: CustomSingleChildLayout(
+          delegate: _PopoverLayout(rect, gap, preferAbove, width),
+          child: BnPopover(
+            width: width,
+            child: Builder(builder: builder),
+          ),
         ),
       ),
+      transitionBuilder: (context, animation, _, child) {
+        final size = MediaQuery.sizeOf(context);
+        final above = preferAbove || rect.center.dy > size.height / 2;
+        return bnPopIn(
+          context,
+          animation,
+          child,
+          alignment: Alignment(
+            (rect.center.dx / size.width) * 2 - 1,
+            above
+                ? (rect.top / size.height) * 2 - 1
+                : (rect.bottom / size.height) * 2 - 1,
+          ),
+        );
+      },
     ),
-    transitionBuilder: (context, animation, _, child) {
-      final size = MediaQuery.sizeOf(context);
-      final above = preferAbove || rect.center.dy > size.height / 2;
-      return bnPopIn(
-        context,
-        animation,
-        child,
-        alignment: Alignment(
-          (rect.center.dx / size.width) * 2 - 1,
-          above
-              ? (rect.top / size.height) * 2 - 1
-              : (rect.bottom / size.height) * 2 - 1,
-        ),
-      );
-    },
-  ).whenComplete(() => EditorSignals.covered.value--);
+  );
 }
 
 class _PopoverLayout extends SingleChildLayoutDelegate {
@@ -208,78 +214,80 @@ Future<T?> showBnDialog<T>({
   bool barrierDismissible = true,
 }) {
   final colors = BadNotesColors.of(context);
-  return showGeneralDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: colors.scrim,
-    transitionDuration: BnMotion.normal,
-    pageBuilder: (context, _, _) => BnAboveKeyboard(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: BnPopover(
-            width: width,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  title,
-                  style: BnType.title.copyWith(
-                    color: BadNotesColors.of(context).text,
+  return EditorSignals.cover(
+    () => showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: colors.scrim,
+      transitionDuration: BnMotion.normal,
+      pageBuilder: (context, _, _) => BnAboveKeyboard(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: BnPopover(
+              width: width,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    title,
+                    style: BnType.title.copyWith(
+                      color: BadNotesColors.of(context).text,
+                    ),
                   ),
-                ),
-                if (message != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      message,
-                      style: BnType.body.copyWith(
-                        color: BadNotesColors.of(context).muted,
-                        fontWeight: FontWeight.w400,
-                        height: 1.45,
+                  if (message != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        message,
+                        style: BnType.body.copyWith(
+                          color: BadNotesColors.of(context).muted,
+                          fontWeight: FontWeight.w400,
+                          height: 1.45,
+                        ),
                       ),
                     ),
-                  ),
-                if (content != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: content,
-                  ),
-                if (actions.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final action in actions)
-                          BnButton(
-                            label: action.label,
-                            kind: action.primary
-                                ? action.destructive
-                                      ? BnButtonKind.destructive
-                                      : BnButtonKind.primary
-                                : action.destructive
-                                ? BnButtonKind.destructive
-                                : BnButtonKind.secondary,
-                            onPressed: () =>
-                                Navigator.of(context).pop(action.value),
-                          ),
-                      ],
+                  if (content != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: content,
                     ),
-                  ),
-              ],
+                  if (actions.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final action in actions)
+                            BnButton(
+                              label: action.label,
+                              kind: action.primary
+                                  ? action.destructive
+                                        ? BnButtonKind.destructive
+                                        : BnButtonKind.primary
+                                  : action.destructive
+                                  ? BnButtonKind.destructive
+                                  : BnButtonKind.secondary,
+                              onPressed: () =>
+                                  Navigator.of(context).pop(action.value),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
       ),
+      transitionBuilder: (context, animation, _, child) =>
+          bnPopIn(context, animation, child),
     ),
-    transitionBuilder: (context, animation, _, child) =>
-        bnPopIn(context, animation, child),
   );
 }
 
@@ -291,54 +299,63 @@ Future<T?> showBnSheet<T>({
 }) {
   final colors = BadNotesColors.of(context);
   if (!bnIsWide(context)) {
-    return showModalBottomSheet<T>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => BnAboveKeyboard(child: Builder(builder: builder)),
+    return EditorSignals.cover(
+      () => showModalBottomSheet<T>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        sheetAnimationStyle: const AnimationStyle(
+          duration: BnMotion.normal,
+          curve: BnMotion.curve,
+          reverseDuration: BnMotion.fast,
+        ),
+        builder: (context) => BnAboveKeyboard(child: Builder(builder: builder)),
+      ),
     );
   }
-  return showGeneralDialog<T>(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: colors.scrim,
-    transitionDuration: BnMotion.normal,
-    pageBuilder: (context, _, _) => BnAboveKeyboard(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: SafeArea(
-            child: BnPopover(
-              width: width,
-              padding: EdgeInsets.zero,
-              child: SizedBox(
-                height: double.infinity,
-                child: Builder(builder: builder),
+  return EditorSignals.cover(
+    () => showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: colors.scrim,
+      transitionDuration: BnMotion.normal,
+      pageBuilder: (context, _, _) => BnAboveKeyboard(
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SafeArea(
+              child: BnPopover(
+                width: width,
+                padding: EdgeInsets.zero,
+                child: SizedBox(
+                  height: double.infinity,
+                  child: Builder(builder: builder),
+                ),
               ),
             ),
           ),
         ),
       ),
+      transitionBuilder: (context, animation, _, child) {
+        if (MediaQuery.disableAnimationsOf(context)) return child;
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: BnMotion.curve,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0.06, 0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
     ),
-    transitionBuilder: (context, animation, _, child) {
-      if (MediaQuery.disableAnimationsOf(context)) return child;
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: BnMotion.curve,
-        reverseCurve: Curves.easeInCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween(
-            begin: const Offset(0.06, 0),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
   );
 }

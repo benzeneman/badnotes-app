@@ -165,7 +165,8 @@ class const DoneLoginStep({
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: quota?.progressIndicatorValue,
+                  // not known yet: an empty bar, not one moving forever
+                  value: quota?.progressIndicatorValue ?? 0,
                   minHeight: 8,
                   backgroundColor: colors.sunken,
                   color: colors.accent,

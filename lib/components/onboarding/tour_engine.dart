@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -856,10 +857,6 @@ class TourScene {
   final Rect view;
 
   final Widget Function(BuildContext context, double t) build;
-
-  /// One pass: written up to [done], then held.
-  Duration get period =>
-      duration * done + const Duration(milliseconds: holdMs);
 }
 
 /// Plays [scene] over and over while [playing], on a layer of its own.
@@ -880,33 +877,47 @@ class TourStage extends StatefulWidget {
 
 class TourStageState extends State<TourStage>
     with SingleTickerProviderStateMixin {
+  /// One pass, written up to [TourScene.done]. The hold after it is a
+  /// timer, not the clock: a page standing still draws nothing.
   late final _clock = AnimationController(
     vsync: this,
-    duration: widget.scene.period,
-  );
+    duration: widget.scene.duration * widget.scene.done,
+  )..addStatusListener(_onStatus);
   final _now = GlobalKey();
   var _still = false;
 
-  /// Passes played since the page came up, and where the clock was last.
+  /// Passes played since the page came up.
   var _laps = 0;
-  var _last = 0.0;
+  Timer? _hold;
 
-  double _ms(double v) => v * widget.scene.period.inMicroseconds / 1000;
+  double _ms(double v) =>
+      v * _clock.duration!.inMicroseconds / 1000;
 
   /// The scene time on the stage.
   @visibleForTesting
-  double get time => _still
-      ? widget.scene.done
-      : min(widget.scene.done, _ms(_clock.value) / widget.scene.duration.inMilliseconds);
+  double get time => _still ? widget.scene.done : _clock.value * widget.scene.done;
+
+  void _onStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    _hold?.cancel();
+    _hold = Timer(const Duration(milliseconds: holdMs), () {
+      if (!mounted || _still || !widget.playing) return;
+      _laps++;
+      _clock.forward(from: 0);
+    });
+  }
 
   void _sync() {
     _still = MediaQuery.disableAnimationsOf(context);
-    if (_still) {
+    if (_still || !widget.playing) {
       _clock.stop();
-    } else if (widget.playing) {
-      if (!_clock.isAnimating) _clock.repeat();
-    } else {
-      _clock.stop();
+      _hold?.cancel();
+    } else if (!_clock.isAnimating && !(_hold?.isActive ?? false)) {
+      if (_clock.isCompleted) {
+        _onStatus(AnimationStatus.completed);
+      } else {
+        _clock.forward();
+      }
     }
   }
 
@@ -920,48 +931,58 @@ class TourStageState extends State<TourStage>
   void didUpdateWidget(TourStage old) {
     super.didUpdateWidget(old);
     if (widget.playing && !old.playing) {
+      _hold?.cancel();
       _clock.value = 0;
       _laps = 0;
-      _last = 0;
     }
     _sync();
   }
 
   @override
   void dispose() {
+    _hold?.cancel();
     _clock.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => RepaintBoundary(
-    child: FittedBox(
-      child: SizedBox.fromSize(
-        size: stageSize,
-        child: AnimatedBuilder(
-          animation: _clock,
-          builder: (context, _) {
-            final scene = widget.scene;
-            final v = _clock.value;
-            if (v < _last) _laps++;
-            _last = v;
-            // after the first pass, the held page fades out over the next
-            final carry = _still || _laps == 0
-                ? 0.0
-                : 1 - span(_ms(v), 0, carryMs.toDouble(), Curves.easeInOutSine);
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                KeyedSubtree(key: _now, child: scene.build(context, time)),
-                if (carry > 0)
-                  Opacity(opacity: carry, child: scene.build(context, scene.done)),
-              ],
-            );
-          },
+  Widget build(BuildContext context) {
+    final scene = widget.scene;
+    // the held page, built once: while it fades out over the next pass
+    // only its opacity changes, it isn't drawn again each frame
+    final held = RepaintBoundary(
+      child: Builder(builder: (context) => scene.build(context, scene.done)),
+    );
+    return RepaintBoundary(
+      child: FittedBox(
+        child: SizedBox.fromSize(
+          size: stageSize,
+          child: AnimatedBuilder(
+            animation: _clock,
+            builder: (context, _) {
+              // after the first pass, the held page fades out over the next
+              final carry = _still || _laps == 0
+                  ? 0.0
+                  : 1 -
+                        span(
+                          _ms(_clock.value),
+                          0,
+                          carryMs.toDouble(),
+                          Curves.easeInOutSine,
+                        );
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  KeyedSubtree(key: _now, child: scene.build(context, time)),
+                  if (carry > 0) Opacity(opacity: carry, child: held),
+                ],
+              );
+            },
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// The colours a scene's toolbar offers: its inks' first few.

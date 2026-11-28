@@ -217,6 +217,7 @@ class _FolderPreview extends StatelessWidget {
         angle: -0.052,
         child: AnimatedContainer(
           duration: BnMotion.fast,
+          curve: BnMotion.curve,
           width: 190,
           child: Column(
             mainAxisSize: MainAxisSize.min,

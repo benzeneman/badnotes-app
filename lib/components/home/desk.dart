@@ -2,6 +2,7 @@ import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/home/cloud_status.dart';
 import 'package:badnotes/components/home/delete_folder_button.dart';
 import 'package:badnotes/components/home/delete_note_button.dart';
+import 'package:badnotes/components/home/documents_widgets.dart';
 import 'package:badnotes/components/home/home_actions.dart';
 import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/move_note_button.dart';
@@ -78,6 +79,90 @@ class DeskFolderTile extends HookWidget {
           ),
           Positioned(top: 6, right: 6, child: LockBadge(path: path, size: 20)),
         ],
+      ),
+    );
+  }
+}
+
+/// A folder sized like a notebook card, for when folders and notebooks share
+/// one grid: a big folder where the cover would be, its name and count
+/// under it. The same tap and long press as [DeskFolderTile].
+class DeskFolderCard extends HookWidget {
+  const new({
+    super.key,
+    required this.name,
+    required this.path,
+    required this.actions,
+  });
+
+  final String name, path;
+  final FolderActions actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = BadNotesColors.of(context);
+    final info = useValueListenable(FolderInfos.of(path));
+    final style = useValueListenable(FolderStyles.of(path));
+    return Builder(
+      builder: (context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onSecondaryTap: () =>
+            showFolderMenu(context, name: name, path: path, actions: actions),
+        child: Column(
+          crossAxisAlignment: .start,
+          children: [
+            Pressable(
+              onTap: () => actions.onTap(name),
+              onLongPress: () {
+                HapticFeedback.mediumImpact();
+                showFolderMenu(
+                  context,
+                  name: name,
+                  path: path,
+                  actions: actions,
+                );
+              },
+              child: AspectRatio(
+                aspectRatio: 3 / 4,
+                child: LayoutBuilder(
+                  builder: (context, box) => Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: FolderGlyph(
+                          color: style.shades,
+                          width: box.maxWidth,
+                        ),
+                      ),
+                      Positioned(
+                        // on the folder's front, not the empty space above
+                        top: box.maxHeight - box.maxWidth * 0.78 + 6,
+                        right: 6,
+                        child: LockBadge(path: path, size: 20),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: .ellipsis,
+              style: BnType.body.copyWith(
+                color: colors.text,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              info?.itemsLabel ?? '',
+              maxLines: 1,
+              overflow: .ellipsis,
+              style: BnType.caption.copyWith(color: colors.muted),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -336,6 +421,7 @@ class _FolderMenu extends HookWidget {
               folderName: name,
               deleteFolder: actions.delete,
               isFolderEmpty: actions.isEmpty,
+              folderPath: path,
             ).open(page),
           ),
         ),
@@ -812,7 +898,8 @@ class HomePageFrame extends StatelessWidget {
         children: [
           CustomScrollView(
             slivers: [
-              SliverPadding(
+              Builder(
+                builder: (context) => SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                   margin,
                   MediaQuery.paddingOf(context).top + (selecting ? 14 : 26),
@@ -828,6 +915,7 @@ class HomePageFrame extends StatelessWidget {
                               selectedFiles!.value = [...selectable],
                         )
                       : const HomeHeader(),
+                ),
                 ),
               ),
               if (selecting)
@@ -856,14 +944,20 @@ class HomePageFrame extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: margin),
                   sliver: sliver,
                 ),
+              // the insets are read in small builders, so a keyboard
+              // opening doesn't rebuild the page each frame
               SliverToBoxAdapter(
-                child: SizedBox(height: HomeChrome.bottomRoom(context)),
+                child: Builder(
+                  builder: (context) =>
+                      SizedBox(height: HomeChrome.bottomRoom(context)),
+                ),
               ),
             ],
           ),
           const SyncErrorBanner(),
           if (selectedFiles != null)
-            Positioned(
+            Builder(
+              builder: (context) => Positioned(
               left: 12,
               right: 12,
               bottom: HomeChrome.safeBottom(context) + 18,
@@ -873,6 +967,7 @@ class HomePageFrame extends StatelessWidget {
                   visible: selecting,
                   child: NotebookSelectionBar(selectedFiles: selectedFiles!),
                 ),
+              ),
               ),
             ),
         ],
@@ -1147,6 +1242,7 @@ class _IconChoice extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: BnMotion.fast,
+        curve: BnMotion.curve,
         width: 46,
         height: 44,
         alignment: Alignment.center,

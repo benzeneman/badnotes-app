@@ -242,6 +242,7 @@ class _BackgroundPanelState extends State<_BackgroundPanel> {
             children: [
               AnimatedContainer(
                 duration: BnMotion.fast,
+                curve: BnMotion.curve,
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(

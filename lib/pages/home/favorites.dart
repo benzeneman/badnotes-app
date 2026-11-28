@@ -8,6 +8,7 @@ import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/home/note_facts.dart';
 import 'package:badnotes/components/home/page_tile.dart';
 import 'package:badnotes/components/home/preview_card.dart';
+import 'package:badnotes/components/home/trash.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/file_manager/file_manager.dart';
@@ -42,6 +43,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
   StreamSubscription? _fileWrites;
   var _show = _Show.all;
 
+  /// Bumped on each note written or deleted, to check the stars again.
+  var _writes = 0;
+
   void _setState() {
     if (mounted) setState(() {});
   }
@@ -51,7 +55,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
     super.initState();
     selectedFiles.addListener(_onSelection);
     _fileWrites = FileManager.fileWriteStream.stream.listen((event) {
-      if (!event.isNoteAsset) _setState();
+      if (event.isNoteAsset) return;
+      _writes++;
+      _setState();
     });
   }
 
@@ -90,14 +96,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
         for (final MapEntry(key: path, value: f) in facts.entries)
           for (final page in f.bookmarks) (path, page),
     ];
-    final files = [
-      if (_show == .all || _show == .notebooks)
+    // checked on changes, not on every build (a selection, say)
+    final starred = useMemoized(
+      () => [
         for (final path in favorites)
           // a starred note moved to the trash keeps its star, re-pointed
           // into the hidden trash folder
           if (isVisiblePath(path) &&
               FileManager.getFile(path + Editor.extension).existsSync())
             path,
+      ],
+      [favorites, _writes],
+    );
+    final files = [
+      if (_show == .all || _show == .notebooks) ...starred,
     ];
     final folders = [
       if (_show == .all || _show == .folders)
@@ -264,7 +276,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           final children = await FileManager.getChildrenOfDirectory(path);
           return children?.isEmpty ?? true;
         },
-        delete: (_) async => FileManager.deleteDirectory(path),
+        delete: (_) => Trash.moveFolderToTrash(path),
       ),
     );
   }

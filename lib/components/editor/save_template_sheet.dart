@@ -1,6 +1,7 @@
 import 'package:badnotes/data/pro/pro.dart';
 import 'package:badnotes/components/canvas/canvas_background_preview.dart';
 import 'package:badnotes/components/canvas/inner_canvas.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/toolbar/ink_dial.dart';
 import 'package:badnotes/data/editor/editor_core_info.dart';
 import 'package:badnotes/data/my_templates.dart';
@@ -188,7 +189,7 @@ class _MyTemplatesRailState extends State<MyTemplatesRail> {
 
   Future<void> _rename(MyTemplate template) async {
     final name = TextEditingController(text: template.name);
-    final newName = await showDialog<String>(
+    final newName = await showAppleDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Rename template'),

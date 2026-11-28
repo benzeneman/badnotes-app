@@ -115,6 +115,28 @@ abstract final class Trash {
     return moved;
   }
 
+  /// The notes in [folder] (e.g. `/College`) and its subfolders, without
+  /// extensions.
+  static Future<List<String>> notesIn(String folder) async {
+    final children = await FileManager.getChildrenOfDirectory(folder);
+    if (children == null) return [];
+    return [
+      for (final file in children.files) '$folder/$file',
+      for (final sub in children.directories) ...await notesIn('$folder/$sub'),
+    ];
+  }
+
+  /// Moves every note in [folder] to the trash, then removes the folder.
+  /// Restoring a note brings its folder back.
+  static Future<List<TrashEntry>> moveFolderToTrash(String folder) async {
+    final moved = await moveToTrash(await notesIn(folder));
+    // a note that didn't move keeps its folder
+    if ((await notesIn(folder)).isEmpty) {
+      await FileManager.deleteDirectory(folder);
+    }
+    return moved;
+  }
+
   /// Puts [entry] back where it was (beside it, if that name is taken now).
   static Future<String> restore(TrashEntry entry) async {
     final extension = _extensionOf(entry.trashPath);

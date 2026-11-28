@@ -17,7 +17,12 @@ class DocumentGrid extends StatelessWidget {
     required this.selectedFiles,
     this.onNew,
     this.newLabel = 'New notebook',
+    this.folders = const [],
   });
+
+  /// Tiles shown before the notebooks, in the grid only: folders, when they
+  /// share the notebooks' grid.
+  final List<Widget> folders;
 
   /// Ignores the grid or list setting.
   final bool forceGrid;
@@ -105,8 +110,10 @@ class DocumentGrid extends StatelessWidget {
             mainAxisSpacing: 22,
             mainAxisExtent: tileHeight,
           ),
-          itemCount: count + (withNew ? 1 : 0),
+          itemCount: folders.length + count + (withNew ? 1 : 0),
           itemBuilder: (context, i) {
+            if (i < folders.length) return folders[i];
+            i -= folders.length;
             if (i == count) {
               return DashedAddTile(label: newLabel, onTap: onNew!);
             }

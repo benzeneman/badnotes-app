@@ -407,6 +407,7 @@ class _TemplateTile extends StatelessWidget {
           children: [
             AnimatedContainer(
               duration: BnMotion.fast,
+              curve: BnMotion.curve,
               width: 66,
               height: 86,
               decoration: frame,

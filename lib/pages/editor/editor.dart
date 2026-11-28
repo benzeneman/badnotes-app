@@ -148,6 +148,10 @@ class Editor extends StatefulWidget {
   /// save lost what was just written.
   static final closing = <String, Future<void>>{};
 
+  /// Notes opened again while [closing]: the closed editor's thumbnail is
+  /// drawn now rather than once the screen is quiet.
+  static final _reopened = <String>{};
+
   /// The notes open in an editor now, by path (twice for one open in two
   /// panes). Sync doesn't write a cloud version over one of these: the
   /// editor's next save would put what it has back over it.
@@ -341,12 +345,21 @@ class EditorState extends State<Editor> {
     // the tools move between the header and a floating bar with its edge
     stows.floatingToolbarEdge.addListener(_toolbarMoved);
     // the page as it was left, shown at once while the note opens
-    widget.initialPath.then((path) {
+    widget.initialPath.then((path) async {
       final picture = FileManager.getFile('$path.open.png');
-      if (mounted &&
-          coreInfo.readOnlyReason == .placeholder &&
-          !NoteLocks.isProtected(path) &&
-          picture.existsSync()) {
+      if (!mounted ||
+          coreInfo.readOnlyReason != .placeholder ||
+          NoteLocks.isProtected(path) ||
+          !picture.existsSync()) {
+        return;
+      }
+      // decoded before it shows, not blank for its first frames; the
+      // picture from the last time it was left, not one cached before that
+      final image = FileImage(picture);
+      await image.evict();
+      if (!mounted) return;
+      await precacheImage(image, context);
+      if (mounted && coreInfo.readOnlyReason == .placeholder) {
         setState(() => _openingPicture = picture);
       }
     });
@@ -552,10 +565,16 @@ class EditorState extends State<Editor> {
     final loading = LagRecorder.span(
       'open note: start reading',
       () async {
-        if (Editor.waitForClosing) await Editor.closing[filePath]?.timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {},
-        );
+        final closing = Editor.waitForClosing
+            ? Editor.closing[filePath]
+            : null;
+        if (closing != null) {
+          Editor._reopened.add(filePath);
+          await closing.timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {},
+          );
+        }
         return EditorCoreInfo.loadFromFilePath(filePath);
       },
     );
@@ -3280,9 +3299,9 @@ class EditorState extends State<Editor> {
     }
     bool shouldSave = true;
     _drawHoldTimer?.cancel();
-    // what the toolbar and page list show, to only rebuild if it changes
+    // what the page list shows, to only rebuild if it changes (undo and
+    // redo listen to the history by themselves)
     final pageCount = coreInfo.pages.length;
-    final couldUndo = history.canUndo, couldRedo = history.canRedo;
     final tool = currentTool;
     void finish() {
       if (tool is Pen) {
@@ -3550,10 +3569,7 @@ class EditorState extends State<Editor> {
       // at the end of each stroke. The ink repaints by itself.
       finish();
       page.currentStrokeTick.value++;
-      if (coreInfo.pages.length != pageCount ||
-          history.canUndo != couldUndo ||
-          history.canRedo != couldRedo ||
-          currentTool != tool) {
+      if (coreInfo.pages.length != pageCount || currentTool != tool) {
         setState(() {});
       }
     } else {
@@ -5794,31 +5810,34 @@ class EditorState extends State<Editor> {
   /// the docked tools.
   Widget _undoRedo(BuildContext context, {required bool floating}) {
     final colors = BadNotesColors.of(context);
-    return ValueListenableBuilder(
-      valueListenable: history.changes,
-      builder: (context, _, _) => Container(
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: floating ? colors.surface : colors.sunken,
-          borderRadius: BorderRadius.circular(floating ? 16 : 12),
-          boxShadow: floating ? BnShadows.floating : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BnIconButton(
-              icon: BnIcons.undo,
-              tooltip: 'Undo',
-              color: colors.text2,
-              onPressed: history.canUndo ? undo : null,
-            ),
-            BnIconButton(
-              icon: BnIcons.redo,
-              tooltip: 'Redo',
-              color: colors.text2,
-              onPressed: history.canRedo ? redo : null,
-            ),
-          ],
+    // drawn again by itself as strokes come and go, not with the page
+    return RepaintBoundary(
+      child: ValueListenableBuilder(
+        valueListenable: history.changes,
+        builder: (context, _, _) => Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: floating ? colors.surface : colors.sunken,
+            borderRadius: BorderRadius.circular(floating ? 16 : 12),
+            boxShadow: floating ? BnShadows.floating : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BnIconButton(
+                icon: BnIcons.undo,
+                tooltip: 'Undo',
+                color: colors.text2,
+                onPressed: history.canUndo ? undo : null,
+              ),
+              BnIconButton(
+                icon: BnIcons.redo,
+                tooltip: 'Redo',
+                color: colors.text2,
+                onPressed: history.canRedo ? redo : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -7916,16 +7935,28 @@ class EditorState extends State<Editor> {
             ),
           ),
         ),
-        // opening: the page as it was left, until the note is read
-        if (_openingPicture case final picture?
-            when coreInfo.readOnlyReason == .placeholder)
+        // opening: the page as it was left, until the note is read, then
+        // faded out over the live pages
+        if (_openingPicture case final picture?)
           Positioned.fill(
             child: IgnorePointer(
-              child: Image.file(
-                picture,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                gaplessPlayback: true,
+              child: AnimatedOpacity(
+                opacity: coreInfo.readOnlyReason == .placeholder ? 1 : 0,
+                duration: BnMotion.fast,
+                curve: BnMotion.curve,
+                onEnd: () {
+                  if (!mounted || coreInfo.readOnlyReason == .placeholder) {
+                    return;
+                  }
+                  setState(() => _openingPicture = null);
+                  unawaited(FileImage(picture).evict());
+                },
+                child: Image.file(
+                  picture,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  gaplessPlayback: true,
+                ),
               ),
             ),
           ),
@@ -8205,7 +8236,9 @@ class EditorState extends State<Editor> {
     LagRecorder.doing('leaving note', lasts: const Duration(seconds: 3));
     LagRecorder.note('leave pressed', {'saving': state.name});
     if (didPop) {
-      // left straight away: the note was saved
+      // left straight away: the note was saved. The pop has begun but
+      // nothing of it is drawn yet
+      _keepLeavePicture();
       _left = true;
       return;
     }
@@ -8241,6 +8274,7 @@ class EditorState extends State<Editor> {
       if (!mounted || _left || savingState.value != .saved) return;
       final route = ModalRoute.of(context);
       if (route != null && !route.isCurrent) return;
+      _keepLeavePicture();
       _left = true;
       final navigator = Navigator.of(context);
       if (navigator.canPop()) {
@@ -8780,10 +8814,31 @@ class EditorState extends State<Editor> {
     );
   }
 
-  /// Keeps a picture of the screen as the note is left, for next time: a
-  /// note opens with it showing at once instead of a blank page.
+  /// Leaving any other way than back (a tab, a restored version): the
+  /// picture is taken now.
   @override
   void deactivate() {
+    _keepLeavePicture();
+    super.deactivate();
+  }
+
+  var _leavePictureKept = false;
+
+  /// Moved in the tree, not left: a picture again when it is.
+  @override
+  void activate() {
+    super.activate();
+    _leavePictureKept = false;
+  }
+
+  /// Keeps a picture of the screen as the note is left, for next time: a
+  /// note opens with it showing at once instead of a blank page. Taken
+  /// before the pop starts (taking it, and reading it back from the GPU,
+  /// at the end of the pop's slide made its last frames stutter), and
+  /// written out once nobody is touching the screen.
+  void _keepLeavePicture() {
+    if (_leavePictureKept) return;
+    _leavePictureKept = true;
     // right after a stroke the GPU is still busy with it: no picture then
     // (leaving at that moment was when the app hung)
     final justDrew =
@@ -8814,6 +8869,7 @@ class EditorState extends State<Editor> {
           LagRecorder.step('leave: picture taken');
           final file = FileManager.getFile('${coreInfo.filePath}.open.png');
           unawaited(() async {
+            await _untilQuiet();
             final png = await image.toByteData(format: ui.ImageByteFormat.png);
             image.dispose();
             if (png != null) {
@@ -8825,7 +8881,36 @@ class EditorState extends State<Editor> {
         log.fine('No picture kept for opening next time: $e');
       }
     }
-    super.deactivate();
+  }
+
+  /// Waits until nobody has touched the screen for [quiet], at most
+  /// [atMost] or until [hurry] says so: work left for later (a picture read
+  /// back, a thumbnail drawn) then doesn't stutter a scroll or a stroke.
+  static Future<void> _untilQuiet({
+    Duration quiet = const Duration(seconds: 2),
+    Duration atMost = const Duration(seconds: 10),
+    bool Function()? hurry,
+  }) async {
+    if (isThisATest) return;
+    final start = DateTime.now();
+    var last = start;
+    void touched(PointerEvent _) => last = DateTime.now();
+    GestureBinding.instance.pointerRouter.addGlobalRoute(touched);
+    try {
+      while (!(hurry?.call() ?? false)) {
+        final now = DateTime.now();
+        final wait = quiet - now.difference(last);
+        if (wait <= Duration.zero || now.difference(start) >= atMost) break;
+        // looks again often enough to hurry when asked
+        await Future<void>.delayed(
+          wait < const Duration(milliseconds: 250)
+              ? wait
+              : const Duration(milliseconds: 250),
+        );
+      }
+    } finally {
+      GestureBinding.instance.pointerRouter.removeGlobalRoute(touched);
+    }
   }
 
   @override
@@ -8923,10 +9008,14 @@ class EditorState extends State<Editor> {
       _announceQuietWrites();
       // autosaves leave the thumbnail for now (a test's editor is gone
       // with its fake clock before the thumbnail could be drawn). It's
-      // drawn once the home screen has come in: drawing it takes the main
-      // thread a quarter to half a second, and made that stutter.
+      // drawn once the home screen has come in and nobody is touching the
+      // screen (or at once when the note is opened again): drawing it takes
+      // the main thread a quarter to half a second, and made scrolling the
+      // home screen stutter.
       if (_editedThisSession && !coreInfo.readOnly && !isThisATest) {
+        final path = coreInfo.filePath;
         await Future<void>.delayed(const Duration(milliseconds: 900));
+        await _untilQuiet(hurry: () => Editor._reopened.contains(path));
         LagRecorder.step('leave: thumbnail');
         await _saveThumbnail();
         LagRecorder.step('leave: thumbnail done');
@@ -8937,6 +9026,7 @@ class EditorState extends State<Editor> {
         PdfCopies.noteChanged(coreInfo.filePath);
       }
     } finally {
+      Editor._reopened.remove(coreInfo.filePath);
       // closed before its note had loaded: the placeholder every editor
       // shares isn't this one's to dispose
       if (!identical(coreInfo, EditorCoreInfo.placeholder)) coreInfo.dispose();

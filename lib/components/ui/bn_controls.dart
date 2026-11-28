@@ -11,7 +11,9 @@ class BnSegment<T> {
   final IconData? icon;
 }
 
-/// A sunken track with the chosen segment as a white chip.
+/// A sunken track with the chosen segment as a white chip, which slides to
+/// the next one chosen. Segments are equally wide: with [expand] they share
+/// the width, otherwise each is as wide as the longest label.
 class BnSegmented<T> extends StatelessWidget {
   const new({
     super.key,
@@ -26,13 +28,20 @@ class BnSegmented<T> extends StatelessWidget {
   final T selected;
   final ValueChanged<T> onChanged;
 
-  /// Segments share the width; otherwise each is as wide as its label.
+  /// Segments share the width; otherwise each is as wide as the longest
+  /// label.
   final bool expand;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     final colors = BadNotesColors.of(context);
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : BnMotion.normal;
+    final chosen = segments.indexWhere((s) => s.value == selected);
+    final n = segments.length;
+
     Widget segment(BnSegment<T> s) {
       final on = s.value == selected;
       return Semantics(
@@ -41,56 +50,76 @@ class BnSegmented<T> extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => onChanged(s.value),
-          child: AnimatedContainer(
-            duration: BnMotion.fast,
-            curve: BnMotion.curve,
+          child: Container(
             height: height,
             padding: EdgeInsets.symmetric(horizontal: expand ? 8 : 14),
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: on ? colors.surface : colors.sunken.withValues(alpha: 0),
-              borderRadius: const BorderRadius.all(
-                Radius.circular(BnRadius.chip),
-              ),
-              boxShadow: on
-                  ? const [
-                      BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (s.icon != null) ...[
-                  Icon(
-                    s.icon,
-                    size: 15,
-                    color: on ? colors.text : colors.muted,
-                  ),
-                  if (s.label.isNotEmpty) const SizedBox(width: 6),
-                ],
-                if (s.label.isNotEmpty)
-                  Flexible(
-                    child: Text(
-                      s.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: BnType.caption.copyWith(
-                        fontWeight: on ? FontWeight.w600 : FontWeight.w500,
-                        color: on ? colors.text : const Color(0xFF55555A),
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: on ? colors.text : colors.text2),
+              duration: duration,
+              curve: BnMotion.curve,
+              builder: (context, color, _) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (s.icon != null) ...[
+                    Icon(s.icon, size: 15, color: color),
+                    if (s.label.isNotEmpty) const SizedBox(width: 6),
+                  ],
+                  if (s.label.isNotEmpty)
+                    Flexible(
+                      child: Text(
+                        s.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        // one weight for both, so a label doesn't change
+                        // width when chosen
+                        style: BnType.caption.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       );
     }
+
+    final track = Stack(
+      fit: StackFit.passthrough,
+      children: [
+        if (chosen >= 0)
+          Positioned.fill(
+            child: AnimatedAlign(
+              duration: duration,
+              curve: BnMotion.curve,
+              alignment: Alignment(n == 1 ? 0 : -1 + 2 * chosen / (n - 1), 0),
+              child: FractionallySizedBox(
+                widthFactor: 1 / n,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(BnRadius.chip),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        Row(children: [for (final s in segments) Expanded(child: segment(s))]),
+      ],
+    );
 
     return Container(
       padding: const EdgeInsets.all(3),
@@ -98,18 +127,8 @@ class BnSegmented<T> extends StatelessWidget {
         color: colors.sunken,
         borderRadius: const BorderRadius.all(Radius.circular(BnRadius.control)),
       ),
-      child: Row(
-        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
-        children: [
-          for (int i = 0; i < segments.length; i++) ...[
-            if (i > 0) const SizedBox(width: 2),
-            if (expand)
-              Expanded(child: segment(segments[i]))
-            else
-              segment(segments[i]),
-          ],
-        ],
-      ),
+      // equal shares of the longest label's width
+      child: expand ? track : IntrinsicWidth(child: track),
     );
   }
 }

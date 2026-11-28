@@ -1,10 +1,12 @@
 import 'package:badnotes/components/canvas/invert_widget.dart';
+import 'package:badnotes/components/home/delete_note_button.dart';
 import 'package:badnotes/components/home/desk.dart';
 import 'package:badnotes/components/home/folder_info.dart';
 import 'package:badnotes/components/home/home_shell.dart';
 import 'package:badnotes/components/home/new_note_button.dart';
 import 'package:badnotes/components/home/notebook_cover.dart';
 import 'package:badnotes/components/home/trash.dart';
+import 'package:badnotes/components/theming/apple_ui.dart';
 import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/ui/ui.dart';
 import 'package:badnotes/data/editor/thumbnail_marks.dart';
@@ -50,21 +52,19 @@ class TrashPage extends HookWidget {
                 label: 'Empty trash',
                 icon: BnIcons.trash,
                 onPressed: () async {
-                  final sure = await showBnDialog<bool>(
+                  final n = entries.length;
+                  final sure = await showAppleDialog<bool>(
                     context: context,
-                    title: 'Empty the trash?',
-                    message:
-                        'The ${entries.length} notes in it are deleted for '
-                        "good. This can't be undone.",
-                    actions: const [
-                      BnDialogAction('Cancel', value: false),
-                      BnDialogAction(
-                        'Empty trash',
-                        value: true,
-                        primary: true,
-                        destructive: true,
-                      ),
-                    ],
+                    builder: (context) => ArtConfirmDialog(
+                      art: TrashArt(item: TrashArt.notebooks(context)),
+                      title: 'Empty Trash?',
+                      text:
+                          '$n item${n == 1 ? ' is' : 's are'} deleted '
+                          "forever. This can't be undone.",
+                      cancelLabel: 'Cancel',
+                      actionLabel: 'Empty Trash',
+                      onAction: () => Navigator.of(context).pop(true),
+                    ),
                   );
                   if (sure ?? false) await Trash.empty();
                 },
@@ -152,11 +152,19 @@ class _TrashRow extends HookWidget {
       }
     }
 
-    return AnimatedOpacity(
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : BnMotion.fast;
+    // fades and folds shut, so the rows under it close up smoothly
+    return ClipRect(
+      child: AnimatedAlign(
+        alignment: Alignment.topCenter,
+        heightFactor: leaving.value ? 0 : 1,
+        duration: duration,
+        curve: BnMotion.curve,
+        child: AnimatedOpacity(
       opacity: leaving.value ? 0 : 1,
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : BnMotion.fast,
+      duration: duration,
       curve: BnMotion.curve,
       child: SizedBox(
         height: 64,
@@ -227,6 +235,8 @@ class _TrashRow extends HookWidget {
           ],
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -234,19 +244,16 @@ class _TrashRow extends HookWidget {
     BuildContext context,
     Future<void> Function(Future<void> Function()) leave,
   ) async {
-    final sure = await showBnDialog<bool>(
+    final sure = await showAppleDialog<bool>(
       context: context,
-      title: 'Delete “${entry.name}” forever?',
-      message: "This can't be undone.",
-      actions: const [
-        BnDialogAction('Cancel', value: false),
-        BnDialogAction(
-          'Delete forever',
-          value: true,
-          primary: true,
-          destructive: true,
-        ),
-      ],
+      builder: (context) => ArtConfirmDialog(
+        art: const TrashArt(),
+        title: 'Delete “${entry.name}” forever?',
+        text: "This can't be undone.",
+        cancelLabel: 'Cancel',
+        actionLabel: 'Delete forever',
+        onAction: () => Navigator.of(context).pop(true),
+      ),
     );
     if (sure ?? false) await leave(() => Trash.deleteForever(entry));
   }

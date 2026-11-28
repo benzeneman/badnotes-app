@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:badnotes/data/is_this_a_test.dart';
+import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/data/routes.dart';
 
 /// Where the open note stands with saving.
@@ -51,24 +52,28 @@ class SaveIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ringColor = ColorScheme.of(context).surface;
-    return ValueListenableBuilder(
-      valueListenable: savingState,
-      builder: (context, state, _) => IconButton(
-        tooltip: _tooltipFor(state),
-        onPressed: () => onLeave != null ? onLeave!() : _leave(context),
-        icon: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-            Positioned(top: -3, right: -5, child: _dot(state, ringColor)),
-          ],
+    // the dot changes with every save: only the button is drawn again
+    return RepaintBoundary(
+      child: ValueListenableBuilder(
+        valueListenable: savingState,
+        builder: (context, state, _) => IconButton(
+          tooltip: _tooltipFor(state),
+          onPressed: () => onLeave != null ? onLeave!() : _leave(context),
+          icon: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              Positioned(top: -3, right: -5, child: _dot(state, ringColor)),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _dot(SavingState state, Color ringColor) => AnimatedContainer(
-    duration: isThisATest ? Duration.zero : const Duration(milliseconds: 150),
+    duration: isThisATest ? Duration.zero : BnMotion.fast,
+    curve: BnMotion.curve,
     width: 8,
     height: 8,
     decoration: BoxDecoration(

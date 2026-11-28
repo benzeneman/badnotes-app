@@ -113,6 +113,22 @@ class CloudStatusButton extends HookWidget {
     // The batch's size is the most files ever waiting since it started.
     _batchTotal = busy ? max(_batchTotal, pending) : 0;
     final done = _batchTotal - pending;
+    // An upload held back (on mobile data, say) left it spinning forever and
+    // the screen redrawn all the while: after 4 s with nothing done, a still
+    // clock instead.
+    final waiting = busy && done == 0;
+    final since = useMemoized(DateTime.now, [waiting]);
+    final recheck = useState(0);
+    useEffect(() {
+      if (!waiting) return null;
+      return Timer(
+        const Duration(seconds: 4),
+        () => recheck.value++,
+      ).cancel;
+    }, [waiting]);
+    final stalled =
+        waiting &&
+        DateTime.now().difference(since) >= const Duration(seconds: 4);
 
     final IconData icon;
     final Color color;
@@ -144,7 +160,15 @@ class CloudStatusButton extends HookWidget {
         ),
         // Only while syncing: spins until the first file is done, then
         // shows done / total and stands still between queue changes.
-        if (stows.loggedIn && problem == null && busy)
+        if (stows.loggedIn && problem == null && stalled)
+          Positioned(
+            right: 6,
+            bottom: 6,
+            child: IgnorePointer(
+              child: Icon(Icons.schedule_rounded, size: 12, color: color),
+            ),
+          )
+        else if (stows.loggedIn && problem == null && busy)
           Positioned.fill(
             child: IgnorePointer(
               child: Padding(

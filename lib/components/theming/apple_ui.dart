@@ -2,6 +2,7 @@ import 'package:badnotes/components/theming/badnotes_theme.dart';
 import 'package:badnotes/components/theming/badnotes_tokens.dart';
 import 'package:badnotes/components/ui/bn_icons.dart';
 import 'package:badnotes/components/ui/bn_overlays.dart';
+import 'package:badnotes/components/ui/editor_signals.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -70,10 +71,7 @@ class _PopoverSurface extends StatelessWidget {
         borderRadius: const BorderRadius.all(
           Radius.circular(BnRadius.popover - 1),
         ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: child,
-        ),
+        child: Material(type: MaterialType.transparency, child: child),
       ),
     );
   }
@@ -85,23 +83,27 @@ Future<void> showAppleMenu(
   BuildContext context, {
   required Rect anchor,
   required List<AppleMenuEntry> entries,
+
   /// [BadNotesColors.scrim] by default; a small menu over the page can do
   /// without greying the whole screen.
   Color? barrierColor,
 }) {
   HapticFeedback.selectionClick();
-  return showGeneralDialog<void>(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: barrierColor ?? BadNotesColors.of(context).scrim,
-    transitionDuration: BnMotion.fast,
-    pageBuilder: (context, animation, _) => _AppleMenuLayout(
-      anchor: anchor,
-      animation: animation,
-      entries: entries,
+  return EditorSignals.cover(
+    () => showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: barrierColor ?? BadNotesColors.of(context).scrim,
+      // menus are small and opened often: quicker than dialogs on purpose
+      transitionDuration: BnMotion.fast,
+      pageBuilder: (context, animation, _) => _AppleMenuLayout(
+        anchor: anchor,
+        animation: animation,
+        entries: entries,
+      ),
+      transitionBuilder: (_, _, _, child) => child,
     ),
-    transitionBuilder: (_, _, _, child) => child,
   );
 }
 
@@ -116,20 +118,24 @@ Future<T?> showAppleDialog<T>({
     from: context,
     to: Navigator.of(context, rootNavigator: true).context,
   );
-  return showGeneralDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: barrierColor ?? BadNotesColors.of(context).scrim,
-    transitionDuration: BnMotion.normal,
-    pageBuilder: (context, animation, _) => _Grow(
-      animation: animation,
-      alignment: Alignment.center,
-      child: themes.wrap(
-        BnAboveKeyboard(child: SafeArea(child: Builder(builder: builder))),
+  return EditorSignals.cover(
+    () => showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: barrierColor ?? BadNotesColors.of(context).scrim,
+      transitionDuration: BnMotion.normal,
+      pageBuilder: (context, animation, _) => _Grow(
+        animation: animation,
+        alignment: Alignment.center,
+        child: themes.wrap(
+          BnAboveKeyboard(
+            child: SafeArea(child: Builder(builder: builder)),
+          ),
+        ),
       ),
+      transitionBuilder: (_, _, _, child) => child,
     ),
-    transitionBuilder: (_, _, _, child) => child,
   );
 }
 
@@ -175,7 +181,8 @@ void showBannerOn(
   IconData? icon,
 }) {
   if (overlay == null || !overlay.mounted) return;
-  _Banner.current?.remove();
+  // the one showing slides away while the new one comes in
+  _Banner.leaving?._leave();
   late final OverlayEntry entry;
   entry = OverlayEntry(
     builder: (context) => _Banner(
@@ -214,6 +221,9 @@ class _Banner extends StatefulWidget {
 
   static OverlayEntry? current;
 
+  /// The one showing, to send away when another comes.
+  static _BannerState? leaving;
+
   final String message;
   final String? subtitle;
   final BannerKind kind;
@@ -245,6 +255,7 @@ class _BannerState extends State<_Banner> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _Banner.leaving = this;
     _controller.forward();
     _timer
       ..addStatusListener((status) {
@@ -267,6 +278,7 @@ class _BannerState extends State<_Banner> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    if (_Banner.leaving == this) _Banner.leaving = null;
     _controller.dispose();
     _timer.dispose();
     super.dispose();
@@ -314,7 +326,11 @@ class _BannerState extends State<_Banner> with TickerProviderStateMixin {
               color: tint,
               borderRadius: BorderRadius.circular(compact ? 999 : 12),
             ),
-            child: Icon(widget.icon ?? icon, size: compact ? 16 : 18, color: tone),
+            child: Icon(
+              widget.icon ?? icon,
+              size: compact ? 16 : 18,
+              color: tone,
+            ),
           ),
           Flexible(
             fit: compact ? FlexFit.loose : FlexFit.tight,
@@ -396,37 +412,46 @@ class _BannerState extends State<_Banner> with TickerProviderStateMixin {
                   onHorizontalDragEnd: (_) => _leave(),
                   child: Semantics(
                     liveRegion: true,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        border: Border.all(color: colors.hairline),
-                        borderRadius: radius,
-                        boxShadow: BnShadows.floating,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: radius,
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: Stack(
-                            children: [
-                              content,
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: AnimatedBuilder(
-                                  animation: _timer,
-                                  builder: (context, _) => FractionallySizedBox(
-                                    alignment: Alignment.centerLeft,
-                                    widthFactor: _timer.value,
-                                    child: Container(
-                                      height: 3,
-                                      color: tone.withValues(alpha: 0.55),
+                    // drawn once, then only moved and faded
+                    child: RepaintBoundary(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          border: Border.all(color: colors.hairline),
+                          borderRadius: radius,
+                          boxShadow: BnShadows.floating,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: radius,
+                          child: Material(
+                            type: MaterialType.transparency,
+                            child: Stack(
+                              children: [
+                                content,
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  // the countdown redraws only itself
+                                  child: RepaintBoundary(
+                                    child: AnimatedBuilder(
+                                      animation: _timer,
+                                      builder: (context, _) =>
+                                          FractionallySizedBox(
+                                            alignment: Alignment.centerLeft,
+                                            widthFactor: _timer.value,
+                                            child: Container(
+                                              height: 3,
+                                              color: tone.withValues(
+                                                alpha: 0.55,
+                                              ),
+                                            ),
+                                          ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -443,7 +468,9 @@ class _BannerState extends State<_Banner> with TickerProviderStateMixin {
 }
 
 /// A larger popup coming out of the top right corner, for a whole panel of
-/// controls that was too much for a sheet over the whole screen.
+/// controls that was too much for a sheet over the whole screen. Not counted
+/// in [EditorSignals.covered]: the note's settings open in it, and their
+/// changes show on the page while it's open.
 Future<void> showApplePopover(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -494,48 +521,50 @@ Future<T?> showAnchoredPanel<T>(
     from: context,
     to: Navigator.of(context, rootNavigator: true).context,
   );
-  return showGeneralDialog<T>(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: BadNotesColors.of(context).scrim,
-    transitionDuration: BnMotion.normal,
-    pageBuilder: (context, animation, _) {
-      const gap = 10.0, margin = 8.0;
-      final screen = MediaQuery.sizeOf(context);
-      final padding = MediaQuery.paddingOf(context);
-      final w = width.clamp(0.0, screen.width - 2 * margin);
-      final fromRight = anchor.center.dx > screen.width / 2;
-      final left = (fromRight ? anchor.right - w : anchor.left).clamp(
-        margin,
-        screen.width - w - margin,
-      );
-      final spaceBelow = screen.height - padding.bottom - anchor.bottom;
-      final spaceAbove = anchor.top - padding.top;
-      final down = spaceBelow >= spaceAbove;
-      final room = (down ? spaceBelow : spaceAbove) - gap - margin;
-      return Stack(
-        children: [
-          Positioned(
-            left: left,
-            width: w,
-            top: down ? anchor.bottom + gap : null,
-            bottom: down ? null : screen.height - anchor.top + gap,
-            child: _Grow(
-              animation: animation,
-              alignment: Alignment(fromRight ? 1 : -1, down ? -1 : 1),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: room),
-                child: themes.wrap(
-                  _PopoverSurface(child: Builder(builder: builder)),
+  return EditorSignals.cover(
+    () => showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: BadNotesColors.of(context).scrim,
+      transitionDuration: BnMotion.normal,
+      pageBuilder: (context, animation, _) {
+        const gap = 10.0, margin = 8.0;
+        final screen = MediaQuery.sizeOf(context);
+        final padding = MediaQuery.paddingOf(context);
+        final w = width.clamp(0.0, screen.width - 2 * margin);
+        final fromRight = anchor.center.dx > screen.width / 2;
+        final left = (fromRight ? anchor.right - w : anchor.left).clamp(
+          margin,
+          screen.width - w - margin,
+        );
+        final spaceBelow = screen.height - padding.bottom - anchor.bottom;
+        final spaceAbove = anchor.top - padding.top;
+        final down = spaceBelow >= spaceAbove;
+        final room = (down ? spaceBelow : spaceAbove) - gap - margin;
+        return Stack(
+          children: [
+            Positioned(
+              left: left,
+              width: w,
+              top: down ? anchor.bottom + gap : null,
+              bottom: down ? null : screen.height - anchor.top + gap,
+              child: _Grow(
+                animation: animation,
+                alignment: Alignment(fromRight ? 1 : -1, down ? -1 : 1),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: room),
+                  child: themes.wrap(
+                    _PopoverSurface(child: Builder(builder: builder)),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      );
-    },
-    transitionBuilder: (_, _, _, child) => child,
+          ],
+        );
+      },
+      transitionBuilder: (_, _, _, child) => child,
+    ),
   );
 }
 
@@ -658,6 +687,8 @@ class _AppleMenuPanelState extends State<_AppleMenuPanel> {
         alignment: Alignment.topCenter,
         child: AnimatedSwitcher(
           duration: BnMotion.normal,
+          switchInCurve: BnMotion.curve,
+          switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (child, animation) {
             final isNew = child.key == ValueKey(_path.length);
             final from = (isNew == _forward) ? 0.25 : -0.25;
@@ -739,9 +770,7 @@ class _AppleMenuPanelState extends State<_AppleMenuPanel> {
       child: InkWell(
         onTap: item.enabled ? onTap : null,
         hoverColor: colors.rowHover,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(BnRadius.control),
-        ),
+        borderRadius: const BorderRadius.all(Radius.circular(BnRadius.control)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 40),
           child: Padding(
@@ -789,7 +818,6 @@ class _MenuDivider extends StatelessWidget {
   );
 }
 
-
 /// Rows on one rounded card with thin lines between them, under a small title.
 class GroupedSection extends StatelessWidget {
   const GroupedSection({
@@ -821,7 +849,9 @@ class GroupedSection extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.08)),
+              side: BorderSide(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1009,8 +1039,7 @@ class PrefSegmentRow<T extends Object> extends StatelessWidget {
           builder: (context, value, _) => CupertinoSlidingSegmentedControl<T>(
             groupValue: value,
             children: {
-              for (final MapEntry(key: option, value: label)
-                  in options.entries)
+              for (final MapEntry(key: option, value: label) in options.entries)
                 option: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(label, style: const TextStyle(fontSize: 13)),
