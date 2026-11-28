@@ -66,6 +66,9 @@ jobs:
       fail-fast: false
       matrix:
         theme: [light, dark]
+        # one runner per file: the editor shots once took the runner down
+        # (shutdown signal) and every picture went with it
+        file: [ui_gallery, design/editor_shots, design/home_shots, design/home_dialogs_shots, design/settings_shots, design/ink_check]
     steps:
       - name: Install Linux libraries
         run: |
@@ -104,14 +107,10 @@ jobs:
           PDFIUM_PATH: ${{ runner.temp }}/pdfium/lib/libpdfium.so
         # each file on its own with a time limit per test, so one that hangs
         # doesn't keep the others' pictures from being uploaded
-        run: |
-          for f in test/ui_gallery_test.dart test/design/*_test.dart; do
-            echo "::group::$f"
-            timeout 900 flutter test --reporter=expanded --timeout 90s "$f" || echo "FAILED $f"
-            echo "::endgroup::"
-          done
+        run: timeout 900 flutter test --reporter=expanded --timeout 90s "test/${{ matrix.file }}_test.dart"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: app-${{ matrix.theme }}
+          name: app-${{ matrix.theme }}-${{ strategy.job-index }}
           path: build/design-out
           retention-days: 30
